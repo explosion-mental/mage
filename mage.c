@@ -156,11 +156,11 @@ drawbar(void)
 
 	/* left text */
 	//Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert)
-	drw_text(drw, 0, 0, xw.w/2, bh, 0, ex1, 0);
+	drw_text(drw, 0, 0, xw.w/2, bh, lrpad / 2, ex1, 0);
 	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
 
 	/* right text */
-	drw_text(drw, xw.w/2, 0, xw.w/2, bh, xw.w/2 - tw2, ex2, 0);
+	drw_text(drw, xw.w/2, 0, xw.w/2, bh, (xw.w/2 - (tw2 + (lrpad / 2)) ), ex2, 0);
 	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
 	//drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 	drw_map(drw, xw.win, 0, 0, xw.w, bh);
