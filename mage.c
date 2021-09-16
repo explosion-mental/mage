@@ -19,6 +19,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 
+#include <Imlib2.h>
+
 #include "arg.h"
 #include "util.h"
 #include "drw.h"
@@ -34,15 +36,25 @@ enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
 /* Purely graphic info */
 typedef struct {
 	Display *dpy;
+	Colormap cmap;
 	Window win;
 	Atom wmdeletewin, netwmname;
+	//Atom xembed, wmdeletewin, netwmname, netwmpid;
 	Visual *vis;
 	XSetWindowAttributes attrs;
+	int depth; /* bit depth */
 	int scr;
 	int w, h;
-	int uw, uh; /* usable dimensions for drawing text and images */
-	int by;     /* bar geometry */
+	//int uw, uh; /* usable dimensions for drawing text and images */
+	//int isfixed; /* is fixed geometry? */
+	//int l, t; /* left and top offset */
+	//int gm; /* geometry mask */
 } XWindow;
+
+typedef struct {
+ 	Imlib_Image *im;
+	int w, h, x, y;
+} Image;
 
 typedef union {
 	int i;
@@ -73,11 +85,12 @@ static void usage();
 static void xhints();
 static void xinit();
 
+/* X events */
 static void bpress(XEvent *);
 static void cmessage(XEvent *);
 static void expose(XEvent *);
 static void kpress(XEvent *);
-static void configure(XEvent *);
+static void configurenotify(XEvent *);
 
 /* commands */
 static void togglebar();
@@ -85,23 +98,49 @@ static void togglebar();
 /* config.h for applying patches and the configuration. */
 #include "config.h"
 
+//enum {	ATOM_WM_DELETE_WINDOW,
+//	ATOM__NET_WM_NAME,
+//	ATOM__NET_WM_ICON_NAME,
+//	ATOM__NET_WM_ICON,
+//	ATOM__NET_WM_STATE,
+//	ATOM__NET_WM_PID,
+//	ATOM__NET_WM_STATE_FULLSCREEN,
+//	ATOM_COUNT };
+//Atom atoms[ATOM_COUNT];
+
+typedef enum {
+	SCALE_DOWN = 0,
+	SCALE_FIT,
+	SCALE_ZOOM
+} scales_t;
+
+
 /* Globals */
-static const char *fname = NULL;
-static char stext[256];
+//static char **fname;
+static const char **fnames;
+unsigned int fileidx, filecnt;
+static scales_t scalemode;
+
 static XWindow xw;
+static Image img;
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
-static int bh, blw = 0;      /* bar geometry */
-static int lrpad;            /* sum of left and right padding for text */
+static int bh = 0;      /* bar geometry */
+static int lrpad;       /* sum of left and right padding for text */
+//static int fileidx = 0, filecnt = 0;
+
+static float zoom;
 
 static void (*handler[LASTEvent])(XEvent *) = {
 	[ButtonPress] = bpress,
 	[ClientMessage] = cmessage,
-	[ConfigureNotify] = configure,
+	[ConfigureNotify] = configurenotify,
 	[Expose] = expose,
 	[KeyPress] = kpress,
 };
+
+#include "image.c"
 
 int
 filter(int fd, const char *cmd)
@@ -132,6 +171,7 @@ cleanup()
 {
 	unsigned int i;
 
+	imlib_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(scheme);
@@ -141,12 +181,27 @@ cleanup()
 	XCloseDisplay(xw.dpy);
 }
 
+
+void
+updatebarpos()
+{
+	//TODO
+	if (showbar) {
+		printf("BAR ENABLED\n");
+		bh = drw->fonts->h + 2;
+	} else {
+		printf("bar disabled\n");
+		bh = 0;
+	}
+}
+
 static void
 drawbar(void)
 {
-	int x = 0, w = 0, tw1 = 0, tw2 = 0;
-	int boxs = drw->fonts->h / 9;
-	int boxw = drw->fonts->h / 9;
+	//int x = 0, w = 0;
+	int tw1 = 0, tw2 = 0;
+	//int boxs = drw->fonts->h / 9;
+	//int boxw = drw->fonts->h / 9;
 	char ex1[] = "[START]left[END]";
 	char ex2[] = "[start]RIGHT[end]";
 
@@ -169,19 +224,9 @@ drawbar(void)
 void
 togglebar()
 {
-	//xw.h = xw.uh;
-	//m->wh = m->mh;
-	if (bh > 0) {
-		printf("bar off");
-		bh = 0;
-		//xw.uh -= bh;
-		//m->by = topbar ? xw.uh : m->wy + m->wh;
-		//m->wy = topbar ? m->wy + bh : m->wy;
-	} else {
-		printf("bar on");
-		bh = drw->fonts->h + 2;
-	}
-		//xw.uh = -bh;
+	showbar = !showbar;
+	updatebarpos();
+	drawbar();
 }
 
 void
@@ -193,11 +238,18 @@ quit(const Arg *arg)
 void
 resize(int width, int height)
 {
+
+	//int changed;
+	//changed = win->w != c->width || win->h + win->bar.h != c->height;
+	//if (xw.w != width || xw.h != height) {
+	//xw.uw = width;
+	//xw.uh = height - bh;
 	xw.w = width;
 	xw.h = height - bh;
-	xw.uw = usablewidth * width;
-	xw.uh = usableheight * height;
 	drw_resize(drw, width, height);
+
+	//XConfigureWindow(dpy, xw.win, CWY | CWWidth | CWHeight, &wc);
+	//}
 }
 
 
@@ -226,7 +278,7 @@ run()
 void
 xhints()
 {
-	XClassHint class = {.res_name = "mage", .res_class = "image-viewer"};
+	XClassHint class = {.res_name = "mage", .res_class = "Mage"};
 	XWMHints wm = {.flags = InputHint, .input = True};
 	XSizeHints *sizeh = NULL;
 
@@ -244,8 +296,8 @@ xhints()
 void
 xinit()
 {
+	int i;
 	XTextProperty prop;
-	unsigned int i;
 
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
@@ -253,20 +305,48 @@ xinit()
 
 	xw.scr = XDefaultScreen(xw.dpy);
 	xw.vis = XDefaultVisual(xw.dpy, xw.scr);
+	xw.cmap = XDefaultColormap(xw.dpy, xw.scr);
+	xw.depth = DefaultDepth(xw.dpy, xw.scr);
+
+	//TODO background IMAGE color
+	//XColor bgcol;
+	//drw_clr_create(drw, scheme[SchemeNorm][ColBg].pixel, scheme[SchemeNorm][ColBg].pixel);
+	//if (!XAllocNamedColor(xw.dpy, DefaultColormap(xw.dpy, xw.scr), scheme[SchemeNorm][ColBg].pixel,
+	//	                    &bgcol, &bgcol))
+	//	die("could not allocate color: %s", scheme[SchemeNorm][ColBg].pixel);
+
+
 	resize(DisplayWidth(xw.dpy, xw.scr), DisplayHeight(xw.dpy, xw.scr));
 
 	xw.attrs.bit_gravity = CenterGravity;
 	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
 	                      ButtonMotionMask | ButtonPressMask;
+	//these 3 ?
+	xw.attrs.backing_store = NotUseful;
+	//xw.attrs.background_pixel = scheme[SchemeNorm][ColBg].pixel;
+	xw.attrs.save_under = False;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
-	                       xw.w, xw.h, 0, XDefaultDepth(xw.dpy, xw.scr),
+	                       xw.w, xw.h, 0, xw.depth,
 	                       InputOutput, xw.vis, CWBitGravity | CWEventMask,
 	                       &xw.attrs);
 
 	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
 	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
+
+//#define INIT_ATOM_(atom) atoms[ATOM_##atom] = XInternAtom(xw.dpy, #atom, False);
+//should I use this macro?
+//	INIT_ATOM_(WM_DELETE_WINDOW);
+//	INIT_ATOM_(_NET_WM_NAME);
+//	INIT_ATOM_(_NET_WM_ICON_NAME);
+//	INIT_ATOM_(_NET_WM_ICON);
+//	INIT_ATOM_(_NET_WM_STATE);
+//	INIT_ATOM_(_NET_WM_STATE_FULLSCREEN);
+//	INIT_ATOM_(_NET_WM_PID);
+
+
 	XSetWMProtocols(xw.dpy, xw.win, &xw.wmdeletewin, 1);
+	//XSetWMProtocols(xw.dpy, xw.win, &atoms[ATOM_WM_DELETE_WINDOW], 1);
 
 	if (!(drw = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
 		die("mage: Unable to create drawing context");
@@ -282,16 +362,16 @@ xinit()
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 	//XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
 
-	//xloadfonts();
-
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
 	bh = drw->fonts->h + 2;
+	//xw.by = drw->fonts->h + 2;
 
 	XStringListToTextProperty(&argv0, 1, &prop);
 	XSetWMName(xw.dpy, xw.win, &prop);
 	XSetTextProperty(xw.dpy, xw.win, &prop, xw.netwmname);
+	//XSetTextPrperty(xw.dpy, xw.win, &prop, &atoms[ATOM__NET_WM_NAME]);
 	XFree(prop.value);
 	XMapWindow(xw.dpy, xw.win);
 	xhints();
@@ -313,14 +393,17 @@ cmessage(XEvent *e)
 {
 	if (e->xclient.data.l[0] == xw.wmdeletewin)
 		running = 0;
+	//if ((Atom) e->xclient.data.l[0] == atoms[ATOM_WM_DELETE_WINDOW])
 }
 
 void
 expose(XEvent *e)
 {
 	if (0 == e->xexpose.count) {
+		//printf("expose\n");
+		drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
+		img_render(&img, &xw, 0, 0, xw.w, xw.h);
 		drawbar();
-		printf("expose\n");
 	}
 }
 
@@ -337,10 +420,13 @@ kpress(XEvent *e)
 }
 
 void
-configure(XEvent *e)
+configurenotify(XEvent *e)
 {
-	printf("configure\n");
+	//printf("configure\n");
 	resize(e->xconfigure.width, e->xconfigure.height);
+	//drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
+	//img_render(img, &xw, 0, 0, xw.w, xw.h);
+	drawbar();
 	//if (slides[idx].img)
 	//	slides[idx].img->state &= ~SCALED;
 }
@@ -354,42 +440,66 @@ usage()
 static void
 setup(void)
 {
-
-	//if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
-	//	die("no fonts could be loaded.");
-	//lrpad = drw->fonts->h;
-	//bh = drw->fonts->h + barh;
 	xinit();
+	updatebarpos();
 	drawbar();
+
+	/* imlib */
+	imlib_init(&xw);
+	img_load(&img, fnames[fileidx]);
+	img_display(&img, &xw);
 }
 
 int
 main(int argc, char *argv[])
 {
-	//FILE *fp = NULL;
+	//FILE *fp = NULL;//Image *fp = NULL;
+
+	//TODO weird naming files segment fault
 
 	ARGBEGIN {
 	case 'v':
 		fprintf(stderr, "mage-"VERSION"\n");
 		return 0;
+	case 'h':
+		usage();
+	case 'j':
+		printf("This is optind %d\n", optind);
+		printf("This is argc %d\n", argc);
 	default:
 		usage();
 	} ARGEND
 
 	//if (!argv[0] || !strcmp(argv[0], "-"))
 	//	fp = stdin;
-//	if (!argv[0]) {
-//		XSelectInput(xw.dpy, xw.win, ExposureMask | KeyPressMask);
-//		XMapWindow(xw.dpy, xw.win);
-//	}
+
+	//if (!filecnt)
+	//	usage();
+
+	//opts?
+	//while ((int opt = getopt(argc, argv, "hv")) != -1) {
+	//	switch (opt) {
+	//		case '?':
+	//			usage();
+	//		case 'h':
+	//			usage();
+	//		case 'v':
+	//			usage();
+	//	}
+	//}
 
 
-	//if (!(fp = fopen(fname = argv[0], "r")))
-	//	die("mage: Unable to open '%s' for reading:", fname);
-	//load(fp);
-	//fclose(fp);
+	fnames = (const char**) argv + (argc - 1);
+	filecnt = argc - (argc - 1);
+
+	// tmp
+	fileidx = 0;
+	zoom = 1.0;
+	scalemode = SCALE_DOWN;
 
 	setup();
+	printf("This is the file '%s'\n", fnames[0]);
+
 	run();
 
 	cleanup();

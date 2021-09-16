@@ -1,7 +1,8 @@
 /* See LICENSE file for copyright and license details. */
 
 /* how much screen estate is to be used at max for the content */
-static int topbar               = 1;        /* 0 means bottom bar */
+static int showbar        = 1;        /* 0 means no bar */
+static const int topbar         = 1;        /* 0 means bottom bar */
 static const float usablewidth  = 0.75;
 static const float usableheight = 0.75;
 static char *fonts[] = {
