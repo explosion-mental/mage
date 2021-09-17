@@ -1,5 +1,5 @@
-# sent version
-VERSION = 1
+# mage version
+VERSION = 0.1
 
 # Customize below to fit your system
 
@@ -9,6 +9,10 @@ MANPREFIX = ${PREFIX}/share/man
 
 X11INC = /usr/X11R6/include
 X11LIB = /usr/X11R6/lib
+
+# freetype
+FREETYPELIBS = -lfontconfig -lXft
+FREETYPEINC = /usr/include/freetype2
 
 # includes and libs
 INCS = -I. -I/usr/include -I/usr/include/freetype2 -I${X11INC}
