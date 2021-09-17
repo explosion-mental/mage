@@ -45,7 +45,7 @@ typedef struct {
 	int depth; /* bit depth */
 	int scr;
 	int w, h;
-	//int uw, uh; /* usable dimensions for drawing text and images */
+	//Pixmap pmap; ?
 	//int isfixed; /* is fixed geometry? */
 	//int l, t; /* left and top offset */
 	//int gm; /* geometry mask */
@@ -53,7 +53,8 @@ typedef struct {
 
 typedef struct {
  	Imlib_Image *im;
-	int w, h, x, y;
+	int w, h; /* position */
+	int x, y; /* dimeniton */
 } Image;
 
 typedef union {
@@ -117,8 +118,9 @@ typedef enum {
 
 /* Globals */
 //static char **fname;
+static char stext1[256], stext2[256];
 static const char **fnames;
-unsigned int fileidx, filecnt;
+static unsigned int fileidx, filecnt;
 static scales_t scalemode;
 
 static XWindow xw;
@@ -128,7 +130,6 @@ static Clr **scheme;
 static int running = 1;
 static int bh = 0;      /* bar geometry */
 static int lrpad;       /* sum of left and right padding for text */
-//static int fileidx = 0, filecnt = 0;
 
 static float zoom;
 
@@ -185,13 +186,21 @@ cleanup()
 void
 updatebarpos()
 {
+	//img.h -= bh;
+	//img.y -= bh;
+	//bh = showbar ? drw->fonts->h + 2 : 0;
+
 	//TODO
 	if (showbar) {
 		printf("BAR ENABLED\n");
-		bh = drw->fonts->h + 2;
+		xw.h = xw.h + bh;
+		img.h -= bh;
+		img.y -= bh;
+		bh = 0;
 	} else {
 		printf("bar disabled\n");
-		bh = 0;
+		bh = drw->fonts->h + 2;
+		xw.h = xw.h - bh;
 	}
 }
 
@@ -204,21 +213,26 @@ drawbar(void)
 	//int boxw = drw->fonts->h / 9;
 	char ex1[] = "[START]left[END]";
 	char ex2[] = "[start]RIGHT[end]";
+	int y;
 
 	drw_setscheme(drw, scheme[SchemeBar]);
-	tw1 = TEXTW(ex1) - lrpad + 2; /* 2px right padding */
-	tw2 = TEXTW(ex2) - lrpad + 2; /* 2px right padding */
+	tw1 = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
+	tw2 = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
+
+	y = topbar ? 0 : xw.h - bh;
 
 	/* left text */
 	//Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert)
-	drw_text(drw, 0, 0, xw.w/2, bh, lrpad / 2, ex1, 0);
+	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, stext1, 0);
 	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
 
 	/* right text */
-	drw_text(drw, xw.w/2, 0, xw.w/2, bh, (xw.w/2 - (tw2 + (lrpad / 2)) ), ex2, 0);
+	drw_text(drw, xw.w/2, y, xw.w/2, bh, (xw.w/2 - (tw2 + (lrpad / 2)) ), stext2, 0);
+	strcpy(stext1, fnames[0]);
+	strcpy(stext2, "Right");
 	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
 	//drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
-	drw_map(drw, xw.win, 0, 0, xw.w, bh);
+	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
 
 void
@@ -245,7 +259,7 @@ resize(int width, int height)
 	//xw.uw = width;
 	//xw.uh = height - bh;
 	xw.w = width;
-	xw.h = height - bh;
+	xw.h = height + (topbar ? -bh : 0);
 	drw_resize(drw, width, height);
 
 	//XConfigureWindow(dpy, xw.win, CWY | CWWidth | CWHeight, &wc);
@@ -308,14 +322,6 @@ xinit()
 	xw.cmap = XDefaultColormap(xw.dpy, xw.scr);
 	xw.depth = DefaultDepth(xw.dpy, xw.scr);
 
-	//TODO background IMAGE color
-	//XColor bgcol;
-	//drw_clr_create(drw, scheme[SchemeNorm][ColBg].pixel, scheme[SchemeNorm][ColBg].pixel);
-	//if (!XAllocNamedColor(xw.dpy, DefaultColormap(xw.dpy, xw.scr), scheme[SchemeNorm][ColBg].pixel,
-	//	                    &bgcol, &bgcol))
-	//	die("could not allocate color: %s", scheme[SchemeNorm][ColBg].pixel);
-
-
 	resize(DisplayWidth(xw.dpy, xw.scr), DisplayHeight(xw.dpy, xw.scr));
 
 	xw.attrs.bit_gravity = CenterGravity;
@@ -327,9 +333,8 @@ xinit()
 	xw.attrs.save_under = False;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
-	                       xw.w, xw.h, 0, xw.depth,
-	                       InputOutput, xw.vis, CWBitGravity | CWEventMask,
-	                       &xw.attrs);
+	                       xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
+			       CWBitGravity | CWEventMask, &xw.attrs);
 
 	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
 	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
@@ -356,16 +361,21 @@ xinit()
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
-	//scheme = drw_scm_create(drw, colors, 2);
+	//TODO background IMAGE color
+	//XColor bgcol;
+	//drw_clr_create(drw, scheme[SchemeNorm][ColBg].pixel, scheme[SchemeNorm][ColBg].pixel);
+	//if (!XAllocNamedColor(xw.dpy, DefaultColormap(xw.dpy, xw.scr), scheme[SchemeNorm][ColBg].pixel,
+	//	                    &bgcol, &bgcol))
+	//	die("could not allocate color: %s", scheme[SchemeNorm][ColBg].pixel);
 
 	//drw_setscheme(drw, scheme[SchemeNorm]);
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
-	//XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+	//XSetForeground(xw.dpy, drw->gc, scheme[SchemeNorm][ColFg].pixel);
 
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
-	bh = drw->fonts->h + 2;
+	//bh = drw->fonts->h + 2;
 	//xw.by = drw->fonts->h + 2;
 
 	XStringListToTextProperty(&argv0, 1, &prop);
@@ -402,8 +412,8 @@ expose(XEvent *e)
 	if (0 == e->xexpose.count) {
 		//printf("expose\n");
 		drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
-		img_render(&img, &xw, 0, 0, xw.w, xw.h);
 		drawbar();
+		img_render(&img, &xw, 0, 0, xw.w, xw.h);
 	}
 }
 

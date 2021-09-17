@@ -1,10 +1,8 @@
 /* See LICENSE file for copyright and license details. */
 
 /* how much screen estate is to be used at max for the content */
-static int showbar        = 1;        /* 0 means no bar */
-static const int topbar         = 1;        /* 0 means bottom bar */
-static const float usablewidth  = 0.75;
-static const float usableheight = 0.75;
+static int showbar              = 0;        /* 0 means no bar */
+static const int topbar         = 0;        /* 0 means bottom bar */
 static char *fonts[] = {
 	"SauceCodePro Nerd Font:pixelsize=14:antialias=true:autohint=true",
 //	"Noto Color Emoji:pixelsize=16:antialias=true:autohint=true: style=Regular", /* Emojis */
