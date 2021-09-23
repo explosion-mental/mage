@@ -45,6 +45,8 @@ typedef struct {
 	int depth; /* bit depth */
 	int scr;
 	int w, h;
+	Pixmap pm;
+	unsigned int pmw, pmh;
 	//Pixmap pmap; ?
 	//int isfixed; /* is fixed geometry? */
 	//int l, t; /* left and top offset */
@@ -80,7 +82,7 @@ typedef struct {
 
 static void cleanup(void);
 static void quit(const Arg *arg);
-static void resize(int width, int height);
+static int resize(int width, int height);
 static void run();
 static void usage();
 static void xhints();
@@ -171,8 +173,12 @@ void
 cleanup()
 {
 	unsigned int i;
+	static int in = 0;
 
-	imlib_destroy();
+	if (!in++) {
+		imlib_destroy();
+	}
+
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(scheme);
@@ -191,17 +197,28 @@ updatebarpos()
 	//bh = showbar ? drw->fonts->h + 2 : 0;
 
 	//TODO
-	if (showbar) {
-		printf("BAR ENABLED\n");
-		xw.h = xw.h + bh;
-		img.h -= bh;
-		img.y -= bh;
+
+	if (bh != 0) {
+		xw.h += bh;
 		bh = 0;
 	} else {
-		printf("bar disabled\n");
 		bh = drw->fonts->h + 2;
-		xw.h = xw.h - bh;
+		xw.h -= bh;
 	}
+
+	resize(xw.w , xw.h);
+//	if (showbar) {
+//		printf("BAR ENABLED\n");
+//		xw.h = xw.h + bh;
+//		//img.h -= bh;
+//		//img.y -= bh;
+//		bh = 0;
+//	} else {
+//		printf("bar disabled\n");
+//		bh = drw->fonts->h + 2;
+//		xw.h = xw.h - bh;
+//		resize(xw.h, xw.w);
+//	}
 }
 
 static void
@@ -215,6 +232,7 @@ drawbar(void)
 	char ex2[] = "[start]RIGHT[end]";
 	int y;
 
+	XClearWindow(xw.dpy, xw.win);
 	drw_setscheme(drw, scheme[SchemeBar]);
 	tw1 = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
 	tw2 = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
@@ -240,7 +258,7 @@ togglebar()
 {
 	showbar = !showbar;
 	updatebarpos();
-	drawbar();
+	//drawbar();
 }
 
 void
@@ -249,18 +267,31 @@ quit(const Arg *arg)
 	running = 0;
 }
 
-void
+int
 resize(int width, int height)
 {
+
+	int changed;
+
+
+	changed = xw.w != width || xw.h != height;
+	//win->x = cev->x;
+	//win->y = cev->y;
+	xw.w = width;
+	xw.h = height;
+	//win->bw = cev->border_width;
+	drw_resize(drw, width, height);
+	return changed;
+
 
 	//int changed;
 	//changed = win->w != c->width || win->h + win->bar.h != c->height;
 	//if (xw.w != width || xw.h != height) {
 	//xw.uw = width;
 	//xw.uh = height - bh;
-	xw.w = width;
-	xw.h = height + (topbar ? -bh : 0);
-	drw_resize(drw, width, height);
+	//xw.w = width;
+	//xw.h = height + (topbar ? 0 : -bh);
+	//drw_resize(drw, width, height);
 
 	//XConfigureWindow(dpy, xw.win, CWY | CWWidth | CWHeight, &wc);
 	//}
@@ -300,6 +331,8 @@ xhints()
 		die("mage: Unable to allocate size hints");
 
 	sizeh->flags = PSize;
+	sizeh->flags = PWinGravity;
+	//sizehints.win_gravity = NorthWestGravity;
 	sizeh->height = xw.h;
 	sizeh->width = xw.w;
 
@@ -315,43 +348,37 @@ xinit()
 
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
-
-
-	xw.scr = XDefaultScreen(xw.dpy);
-	xw.vis = XDefaultVisual(xw.dpy, xw.scr);
-	xw.cmap = XDefaultColormap(xw.dpy, xw.scr);
+	xw.scr = DefaultScreen(xw.dpy);
+	xw.vis = DefaultVisual(xw.dpy, xw.scr);
+	xw.cmap = DefaultColormap(xw.dpy, xw.scr);
 	xw.depth = DefaultDepth(xw.dpy, xw.scr);
+	//xw.h = DisplayWidth(xw.dpy, xw.scr);
+	//xw.w = DisplayHeight(xw.dpy, xw.scr);
+	//xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.pmw, xw.pmh, xw.depth);
 
 	resize(DisplayWidth(xw.dpy, xw.scr), DisplayHeight(xw.dpy, xw.scr));
 
 	xw.attrs.bit_gravity = CenterGravity;
 	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
 	                      ButtonMotionMask | ButtonPressMask;
-	//these 3 ?
-	xw.attrs.backing_store = NotUseful;
+	//xw.attrs.backing_store = NotUseful;
 	//xw.attrs.background_pixel = scheme[SchemeNorm][ColBg].pixel;
-	xw.attrs.save_under = False;
+	//xw.attrs.background_pixel = bgcol.pixel;
+	//xw.attrs.save_under = False;
+	//unsigned long mask = CWBackingStore | CWBackPixel | CWSaveUnder;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
 	                       xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
-			       CWBitGravity | CWEventMask, &xw.attrs);
+			       //CWBitGravity | CWEventMask, &xw.attrs);
+			       CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
+			       //mask, &xw.attrs);
+	XSelectInput(xw.dpy, xw.win,
+	             StructureNotifyMask | ExposureMask | KeyPressMask);
 
 	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
 	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
 
-//#define INIT_ATOM_(atom) atoms[ATOM_##atom] = XInternAtom(xw.dpy, #atom, False);
-//should I use this macro?
-//	INIT_ATOM_(WM_DELETE_WINDOW);
-//	INIT_ATOM_(_NET_WM_NAME);
-//	INIT_ATOM_(_NET_WM_ICON_NAME);
-//	INIT_ATOM_(_NET_WM_ICON);
-//	INIT_ATOM_(_NET_WM_STATE);
-//	INIT_ATOM_(_NET_WM_STATE_FULLSCREEN);
-//	INIT_ATOM_(_NET_WM_PID);
-
-
 	XSetWMProtocols(xw.dpy, xw.win, &xw.wmdeletewin, 1);
-	//XSetWMProtocols(xw.dpy, xw.win, &atoms[ATOM_WM_DELETE_WINDOW], 1);
 
 	if (!(drw = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
 		die("mage: Unable to create drawing context");
@@ -362,15 +389,14 @@ xinit()
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
 	//TODO background IMAGE color
-	//XColor bgcol;
 	//drw_clr_create(drw, scheme[SchemeNorm][ColBg].pixel, scheme[SchemeNorm][ColBg].pixel);
-	//if (!XAllocNamedColor(xw.dpy, DefaultColormap(xw.dpy, xw.scr), scheme[SchemeNorm][ColBg].pixel,
-	//	                    &bgcol, &bgcol))
-	//	die("could not allocate color: %s", scheme[SchemeNorm][ColBg].pixel);
-
-	//drw_setscheme(drw, scheme[SchemeNorm]);
-	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
+	//XSetForeground(xw.dpy, , win->bg.pixel);
 	//XSetForeground(xw.dpy, drw->gc, scheme[SchemeNorm][ColFg].pixel);
+	//XFillRectangle(xw.dpy, xw.pm, drw->gc, 0, 0, xw.pmw, xw.pmh);
+	//drw_rect(drw, 0, 0, xw.pmw, xw.pmh, 1, 0);
+	//XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
+	drw_setscheme(drw, scheme[SchemeNorm]);
+	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
@@ -378,14 +404,13 @@ xinit()
 	//bh = drw->fonts->h + 2;
 	//xw.by = drw->fonts->h + 2;
 
-	XStringListToTextProperty(&argv0, 1, &prop);
+	XStringListToTextProperty(&argv0, 1, &prop); //program name
 	XSetWMName(xw.dpy, xw.win, &prop);
-	XSetTextProperty(xw.dpy, xw.win, &prop, xw.netwmname);
-	//XSetTextPrperty(xw.dpy, xw.win, &prop, &atoms[ATOM__NET_WM_NAME]);
+	XSetTextProperty(xw.dpy, xw.win, &prop, xw.netwmname); //&atoms[ATOM__NET_WM_NAME]);
 	XFree(prop.value);
 	XMapWindow(xw.dpy, xw.win);
 	xhints();
-	XSync(xw.dpy, False);
+	//XSync(xw.dpy, False);
 }
 
 void
@@ -403,18 +428,17 @@ cmessage(XEvent *e)
 {
 	if (e->xclient.data.l[0] == xw.wmdeletewin)
 		running = 0;
-	//if ((Atom) e->xclient.data.l[0] == atoms[ATOM_WM_DELETE_WINDOW])
 }
 
 void
 expose(XEvent *e)
 {
-	if (0 == e->xexpose.count) {
-		//printf("expose\n");
-		drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
-		drawbar();
-		img_render(&img, &xw, 0, 0, xw.w, xw.h);
-	}
+	//if (0 == e->xexpose.count) {
+	//	//printf("expose\n");
+		img_render(&img, &xw, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
+	//	//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
+	//	//drawbar();
+	//}
 }
 
 void
@@ -435,8 +459,8 @@ configurenotify(XEvent *e)
 	//printf("configure\n");
 	resize(e->xconfigure.width, e->xconfigure.height);
 	//drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
+	//drawbar();
 	//img_render(img, &xw, 0, 0, xw.w, xw.h);
-	drawbar();
 	//if (slides[idx].img)
 	//	slides[idx].img->state &= ~SCALED;
 }
