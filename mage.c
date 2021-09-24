@@ -270,11 +270,10 @@ quit(const Arg *arg)
 int
 resize(int width, int height)
 {
+	//int changed;
 
-	int changed;
-
-
-	changed = xw.w != width || xw.h != height;
+	int changed = xw.w != width || xw.h != height;
+	//if (xw.w != width || xw.h != height) {
 	//win->x = cev->x;
 	//win->y = cev->y;
 	xw.w = width;
@@ -282,19 +281,6 @@ resize(int width, int height)
 	//win->bw = cev->border_width;
 	drw_resize(drw, width, height);
 	return changed;
-
-
-	//int changed;
-	//changed = win->w != c->width || win->h + win->bar.h != c->height;
-	//if (xw.w != width || xw.h != height) {
-	//xw.uw = width;
-	//xw.uh = height - bh;
-	//xw.w = width;
-	//xw.h = height + (topbar ? 0 : -bh);
-	//drw_resize(drw, width, height);
-
-	//XConfigureWindow(dpy, xw.win, CWY | CWWidth | CWHeight, &wc);
-	//}
 }
 
 
@@ -331,7 +317,7 @@ xhints()
 		die("mage: Unable to allocate size hints");
 
 	sizeh->flags = PSize;
-	sizeh->flags = PWinGravity;
+	//sizeh->flags = PWinGravity;
 	//sizehints.win_gravity = NorthWestGravity;
 	sizeh->height = xw.h;
 	sizeh->width = xw.w;
@@ -352,28 +338,23 @@ xinit()
 	xw.vis = DefaultVisual(xw.dpy, xw.scr);
 	xw.cmap = DefaultColormap(xw.dpy, xw.scr);
 	xw.depth = DefaultDepth(xw.dpy, xw.scr);
-	//xw.h = DisplayWidth(xw.dpy, xw.scr);
-	//xw.w = DisplayHeight(xw.dpy, xw.scr);
 	//xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.pmw, xw.pmh, xw.depth);
 
+	//xw.h = DisplayWidth(xw.dpy, xw.scr);
+	//xw.w = DisplayHeight(xw.dpy, xw.scr);
+	//to resize or not?
 	resize(DisplayWidth(xw.dpy, xw.scr), DisplayHeight(xw.dpy, xw.scr));
 
 	xw.attrs.bit_gravity = CenterGravity;
 	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
 	                      ButtonMotionMask | ButtonPressMask;
 	//xw.attrs.backing_store = NotUseful;
-	//xw.attrs.background_pixel = scheme[SchemeNorm][ColBg].pixel;
-	//xw.attrs.background_pixel = bgcol.pixel;
 	//xw.attrs.save_under = False;
-	//unsigned long mask = CWBackingStore | CWBackPixel | CWSaveUnder;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
 	                       xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
-			       //CWBitGravity | CWEventMask, &xw.attrs);
-			       CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
-			       //mask, &xw.attrs);
-	XSelectInput(xw.dpy, xw.win,
-	             StructureNotifyMask | ExposureMask | KeyPressMask);
+			       CWBitGravity | CWEventMask, &xw.attrs);
+			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
 
 	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
 	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
@@ -388,13 +369,6 @@ xinit()
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
-	//TODO background IMAGE color
-	//drw_clr_create(drw, scheme[SchemeNorm][ColBg].pixel, scheme[SchemeNorm][ColBg].pixel);
-	//XSetForeground(xw.dpy, , win->bg.pixel);
-	//XSetForeground(xw.dpy, drw->gc, scheme[SchemeNorm][ColFg].pixel);
-	//XFillRectangle(xw.dpy, xw.pm, drw->gc, 0, 0, xw.pmw, xw.pmh);
-	//drw_rect(drw, 0, 0, xw.pmw, xw.pmh, 1, 0);
-	//XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 
@@ -410,7 +384,7 @@ xinit()
 	XFree(prop.value);
 	XMapWindow(xw.dpy, xw.win);
 	xhints();
-	//XSync(xw.dpy, False);
+	XSync(xw.dpy, False);
 }
 
 void
@@ -435,7 +409,8 @@ expose(XEvent *e)
 {
 	//if (0 == e->xexpose.count) {
 	//	//printf("expose\n");
-		img_render(&img, &xw, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
+	img_render(&img, &xw, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
+	//img_render(&img, &xw, e->xexpose.x, e->xexpose.y, xw.w, xw.h);
 	//	//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
 	//	//drawbar();
 	//}
@@ -460,7 +435,7 @@ configurenotify(XEvent *e)
 	resize(e->xconfigure.width, e->xconfigure.height);
 	//drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
 	//drawbar();
-	//img_render(img, &xw, 0, 0, xw.w, xw.h);
+	//img_render(&img, &xw, 0, 0, xw.w, xw.h);
 	//if (slides[idx].img)
 	//	slides[idx].img->state &= ~SCALED;
 }
@@ -475,8 +450,8 @@ static void
 setup(void)
 {
 	xinit();
-	updatebarpos();
-	drawbar();
+	//updatebarpos();
+	//drawbar();
 
 	/* imlib */
 	imlib_init(&xw);
@@ -488,8 +463,7 @@ int
 main(int argc, char *argv[])
 {
 	//FILE *fp = NULL;//Image *fp = NULL;
-
-	//TODO weird naming files segment fault
+	// do really 'weird naming files segment fault'?
 
 	ARGBEGIN {
 	case 'v':
@@ -503,6 +477,9 @@ main(int argc, char *argv[])
 	default:
 		usage();
 	} ARGEND
+
+	if (!argv[0])
+		usage();
 
 	//if (!argv[0] || !strcmp(argv[0], "-"))
 	//	fp = stdin;
