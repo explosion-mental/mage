@@ -31,5 +31,5 @@ LDFLAGS += -g ${LIBS}
 #LDFLAGS += ${LIBS}
 
 # compiler and linker
-CC = cc
-#CC = tcc
+#CC = cc
+CC = tcc

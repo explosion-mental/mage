@@ -32,6 +32,9 @@ char *argv0;
 #define TEXTW(X)          (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
+enum { NetWMWindowType,
+       NetWMName,
+	NetLast}; /* atoms */
 
 /* Purely graphic info */
 typedef struct {
@@ -44,12 +47,12 @@ typedef struct {
 	XSetWindowAttributes attrs;
 	int depth; /* bit depth */
 	int scr;
+	int scrw, scrh;
+	int x, y;
 	int w, h;
+	//pixmap needed?
 	Pixmap pm;
 	unsigned int pmw, pmh;
-	//Pixmap pmap; ?
-	//int isfixed; /* is fixed geometry? */
-	//int l, t; /* left and top offset */
 	//int gm; /* geometry mask */
 } XWindow;
 
@@ -82,11 +85,11 @@ typedef struct {
 
 static void cleanup(void);
 static void quit(const Arg *arg);
-static int resize(int width, int height);
-static void run();
-static void usage();
-static void xhints();
-static void xinit();
+static void run(void);
+static void usage(void);
+static void xhints(void);
+//static void xinit();
+static void setup(void);
 
 /* X events */
 static void bpress(XEvent *);
@@ -95,21 +98,22 @@ static void expose(XEvent *);
 static void kpress(XEvent *);
 static void configurenotify(XEvent *);
 
+//image
+static void imlib_init(XWindow *win);
+static void imlib_destroy();
+static void img_load(Image *image, const char *filename);
+static void img_render(Image *image, XWindow *win, int x, int y, int w, int h);
+static void img_display(Image *image, XWindow *win);
+
+#define ZOOM_MIN   12.5
+#define ZOOM_MAX   400
 /* commands */
 static void togglebar();
+static void next();
+static void prev();
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
-
-//enum {	ATOM_WM_DELETE_WINDOW,
-//	ATOM__NET_WM_NAME,
-//	ATOM__NET_WM_ICON_NAME,
-//	ATOM__NET_WM_ICON,
-//	ATOM__NET_WM_STATE,
-//	ATOM__NET_WM_PID,
-//	ATOM__NET_WM_STATE_FULLSCREEN,
-//	ATOM_COUNT };
-//Atom atoms[ATOM_COUNT];
 
 typedef enum {
 	SCALE_DOWN = 0,
@@ -119,6 +123,7 @@ typedef enum {
 
 
 /* Globals */
+static Atom netatom[NetLast];
 //static char **fname;
 static char stext1[256], stext2[256];
 static const char **fnames;
@@ -139,46 +144,18 @@ static void (*handler[LASTEvent])(XEvent *) = {
 	[ButtonPress] = bpress,
 	[ClientMessage] = cmessage,
 	[ConfigureNotify] = configurenotify,
-	[Expose] = expose,
 	[KeyPress] = kpress,
 };
 
 #include "image.c"
-
-int
-filter(int fd, const char *cmd)
-{
-	int fds[2];
-
-	if (pipe(fds) < 0)
-		die("mage: Unable to create pipe:");
-
-	switch (fork()) {
-	case -1:
-		die("mage: Unable to fork:");
-	case 0:
-		dup2(fd, 0);
-		dup2(fds[1], 1);
-		close(fds[0]);
-		close(fds[1]);
-		execlp("sh", "sh", "-c", cmd, (char *)0);
-		fprintf(stderr, "mage: execlp sh -c '%s': %s\n", cmd, strerror(errno));
-		_exit(1);
-	}
-	close(fds[1]);
-	return fds[0];
-}
+#include "cmd.c"
 
 void
 cleanup()
 {
 	unsigned int i;
-	static int in = 0;
 
-	if (!in++) {
-		imlib_destroy();
-	}
-
+	imlib_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(scheme);
@@ -206,19 +183,6 @@ updatebarpos()
 		xw.h -= bh;
 	}
 
-	resize(xw.w , xw.h);
-//	if (showbar) {
-//		printf("BAR ENABLED\n");
-//		xw.h = xw.h + bh;
-//		//img.h -= bh;
-//		//img.y -= bh;
-//		bh = 0;
-//	} else {
-//		printf("bar disabled\n");
-//		bh = drw->fonts->h + 2;
-//		xw.h = xw.h - bh;
-//		resize(xw.h, xw.w);
-//	}
 }
 
 static void
@@ -232,7 +196,7 @@ drawbar(void)
 	char ex2[] = "[start]RIGHT[end]";
 	int y;
 
-	XClearWindow(xw.dpy, xw.win);
+	//XClearWindow(xw.dpy, xw.win);
 	drw_setscheme(drw, scheme[SchemeBar]);
 	tw1 = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
 	tw2 = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
@@ -254,50 +218,15 @@ drawbar(void)
 }
 
 void
-togglebar()
-{
-	showbar = !showbar;
-	updatebarpos();
-	//drawbar();
-}
-
-void
 quit(const Arg *arg)
 {
 	running = 0;
 }
 
-int
-resize(int width, int height)
-{
-	//int changed;
-
-	int changed = xw.w != width || xw.h != height;
-	//if (xw.w != width || xw.h != height) {
-	//win->x = cev->x;
-	//win->y = cev->y;
-	xw.w = width;
-	xw.h = height;
-	//win->bw = cev->border_width;
-	drw_resize(drw, width, height);
-	return changed;
-}
-
-
 void
 run()
 {
 	XEvent ev;
-
-	/* Waiting for window mapping */
-	while (1) {
-		XNextEvent(xw.dpy, &ev);
-		if (ev.type == ConfigureNotify) {
-			resize(ev.xconfigure.width, ev.xconfigure.height);
-		} else if (ev.type == MapNotify) {
-			break;
-		}
-	}
 
 	while (running) {
 		XNextEvent(xw.dpy, &ev);
@@ -317,74 +246,11 @@ xhints()
 		die("mage: Unable to allocate size hints");
 
 	sizeh->flags = PSize;
-	//sizeh->flags = PWinGravity;
-	//sizehints.win_gravity = NorthWestGravity;
 	sizeh->height = xw.h;
 	sizeh->width = xw.w;
 
 	XSetWMProperties(xw.dpy, xw.win, NULL, NULL, NULL, 0, sizeh, &wm, &class);
 	XFree(sizeh);
-}
-
-void
-xinit()
-{
-	int i;
-	XTextProperty prop;
-
-	if (!(xw.dpy = XOpenDisplay(NULL)))
-		die("mage: Unable to open display");
-	xw.scr = DefaultScreen(xw.dpy);
-	xw.vis = DefaultVisual(xw.dpy, xw.scr);
-	xw.cmap = DefaultColormap(xw.dpy, xw.scr);
-	xw.depth = DefaultDepth(xw.dpy, xw.scr);
-	//xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.pmw, xw.pmh, xw.depth);
-
-	//xw.h = DisplayWidth(xw.dpy, xw.scr);
-	//xw.w = DisplayHeight(xw.dpy, xw.scr);
-	//to resize or not?
-	resize(DisplayWidth(xw.dpy, xw.scr), DisplayHeight(xw.dpy, xw.scr));
-
-	xw.attrs.bit_gravity = CenterGravity;
-	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
-	                      ButtonMotionMask | ButtonPressMask;
-	//xw.attrs.backing_store = NotUseful;
-	//xw.attrs.save_under = False;
-
-	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
-	                       xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
-			       CWBitGravity | CWEventMask, &xw.attrs);
-			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
-
-	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
-	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
-
-	XSetWMProtocols(xw.dpy, xw.win, &xw.wmdeletewin, 1);
-
-	if (!(drw = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
-		die("mage: Unable to create drawing context");
-
-	/* init appearance */
-	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
-	for (i = 0; i < LENGTH(colors); i++)
-		scheme[i] = drw_scm_create(drw, colors[i], 3);
-
-	drw_setscheme(drw, scheme[SchemeNorm]);
-	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
-
-	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
-		die("no fonts could be loaded.");
-	lrpad = drw->fonts->h;
-	//bh = drw->fonts->h + 2;
-	//xw.by = drw->fonts->h + 2;
-
-	XStringListToTextProperty(&argv0, 1, &prop); //program name
-	XSetWMName(xw.dpy, xw.win, &prop);
-	XSetTextProperty(xw.dpy, xw.win, &prop, xw.netwmname); //&atoms[ATOM__NET_WM_NAME]);
-	XFree(prop.value);
-	XMapWindow(xw.dpy, xw.win);
-	xhints();
-	XSync(xw.dpy, False);
 }
 
 void
@@ -405,18 +271,6 @@ cmessage(XEvent *e)
 }
 
 void
-expose(XEvent *e)
-{
-	//if (0 == e->xexpose.count) {
-	//	//printf("expose\n");
-	img_render(&img, &xw, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
-	//img_render(&img, &xw, e->xexpose.x, e->xexpose.y, xw.w, xw.h);
-	//	//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
-	//	//drawbar();
-	//}
-}
-
-void
 kpress(XEvent *e)
 {
 	unsigned int i;
@@ -431,13 +285,13 @@ kpress(XEvent *e)
 void
 configurenotify(XEvent *e)
 {
-	//printf("configure\n");
-	resize(e->xconfigure.width, e->xconfigure.height);
-	//drw_map(drw, xw.win, 0, 0, xw.w, xw.h);
-	//drawbar();
-	//img_render(&img, &xw, 0, 0, xw.w, xw.h);
-	//if (slides[idx].img)
-	//	slides[idx].img->state &= ~SCALED;
+	XConfigureEvent *ev = &e->xconfigure;
+
+	 if (xw.w != ev->width || xw.h != ev->height) {
+		xw.w = ev->width;
+		xw.h = ev->height;
+		drw_resize(drw, xw.w, xw.h);
+	}
 }
 
 void
@@ -446,25 +300,112 @@ usage()
 	die("usage: %s [file]", argv0);
 }
 
-static void
+//void
+//setup(void)
+//{
+//	xinit();
+//	//updatebarpos();
+//	drawbar();
+//
+//	/* imlib */
+//	imlib_init(&xw);
+//	img_load(&img, fnames[fileidx]);
+//	img_display(&img, &xw);
+//}
+void
 setup(void)
 {
-	xinit();
-	//updatebarpos();
-	//drawbar();
+	int i;
+	XTextProperty prop;
 
-	/* imlib */
-	imlib_init(&xw);
-	img_load(&img, fnames[fileidx]);
-	img_display(&img, &xw);
+	if (!(xw.dpy = XOpenDisplay(NULL)))
+		die("mage: Unable to open display");
+
+	/* init screen */
+	xw.scr  = DefaultScreen(xw.dpy);
+	xw.scrw = DisplayWidth(xw.dpy, xw.scr);
+	xw.scrh = DisplayHeight(xw.dpy, xw.scr);
+
+	xw.vis   = DefaultVisual(xw.dpy, xw.scr);
+	xw.cmap  = DefaultColormap(xw.dpy, xw.scr);
+	xw.depth = DefaultDepth(xw.dpy, xw.scr);
+	//xw.h = DisplayWidth(xw.dpy, xw.scr);
+	//xw.w = DisplayHeight(xw.dpy, xw.scr);
+
+//	if (xw.w > xw.scrw)
+//		xw.w = xw.scrw;
+//	if (xw.h > xw.scrh)
+//		xw.h = xw.scrh;
+//	xw.x = (xw.scrw - xw.w) / 2;
+//	xw.y = (xw.scrh - xw.h) / 2;
+
+	if (!xw.w)
+		xw.w = xw.scrw;
+	if (!xw.h)
+		xw.h = xw.scrh;
+
+	//if (!xw.x)
+	//	xw.x = 0;
+	//if (xw.x < 0)
+	//	xw.x = xw.scrw + xw.x - xw.w;
+	//if (!xw.y)
+	//	xw.y = xw.scrh - xw.h;
+	//if (xw.y < 0)
+	//	xw.y = xw.scrh + xw.y - xw.h;
+
+
+	xw.x = (xw.scrw - xw.w) / 2;
+	xw.y = (xw.scrh - xw.h) / 2;
+
+	xw.attrs.bit_gravity = CenterGravity;
+	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
+	                      ButtonMotionMask | ButtonPressMask;
+	//xw.attrs.backing_store = NotUseful;
+	//xw.attrs.save_under = False;
+	long mask = CWBackingStore | CWBackPixel | CWSaveUnder;
+
+	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
+				xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
+				&mask, &xw.attrs);
+				//CWBitGravity | CWEventMask, &xw.attrs);
+			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
+	XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask);
+
+	/* init atoms */
+	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
+	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
+	//netatom[NetWMName] = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
+
+	XSetWMProtocols(xw.dpy, xw.win, &xw.wmdeletewin, 1);
+
+	if (!(drw = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
+		die("mage: Unable to create drawing context");
+
+	/* init appearance */
+	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
+	for (i = 0; i < LENGTH(colors); i++)
+		scheme[i] = drw_scm_create(drw, colors[i], 3);
+
+	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
+
+	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
+		die("no fonts could be loaded.");
+	lrpad = drw->fonts->h;
+	bh = drw->fonts->h + 2;
+
+	XStringListToTextProperty(&argv0, 1, &prop); //program name
+	XSetWMName(xw.dpy, xw.win, &prop);
+	XSetTextProperty(xw.dpy, xw.win, &prop, xw.netwmname); //&atoms[ATOM__NET_WM_NAME]);
+	XFree(prop.value);
+	XMapWindow(xw.dpy, xw.win);
+	xhints();
+	XSync(xw.dpy, False);
+	//XSync(drw->dpy, False);
 }
 
 int
 main(int argc, char *argv[])
 {
-	//FILE *fp = NULL;//Image *fp = NULL;
-	// do really 'weird naming files segment fault'?
-
 	ARGBEGIN {
 	case 'v':
 		fprintf(stderr, "mage-"VERSION"\n");
@@ -481,25 +422,6 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	//if (!argv[0] || !strcmp(argv[0], "-"))
-	//	fp = stdin;
-
-	//if (!filecnt)
-	//	usage();
-
-	//opts?
-	//while ((int opt = getopt(argc, argv, "hv")) != -1) {
-	//	switch (opt) {
-	//		case '?':
-	//			usage();
-	//		case 'h':
-	//			usage();
-	//		case 'v':
-	//			usage();
-	//	}
-	//}
-
-
 	fnames = (const char**) argv + (argc - 1);
 	filecnt = argc - (argc - 1);
 
@@ -509,6 +431,12 @@ main(int argc, char *argv[])
 	scalemode = SCALE_DOWN;
 
 	setup();
+	/* imlib */
+	//init should be on setup?
+	imlib_init(&xw);
+	img_load(&img, fnames[fileidx]);
+	img_display(&img, &xw);
+
 	printf("This is the file '%s'\n", fnames[0]);
 
 	run();

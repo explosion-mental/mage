@@ -1,4 +1,4 @@
-static void
+void
 imlib_init(XWindow *win)
 {
 	if (!win)
@@ -16,8 +16,9 @@ imlib_destroy()
 		imlib_free_image();
 }
 
-static void
-img_load(Image *image, const char *filename) {
+void
+img_load(Image *image, const char *filename)
+{
 	Imlib_Image *im;
 	if (!image || !filename)
 		return;
@@ -34,9 +35,8 @@ img_load(Image *image, const char *filename) {
 	image->h = imlib_image_get_height();
 }
 
-#define ZOOM_MIN   12.5
-#define ZOOM_MAX   400
-static void
+void
+//img_render(Image *image, XWindow *win)
 img_render(Image *image, XWindow *win, int x, int y, int w, int h)
 {
 	int sx, sy, sw, sh;
@@ -81,8 +81,9 @@ im_clear(XWindow *win)
 	XClearWindow(win->dpy, win->win);
 }
 
-static void
-img_display(Image *image, XWindow *win) {
+void
+img_display(Image *image, XWindow *win)
+{
 
 	if (!image || !win || !imlib_context_get_image())
 		return;

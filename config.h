@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
 /* how much screen estate is to be used at max for the content */
-static int showbar              = 0;        /* 0 means no bar */
+static int showbar              = 1;        /* 0 means no bar */
 static const int topbar         = 0;        /* 0 means bottom bar */
 static char *fonts[] = {
 	"SauceCodePro Nerd Font:pixelsize=14:antialias=true:autohint=true",
@@ -20,14 +20,16 @@ static Shortcut shortcuts[] = {
 	/* keysym         function        argument */
 	{ XK_Escape,      quit,           {0} },
 	{ XK_q,           quit,           {0} },
-	{ XK_b,           togglebar,           {0} },
+	{ XK_b,           togglebar,      {0} },
+	{ XK_j,           next,           {0} },
+	{ XK_space,           prev,           {0} },
 	//{ XK_f,           fullscreen,     {0} },
 };
 
 static Mousekey mshortcuts[] = {
 	/* button         function        argument */
-	{ Button1,        quit,        {0} },
-	{ Button3,        quit,        {0} },
-	{ Button4,        quit,        {0} },
-	{ Button5,        quit,        {0} },
+//	{ Button1,        quit,        {0} },
+//	{ Button3,        quit,        {0} },
+//	{ Button4,        quit,        {0} },
+//	{ Button5,        quit,        {0} },
 };
