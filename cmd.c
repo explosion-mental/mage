@@ -9,6 +9,22 @@ togglebar(const Arg *arg)
 }
 
 void
+advance(const Arg *arg)
+{
+	if (arg->i > 0) {
+		if (fileidx + 1 < filecnt) {
+			img_load(&img, filenames[++fileidx]);
+			img_display(&img, &xw);
+		}
+	} else {
+		if (fileidx > 0) {
+			img_load(&img, filenames[--fileidx]);
+			img_display(&img, &xw);
+		}
+	}
+}
+
+void
 next_img(const Arg *arg)
 {
 	printf("NEXT\n");

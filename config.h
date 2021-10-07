@@ -21,14 +21,14 @@ static Shortcut shortcuts[] = {
 	{ XK_Escape,      quit,           {0} },
 	{ XK_q,           quit,           {0} },
 	{ XK_b,           togglebar,      {0} },
-	{ XK_k,           next_img,           {0} },
-	{ XK_j,       prev_img,           {0} },
+	{ XK_k,          advance,        {.i = +1} },
+	{ XK_j,		 advance,        {.i = -1} },
 	//{ XK_f,           fullscreen,     {0} },
 };
 
 static Mousekey mshortcuts[] = {
 	/* button         function        argument */
-//	{ Button1,        quit,        {0} },
+	{ Button1,        advance,     {.i = +1} },
 	{ Button3,        quit,        {0} },
 //	{ Button4,        quit,        {0} },
 //	{ Button5,        quit,        {0} },

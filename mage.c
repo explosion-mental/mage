@@ -113,6 +113,7 @@ static void img_display(Image *image, XWindow *win);
 static void togglebar(const Arg *arg);
 static void next_img(const Arg *arg);
 static void prev_img(const Arg *arg);
+static void advance(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -289,7 +290,7 @@ expose(XEvent *e)
 	//img_load
 	//img_load(&img, filenames[++fileidx]);
 
-	//img_display might be the right one
+	//img_display might be the right one, it's slow on big images
 	img_display(&img, &xw);
 
 	//if (0 == e->xexpose.count) {
