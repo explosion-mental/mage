@@ -4,8 +4,8 @@ imlib_init(XWindow *win)
 	if (!win)
 		return;
 	imlib_context_set_display(win->dpy);
-	imlib_context_set_visual(win->vis);
-	imlib_context_set_colormap(win->cmap);
+	imlib_context_set_visual(visual);
+	imlib_context_set_colormap(cmap);
 	imlib_context_set_drawable(win->win);
 }
 
@@ -35,56 +35,11 @@ img_load(Image *image, const char *filename)
 	image->h = imlib_image_get_height();
 }
 
-void
-//img_render(Image *image, XWindow *win)
-img_render(Image *image, XWindow *win, int x, int y, int w, int h)
-{
-	int sx, sy, sw, sh;
-	int dx, dy, dw, dh;
 
-	if (!image || !win || !imlib_context_get_image())
-		return;
-
-	if (image->x < x) {
-		sx = (x - image->x) / zoom;
-		sw = MIN(w / zoom, image->w - sx);
-		dx = x;
-		dw = sw * zoom;
-	} else {
-		sx = 0;
-		sw = MIN((w - image->x + x) / zoom, image->w);
-		dx = image->x;
-		dw = sw * zoom;
-	}
-	if (image->y < y) {
-		sy = (y - image->y) / zoom;
-		sh = MIN(h / zoom, image->h - sy);
-		dy = y;
-		dh = sh * zoom;
-	} else {
-		sy = 0;
-		sh = MIN((h - image->y + y) / zoom, image->h);
-		dy = image->y;
-		dh = sh * zoom;
-	}
-
-	if (sw < 0 || sh < 0)
-		return;
-
-	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
-}
-
-
-void
-im_clear(XWindow *win)
-{
-	XClearWindow(win->dpy, win->win);
-}
 
 void
 img_display(Image *image, XWindow *win)
 {
-
 	if (!image || !win || !imlib_context_get_image())
 		return;
 
@@ -108,7 +63,55 @@ img_display(Image *image, XWindow *win)
 	image->x = (win->w - image->w * zoom) / 2;
 	image->y = (win->h - image->h * zoom) / 2;
 
-	im_clear(win);
+	//im_clear(win);
 
-	img_render(image, win, 0, 0, win->w, win->h);
+	img_render(image, win);
+}
+
+void
+img_render(Image *image, XWindow *win)
+{
+	int sx, sy, sw, sh;
+	int dx, dy, dw, dh;
+
+	if (!image || !win || !imlib_context_get_image())
+		return;
+
+	if (image->x < 0) {
+		sx = -image->x / zoom;
+		sw = win->w / zoom;
+		dx = 0;
+		dw = win->w;
+	} else {
+		sx = 0;
+		sw = image->w;
+		dx = image->x;
+		dw = image->w * zoom;
+	}
+	if (image->y < 0) {
+		sy = - image->y / zoom;
+		sh = win->h / zoom;
+		dy = 0;
+		dh = win->h;
+	} else {
+		sy = 0;
+		sh = image->h;
+		dy = image->y;
+		dh = image->h * zoom;
+	}
+
+	//XClearWindow(win->dpy, win->win);
+
+	//imlib_context_set_drawable(win->pm);
+	im_clear();
+	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
+	//XClearWindow(win->dpy, win->win);
+
+}
+
+
+void
+im_clear(void)
+{
+	XClearWindow(xw.dpy, xw.win);
 }

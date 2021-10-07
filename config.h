@@ -13,7 +13,7 @@ static const char *colors[][3] = {
       			/*  fg       bg     */
 	[SchemeNorm]  = { "#eeeeee", "#005577" },
 	[SchemeSel]   = { "#bbbbbb", "#882100" },
-	[SchemeBar]   = { "#bbb012", "#911828" },
+	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
 static Shortcut shortcuts[] = {
@@ -21,15 +21,15 @@ static Shortcut shortcuts[] = {
 	{ XK_Escape,      quit,           {0} },
 	{ XK_q,           quit,           {0} },
 	{ XK_b,           togglebar,      {0} },
-	{ XK_j,           next,           {0} },
-	{ XK_space,           prev,           {0} },
+	{ XK_k,           next_img,           {0} },
+	{ XK_j,       prev_img,           {0} },
 	//{ XK_f,           fullscreen,     {0} },
 };
 
 static Mousekey mshortcuts[] = {
 	/* button         function        argument */
 //	{ Button1,        quit,        {0} },
-//	{ Button3,        quit,        {0} },
+	{ Button3,        quit,        {0} },
 //	{ Button4,        quit,        {0} },
 //	{ Button5,        quit,        {0} },
 };

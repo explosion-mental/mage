@@ -1,25 +1,36 @@
 void
-togglebar()
+togglebar(const Arg *arg)
 {
+	printf("bar off\n");
+	//fprintf(stderr, "Previous");
 	showbar = !showbar;
 	//updatebarpos();
-	//drawbar();
+	drawbar();
 }
 
 void
-next()
+next_img(const Arg *arg)
 {
+	printf("NEXT\n");
 	if (fileidx + 1 < filecnt) {
-		img_load(&img, fnames[++fileidx]);
+		img_load(&img, filenames[++fileidx]);
 		img_display(&img, &xw);
 	}
+	//if (fileidx + 1 < filecnt) {
+	//	XClearWindow(xw.dpy, xw.win);
+	//	img_load(&img, filenames[++fileidx]);
+	//	img_display(&img, &xw);
+	//}
 }
 
 void
-prev()
+prev_img(const Arg *arg)
 {
+	printf("Previous\n");
+	//fprintf(stderr, "Previous");
 	if (fileidx > 0) {
-		img_load(&img, fnames[--fileidx]);
+		//XClearWindow(xw.dpy, xw.win);
+		img_load(&img, filenames[--fileidx]);
 		img_display(&img, &xw);
 	}
 }
