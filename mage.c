@@ -331,7 +331,7 @@ configurenotify(XEvent *e)
 void
 usage()
 {
-	die("usage: %s [file]", argv0);
+	die("usage: %s [-hv] FILE", argv0);
 }
 
 //void
@@ -493,8 +493,14 @@ main(int argc, char *argv[])
 	const char **files = (const char**) argv + optind - 1;
 	int cnt = argc - optind + 1;
 
+	//separate all the space of cnt, even if there is some that we won't use
+	if (!(filenames = (const char**) malloc(cnt * sizeof(char*))))
+		die("could not allocate memory");
+
+
 	// tmp
 	fileidx = 0;
+	filecnt = 0;
 	zoom = 1.0;
 	scalemode = SCALE_DOWN;
 
@@ -506,6 +512,7 @@ main(int argc, char *argv[])
 		//as much images as posible
 		if (!(img_load(&img, files[i]) < 0))
 			// we finally pass only files that imlib2 can load (return 0)
+			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];
 	}
 
@@ -519,7 +526,7 @@ main(int argc, char *argv[])
 	img_load(&img, filenames[fileidx]);
 	img_display(&img, &xw);
 
-	printf("This is the file '%s'\n", filenames[0]);
+	printf("This is the file '%s'\n", filenames[fileidx]);
 
 	run();
 
