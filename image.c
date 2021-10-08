@@ -16,23 +16,27 @@ imlib_destroy()
 		imlib_free_image();
 }
 
-void
+int
 img_load(Image *image, const char *filename)
 {
 	Imlib_Image *im;
 	if (!image || !filename)
-		return;
+		return -1;
 
 	if (imlib_context_get_image())
 		imlib_free_image();
 
-	if (!(im = imlib_load_image(filename)))
-		die("could not open image: %s", filename);
+	if (!(im = imlib_load_image(filename))) {
+		printf("could not open image: %s\n", filename);
+		return -1;
+	}
 
 	imlib_context_set_image(im);
 
 	image->w = imlib_image_get_width();
 	image->h = imlib_image_get_height();
+
+	return 0;
 }
 
 

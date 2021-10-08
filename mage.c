@@ -103,7 +103,7 @@ static void configurenotify(XEvent *);
 static void imlib_init(XWindow *win);
 static void im_clear(void);
 static void imlib_destroy();
-static void img_load(Image *image, const char *filename);
+static int img_load(Image *image, const char *filename);
 static void img_render(Image *image, XWindow *win);
 static void img_display(Image *image, XWindow *win);
 
@@ -211,7 +211,10 @@ drawbar(void)
 	tw1 = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
 	tw2 = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
 
-	y = topbar ? 0 : xw.h - bh;
+	//y = topbar ? 0 : xw.h - bh;
+	y = xw.h - bh;
+
+	//why is the bar not at the bottom
 
 	/* left text */
 	//Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert)
@@ -389,22 +392,29 @@ setup(void)
 	xw.x = (xw.scrw - xw.w) / 2;
 	xw.y = (xw.scrh - xw.h) / 2;
 
-	xw.attrs.bit_gravity = CenterGravity;
-	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
-	                      ButtonMotionMask | ButtonPressMask;
+	//xw.attrs.bit_gravity = CenterGravity;
+ 	xw.attrs.colormap = cmap;
+	xw.attrs.background_pixel = 0;
+	xw.attrs.border_pixel = 0;
+	//xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
+	 //                     ButtonMotionMask | ButtonPressMask;
 	//xw.attrs.backing_store = NotUseful;
-	//xw.attrs.save_under = False;
+	xw.attrs.save_under = False;
 	//long mask = CWBackingStore | CWBackPixel | CWSaveUnder;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
 				xw.w, xw.h, 0, depth, InputOutput, visual,
-				0, &xw.attrs);
+				//0, &xw.attrs);
+				CWBackPixel | CWColormap | CWBorderPixel, &xw.attrs);
 				//CWBitGravity | CWEventMask, &xw.attrs);
 			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
 	//XSelectInput(xw.dpy, xw.win, StructureNotifyMask | KeyPressMask);
 
-	XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask |
-	                       ButtonPressMask);
+
+	XSelectInput(xw.dpy, xw.win, ButtonReleaseMask | ButtonPressMask | KeyPressMask |
+	             PointerMotionMask | StructureNotifyMask);
+	//XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask |
+	 //                     ButtonPressMask);
 
 	/* init atoms */
 	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
@@ -479,13 +489,28 @@ main(int argc, char *argv[])
 	//filenames = (const char**) argv + (argc - 1);
 	//filecnt = argc - (argc - 1);
 
-	filenames = (const char**) argv + optind - 1;
-	filecnt = argc - optind + 1;
+	//temporal variables so we can later evaluate if they truly are files
+	const char **files = (const char**) argv + optind - 1;
+	int cnt = argc - optind + 1;
 
 	// tmp
 	fileidx = 0;
 	zoom = 1.0;
 	scalemode = SCALE_DOWN;
+
+	int i;
+	//char **true_name = "";
+	//const char **true_name;
+	for (i = 0; i < cnt; i++) {
+		//return code so you can evaluate this. This is so it can load
+		//as much images as posible
+		if (!(img_load(&img, files[i]) < 0))
+			// we finally pass only files that imlib2 can load (return 0)
+			filenames[filecnt++] = files[i];
+	}
+
+	if (!filecnt)
+		die("no valid image filename given, aborting");
 
 	setup();
 	/* imlib */
