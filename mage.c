@@ -32,9 +32,8 @@ char *argv0;
 #define TEXTW(X)          (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
-enum { NetWMWindowType,
-       NetWMName,
-	NetLast}; /* atoms */
+enum { WMDelete, WMName, WMFullscreen,
+	WMLast }; /* atoms */
 
 /* Purely graphic info */
 typedef struct {
@@ -48,7 +47,7 @@ typedef struct {
 	//int depth; /* bit depth */
 	int scr;
 	int scrw, scrh;
-	int x, y;
+	//int x, y;
 	int w, h;
 	//pixmap needed?
 	//Pixmap pm;
@@ -91,6 +90,7 @@ static void xhints(void);
 //static void xinit();
 static void setup(void);
 static void drawbar(void);
+static void update_title(void);
 
 /* X events */
 static void bpress(XEvent *);
@@ -111,8 +111,8 @@ static void img_display(Image *image, XWindow *win);
 #define ZOOM_MAX   400
 /* commands */
 static void togglebar(const Arg *arg);
-static void next_img(const Arg *arg);
-static void prev_img(const Arg *arg);
+//static void next_img(const Arg *arg);
+//static void prev_img(const Arg *arg);
 static void advance(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
@@ -126,7 +126,7 @@ typedef enum {
 
 
 /* Globals */
-static Atom netatom[NetLast];
+static Atom atom[WMLast];
 //static char **fname;
 static char stext1[256], stext2[256];
 static const char **filenames;
@@ -145,7 +145,7 @@ static float zoom;
 
 
 static Colormap cmap;
-static Drawable xpix = 0;
+//static Drawable xpix = 0;
 static int depth;
 static Visual *visual;
 
@@ -194,20 +194,37 @@ updatebarpos()
 	}
 
 }
+void
+update_title()
+{
+	char title[512];
+
+	snprintf(title, LENGTH(title), "sxiv: [%d/%d] <%d%%> %s", fileidx + 1,
+	             filecnt, (int) (zoom * 100.0), filenames[fileidx]);
+
+	XChangeProperty(xw.dpy, xw.win, atom[WMName],
+	                XInternAtom(xw.dpy, "UTF8_STRING", False), 8,
+	                PropModeReplace, (unsigned char *) title, strlen(title));
+}
 
 void
 drawbar(void)
 {
-	//int x = 0, w = 0;
 	int tw1 = 0, tw2 = 0;
+
 	//int boxs = drw->fonts->h / 9;
 	//int boxw = drw->fonts->h / 9;
 	char ex1[] = "[START]left[END]";
 	char ex2[] = "[start]RIGHT[end]";
 	int y;
+	char right[256];
+
+	if (showbar)
+		return;
 
 	//XClearWindow(xw.dpy, xw.win);
 	drw_setscheme(drw, scheme[SchemeBar]);
+	//XClearWindow(xw.dpy, xw.win);
 	tw1 = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
 	tw2 = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
 
@@ -223,7 +240,16 @@ drawbar(void)
 
 	/* right text */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, (xw.w/2 - (tw2 + (lrpad / 2)) ), stext2, 0);
-	strcpy(stext1, filenames[0]);
+
+	snprintf(right, LENGTH(right), "sxiv: [%d/%d] <%d%%> %s", fileidx + 1,
+	             filecnt, (int) (zoom * 100.0), filenames[fileidx]);
+
+	/* init right */
+	strcpy(stext1, right);
+	//strcpy(stext1, filenames[fileidx]);
+	//strncpy(stext1, "sxiv:[%d/%d] <%d%%> %s", fileidx + 1, filecnt, (int)(zoom * 100.0), filenames[fileidx]);
+
+	/* init left */
 	strcpy(stext2, ex2);
 	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
 	//drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
@@ -237,7 +263,7 @@ quit(const Arg *arg)
 }
 
 void
-run()
+run(void)
 {
 	XEvent ev;
 
@@ -299,6 +325,7 @@ expose(XEvent *e)
 	//if (0 == e->xexpose.count) {
 	//	//printf("expose\n");
 	//img_render(&img, &xw, e->xexpose.x, e->xexpose.y, xw.w, xw.h);
+	//	img_render(&img, &xw);
 	//	//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
 	//	//drawbar();
 	//}
@@ -322,7 +349,7 @@ configurenotify(XEvent *e)
 
 	 if (xw.w != ev->width || xw.h != ev->height) {
 		xw.w = ev->width;
-		xw.h = ev->height - bh;
+		xw.h = ev->height;
 		//scalemode = SCALE_DOWN;
 		drw_resize(drw, xw.w, xw.h);
 	}
@@ -331,7 +358,7 @@ configurenotify(XEvent *e)
 void
 usage()
 {
-	die("usage: %s [-hv] FILE", argv0);
+	die("usage: %s [-hv] file...", argv0);
 }
 
 //void
@@ -374,33 +401,16 @@ setup(void)
 //	xw.x = (xw.scrw - xw.w) / 2;
 //	xw.y = (xw.scrh - xw.h) / 2;
 
+	//TODO handle inital window size (width - height) respectively (configurenotify?)
 	if (!xw.w)
 		xw.w = xw.scrw;
 	if (!xw.h)
 		xw.h = xw.scrh;
 
-	//if (!xw.x)
-	//	xw.x = 0;
-	//if (xw.x < 0)
-	//	xw.x = xw.scrw + xw.x - xw.w;
-	//if (!xw.y)
-	//	xw.y = xw.scrh - xw.h;
-	//if (xw.y < 0)
-	//	xw.y = xw.scrh + xw.y - xw.h;
-
-
-	xw.x = (xw.scrw - xw.w) / 2;
-	xw.y = (xw.scrh - xw.h) / 2;
-
-	//xw.attrs.bit_gravity = CenterGravity;
  	xw.attrs.colormap = cmap;
-	xw.attrs.background_pixel = 0;
+	//xw.attrs.background_pixel = 0;
 	xw.attrs.border_pixel = 0;
-	//xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
-	 //                     ButtonMotionMask | ButtonPressMask;
-	//xw.attrs.backing_store = NotUseful;
 	xw.attrs.save_under = False;
-	//long mask = CWBackingStore | CWBackPixel | CWSaveUnder;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
 				xw.w, xw.h, 0, depth, InputOutput, visual,
@@ -413,15 +423,14 @@ setup(void)
 
 	XSelectInput(xw.dpy, xw.win, ButtonReleaseMask | ButtonPressMask | KeyPressMask |
 	             PointerMotionMask | StructureNotifyMask);
-	//XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask |
-	 //                     ButtonPressMask);
 
 	/* init atoms */
-	xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
-	xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
-	//netatom[NetWMName] = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
+	//xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
+	//xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
+	atom[WMDelete] = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
+	atom[WMName] = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
 
-	XSetWMProtocols(xw.dpy, xw.win, &xw.wmdeletewin, 1);
+	XSetWMProtocols(xw.dpy, xw.win, &atom[WMDelete], 1);
 
 	if (!(drw = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
 		die("mage: Unable to create drawing context");
@@ -437,20 +446,18 @@ setup(void)
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
 	bh = drw->fonts->h + 2;
+	//by = topbar ? 0 : xw.h - bh;
 
 	/* init bars */
-	//by = topbar ? 0 : xw.h - bh;
 	drawbar();
 
-	XStringListToTextProperty(&argv0, 1, &prop); //program name
+	XStringListToTextProperty(&argv0, 1, &prop);
 	XSetWMName(xw.dpy, xw.win, &prop);
-	XSetTextProperty(xw.dpy, xw.win, &prop, xw.netwmname); //&atoms[ATOM__NET_WM_NAME]);
+	XSetTextProperty(xw.dpy, xw.win, &prop, atom[WMName]);
 	XFree(prop.value);
-	//XMapRaised(xw.dpy, xw.win);
 	XMapWindow(xw.dpy, xw.win);
 	xhints();
 	XSync(xw.dpy, False);
-	//XSync(drw->dpy, False);
 }
 
 int
@@ -499,8 +506,6 @@ main(int argc, char *argv[])
 
 
 	// tmp
-	fileidx = 0;
-	filecnt = 0;
 	zoom = 1.0;
 	scalemode = SCALE_DOWN;
 
@@ -510,7 +515,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < cnt; i++) {
 		//return code so you can evaluate this. This is so it can load
 		//as much images as posible
-		if (!(img_load(&img, files[i]) < 0))
+		if (img_load(&img, files[i]) == 0)
 			// we finally pass only files that imlib2 can load (return 0)
 			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];
@@ -520,11 +525,11 @@ main(int argc, char *argv[])
 		die("no valid image filename given, aborting");
 
 	setup();
-	/* imlib */
-	//init should be on setup?
+	/* init imlib */
 	imlib_init(&xw);
 	img_load(&img, filenames[fileidx]);
 	img_display(&img, &xw);
+ 	update_title();
 
 	printf("This is the file '%s'\n", filenames[fileidx]);
 
