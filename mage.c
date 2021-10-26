@@ -382,8 +382,6 @@ setup(void)
 	visual = DefaultVisual(xw.dpy, xw.scr);
 	cmap   = DefaultColormap(xw.dpy, xw.scr);
 	depth  = DefaultDepth(xw.dpy, xw.scr);
-	//xw.h = DisplayWidth(xw.dpy, xw.scr);
-	//xw.w = DisplayHeight(xw.dpy, xw.scr);
 
 	//xpix = XCreatePixmap(xw.dpy, xw.win, xw.w, xw.h, depth);
 //	if (xw.w > xw.scrw)
@@ -399,10 +397,10 @@ setup(void)
 	if (!xw.h)
 		xw.h = xw.scrh;
 
- 	//xw.attrs.colormap = cmap;
+ 	xw.attrs.colormap = cmap;
 	//xw.attrs.background_pixel = 0;
 	//xw.attrs.border_pixel = 0;
-	//xw.attrs.save_under = False;
+	xw.attrs.save_under = False;
 
 	xw.attrs.bit_gravity = CenterGravity;
 	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
@@ -414,8 +412,6 @@ setup(void)
 				//CWBackPixel | CWColormap | CWBorderPixel, &xw.attrs);
 				//CWBitGravity | CWEventMask, &xw.attrs);
 			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
-	//XSelectInput(xw.dpy, xw.win, StructureNotifyMask | KeyPressMask);
-
 
 	//XSelectInput(xw.dpy, xw.win, ButtonReleaseMask | ButtonPressMask | KeyPressMask |
 	  //           PointerMotionMask | StructureNotifyMask);
