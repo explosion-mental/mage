@@ -28,6 +28,7 @@
 char *argv0;
 
 /* macros */
+#define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define LENGTH(a)         (sizeof(a) / sizeof(a)[0])
 #define TEXTW(X)          (drw_fontset_getwidth(drw, (X)) + lrpad)
 
@@ -75,7 +76,7 @@ typedef struct {
 } Mousekey;
 
 typedef struct {
-	//unsigned int mod;
+	unsigned int mod;
 	KeySym keysym;
 	void (*func)(const Arg *);
 	const Arg arg;
@@ -114,6 +115,7 @@ static void togglebar(const Arg *arg);
 //static void next_img(const Arg *arg);
 //static void prev_img(const Arg *arg);
 static void advance(const Arg *arg);
+static void printfile(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -126,6 +128,8 @@ typedef enum {
 
 
 /* Globals */
+static unsigned int numlockmask = 0; //should this be handled at all?
+
 static Atom atom[WMLast];
 //static char **fname;
 static char stext1[256], stext2[256];
@@ -168,6 +172,7 @@ cleanup()
 	imlib_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
+	free(filenames); //this should be free'ed?
 	free(scheme);
 	drw_free(drw);
 	XDestroyWindow(xw.dpy, xw.win);
@@ -199,7 +204,7 @@ update_title()
 {
 	char title[512];
 
-	snprintf(title, LENGTH(title), "sxiv: [%d/%d] <%d%%> %s", fileidx + 1,
+	snprintf(title, LENGTH(title), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
 	             filecnt, (int) (zoom * 100.0), filenames[fileidx]);
 
 	XChangeProperty(xw.dpy, xw.win, atom[WMName],
@@ -241,13 +246,12 @@ drawbar(void)
 	/* right text */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, (xw.w/2 - (tw2 + (lrpad / 2)) ), stext2, 0);
 
-	snprintf(right, LENGTH(right), "sxiv: [%d/%d] <%d%%> %s", fileidx + 1,
+	snprintf(right, LENGTH(right), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
 	             filecnt, (int) (zoom * 100.0), filenames[fileidx]);
 
 	/* init right */
 	strcpy(stext1, right);
 	//strcpy(stext1, filenames[fileidx]);
-	//strncpy(stext1, "sxiv:[%d/%d] <%d%%> %s", fileidx + 1, filecnt, (int)(zoom * 100.0), filenames[fileidx]);
 
 	/* init left */
 	strcpy(stext2, ex2);
@@ -321,6 +325,8 @@ expose(XEvent *e)
 
 	//img_display might be the right one, it's slow on big images
 	img_display(&img, &xw);
+	drawbar();
+	//img_render(&img, &xw);
 
 	//if (0 == e->xexpose.count) {
 	//	//printf("expose\n");
@@ -333,12 +339,15 @@ expose(XEvent *e)
 void
 kpress(XEvent *e)
 {
+	const XKeyEvent *ev = &e->xkey;
 	unsigned int i;
-	KeySym sym;
+	KeySym keysym;
 
-	sym = XkbKeycodeToKeysym(xw.dpy, (KeyCode)e->xkey.keycode, 0, 0);
+	keysym = XkbKeycodeToKeysym(xw.dpy, (KeyCode)ev->keycode, 0, 0);
 	for (i = 0; i < LENGTH(shortcuts); i++)
-		if (sym == shortcuts[i].keysym && shortcuts[i].func)
+		if (keysym == shortcuts[i].keysym
+		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
+		&& shortcuts[i].func)
 			shortcuts[i].func(&(shortcuts[i].arg));
 }
 
@@ -346,8 +355,7 @@ void
 configurenotify(XEvent *e)
 {
 	XConfigureEvent *ev = &e->xconfigure;
-
-	 if (xw.w != ev->width || xw.h != ev->height) {
+	if (xw.w != ev->width || xw.h != ev->height) {
 		xw.w = ev->width;
 		xw.h = ev->height;
 		//scalemode = SCALE_DOWN;
@@ -407,26 +415,31 @@ setup(void)
 	if (!xw.h)
 		xw.h = xw.scrh;
 
- 	xw.attrs.colormap = cmap;
+ 	//xw.attrs.colormap = cmap;
 	//xw.attrs.background_pixel = 0;
-	xw.attrs.border_pixel = 0;
-	xw.attrs.save_under = False;
+	//xw.attrs.border_pixel = 0;
+	//xw.attrs.save_under = False;
+
+	xw.attrs.bit_gravity = CenterGravity;
+	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
+	                      ButtonMotionMask | ButtonPressMask;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
 				xw.w, xw.h, 0, depth, InputOutput, visual,
-				//0, &xw.attrs);
-				CWBackPixel | CWColormap | CWBorderPixel, &xw.attrs);
+				0, &xw.attrs);
+				//CWBackPixel | CWColormap | CWBorderPixel, &xw.attrs);
 				//CWBitGravity | CWEventMask, &xw.attrs);
 			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
 	//XSelectInput(xw.dpy, xw.win, StructureNotifyMask | KeyPressMask);
 
 
-	XSelectInput(xw.dpy, xw.win, ButtonReleaseMask | ButtonPressMask | KeyPressMask |
-	             PointerMotionMask | StructureNotifyMask);
+	//XSelectInput(xw.dpy, xw.win, ButtonReleaseMask | ButtonPressMask | KeyPressMask |
+	  //           PointerMotionMask | StructureNotifyMask);
+
+	XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask |
+	                       ButtonPressMask);
 
 	/* init atoms */
-	//xw.wmdeletewin = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
-	//xw.netwmname = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
 	atom[WMDelete] = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
 	atom[WMName] = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
 
@@ -458,11 +471,21 @@ setup(void)
 	XMapWindow(xw.dpy, xw.win);
 	xhints();
 	XSync(xw.dpy, False);
+
+	/* init imlib */
+	imlib_init(&xw);
+	img_load(&img, filenames[fileidx]);
+	img_display(&img, &xw);
+
+	/* init title */
+ 	update_title();
 }
 
 int
 main(int argc, char *argv[])
 {
+	int i;
+
 	ARGBEGIN {
 	case 'v':
 		fprintf(stderr, "mage-"VERSION"\n");
@@ -478,23 +501,6 @@ main(int argc, char *argv[])
 
 	if (!argv[0])
 		usage();
-//	int opt;
-//	while ((opt = getopt(argc, argv, "hv")) != -1) {
-//		switch (opt) {
-//			case '?':
-//				usage();
-//			case 'h':
-//				usage();
-//			case 'v':
-//				usage();
-//		}
-//	}
-
-	//filenames = (const char**) argv + optind;
-	//filecnt = argc - optind;
-
-	//filenames = (const char**) argv + (argc - 1);
-	//filecnt = argc - (argc - 1);
 
 	//temporal variables so we can later evaluate if they truly are files
 	const char **files = (const char**) argv + optind - 1;
@@ -509,29 +515,20 @@ main(int argc, char *argv[])
 	zoom = 1.0;
 	scalemode = SCALE_DOWN;
 
-	int i;
 	//char **true_name = "";
 	//const char **true_name;
-	for (i = 0; i < cnt; i++) {
+	for (i = 0; i < cnt; i++)
 		//return code so you can evaluate this. This is so it can load
 		//as much images as posible
 		if (img_load(&img, files[i]) == 0)
 			// we finally pass only files that imlib2 can load (return 0)
 			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];
-	}
 
 	if (!filecnt)
 		die("no valid image filename given, aborting");
 
 	setup();
-	/* init imlib */
-	imlib_init(&xw);
-	img_load(&img, filenames[fileidx]);
-	img_display(&img, &xw);
- 	update_title();
-
-	printf("This is the file '%s'\n", filenames[fileidx]);
 
 	run();
 

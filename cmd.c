@@ -17,6 +17,10 @@ togglebar(const Arg *arg)
 	img_display(&img, &xw);
 	//img_render(&img, &xw);
 	drawbar();
+
+	/* todo */
+	/* while changing images; shall the image have a 'dirty' stage where it
+	 * updates everything, or just call that function directly? */
 }
 
 void
@@ -40,28 +44,7 @@ advance(const Arg *arg)
 }
 
 void
-next_img(const Arg *arg)
+printfile(const Arg *arg)
 {
-	printf("NEXT\n");
-	if (fileidx + 1 < filecnt) {
-		img_load(&img, filenames[++fileidx]);
-		img_display(&img, &xw);
-	}
-	//if (fileidx + 1 < filecnt) {
-	//	XClearWindow(xw.dpy, xw.win);
-	//	img_load(&img, filenames[++fileidx]);
-	//	img_display(&img, &xw);
-	//}
-}
-
-void
-prev_img(const Arg *arg)
-{
-	printf("Previous\n");
-	//fprintf(stderr, "Previous");
-	if (fileidx > 0) {
-		//XClearWindow(xw.dpy, xw.win);
-		img_load(&img, filenames[--fileidx]);
-		img_display(&img, &xw);
-	}
+	printf("This is the file '%s'\n", filenames[fileidx]);
 }

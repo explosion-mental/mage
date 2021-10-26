@@ -17,12 +17,13 @@ static const char *colors[][3] = {
 };
 
 static Shortcut shortcuts[] = {
-	/* keysym         function        argument */
-	{ XK_Escape,      quit,           {0} },
-	{ XK_q,           quit,           {0} },
-	{ XK_b,           togglebar,      {0} },
-	{ XK_k,          advance,        {.i = +1} },
-	{ XK_j,		 advance,        {.i = -1} },
+	/* mod          keysym         function        argument */
+	{ 0,            XK_Escape,     quit,           {0} },
+	{ 0,            XK_q,          quit,           {0} },
+	{ 0,            XK_b,          togglebar,      {0} },
+	{ 0,            XK_k,          advance,        {.i = +1} },
+	{ 0,            XK_j,          advance,        {.i = -1} },
+	{ 0,            XK_p,          printfile,      {0} },
 	//{ XK_f,           fullscreen,     {0} },
 };
 
