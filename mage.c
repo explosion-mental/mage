@@ -215,48 +215,32 @@ update_title()
 void
 drawbar(void)
 {
-	int tw1 = 0, tw2 = 0;
+	int y, tw = 0;
+	char right[256], left[256];
+	/* bar elements */
+	//int bzoom = (int) zoom * 100.0;
+	//int bidx = fileidx + 1;
 
-	//int boxs = drw->fonts->h / 9;
-	//int boxw = drw->fonts->h / 9;
-	char ex1[] = "[START]left[END]";
-	char ex2[] = "[start]RIGHT[end]";
-	int y;
-	char right[256];
-
-	if (showbar)
+	if (showbar) //hack? to not drawbar
 		return;
 
-	//XClearWindow(xw.dpy, xw.win);
-	drw_setscheme(drw, scheme[SchemeBar]);
-	//XClearWindow(xw.dpy, xw.win);
-	tw1 = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
-	tw2 = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
+	tw = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
 
+	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
 	y = xw.h - bh;
 
-	//why is the bar not at the bottom
-
+	drw_setscheme(drw, scheme[SchemeBar]);
 	/* left text */
-	//Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, stext1, 0);
-	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
+	snprintf(left, LENGTH(left), "<%d%%> [%d/%d]", (int) (zoom * 100.0), fileidx + 1, filecnt);
+	strcpy(stext2, left);
 
 	/* right text */
-	drw_text(drw, xw.w/2, y, xw.w/2, bh, (xw.w/2 - (tw2 + (lrpad / 2)) ), stext2, 0);
-
-	snprintf(right, LENGTH(right), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
-	             filecnt, (int) (zoom * 100.0), filenames[fileidx]);
-
-	/* init right */
+	drw_text(drw, xw.w/2, y, xw.w/2, bh, (xw.w/2 - (tw + (lrpad / 2)) ), stext2, 0);
+	snprintf(right, LENGTH(right), "%s", filenames[fileidx]);
 	strcpy(stext1, right);
-	//strcpy(stext1, filenames[fileidx]);
 
-	/* init left */
-	strcpy(stext2, ex2);
-	//drw_rect(drw, 0, 0, xw.w, bh, 0, 1);
-	//drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
 

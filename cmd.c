@@ -14,8 +14,8 @@ togglebar(const Arg *arg)
 	//XClearArea(xw.dpy, xw.win, 0, xw.h, xw.w, bh, True);
 	XSync(xw.dpy, False);
 	//img_load(&img, filenames[fileidx]);
-	img_display(&img, &xw);
-	//img_render(&img, &xw);
+	//img_display(&img, &xw);
+	img_render(&img, &xw);
 	drawbar();
 
 	/* todo */
