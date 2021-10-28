@@ -33,7 +33,8 @@ char *argv0;
 #define TEXTW(X)          (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
-enum { WMDelete, WMName, WMFullscreen,
+enum { LEFT, RIGHT, UP, DOWN }; /* 2d directions */
+enum { WMDelete, WMName, WMFullscreen, WMState,
 	WMLast }; /* atoms */
 
 /* Purely graphic info */
@@ -58,6 +59,7 @@ typedef struct {
 
 typedef struct {
  	//Imlib_Image *im;
+ 	unsigned char re; /* rendered */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -104,50 +106,53 @@ static void configurenotify(XEvent *);
 static void imlib_init(XWindow *win);
 static void im_clear(void);
 static void imlib_destroy();
-static int img_load(Image *image, const char *filename);
-static void img_render(Image *image, XWindow *win);
-static void img_display(Image *image, XWindow *win);
+static int img_load(Image *img, const char *filename);
+static void img_render(Image *img, XWindow *win);
+static int img_zoom(Image *img, float z);
+static void img_check_pan(Image *img, XWindow *win);
 
-#define ZOOM_MIN   12.5
-#define ZOOM_MAX   400
 /* commands */
 static void togglebar(const Arg *arg);
 //static void next_img(const Arg *arg);
 //static void prev_img(const Arg *arg);
 static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
+static void zoom(const Arg *arg);
+static void togglefullscreen(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
 
-typedef enum {
-	SCALE_DOWN = 0,
+enum {
+	SCALE_DOWN,
 	SCALE_FIT,
 	SCALE_ZOOM
-} scales_t;
+} scalemode;
 
 
 /* Globals */
-static unsigned int numlockmask = 0; //should this be handled at all?
+static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
 static Atom atom[WMLast];
-//static char **fname;
 static char stext1[256], stext2[256];
 static const char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
-static scales_t scalemode;
 
 static XWindow xw;
-static Image img;
+static Image image;
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
 static int bh = 0;      /* bar geometry */
-static int by; /* bar y */
+static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
-static float zoom;
 
+/* zoom */
+static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)
+static int zl_cnt;	//idx of the zoom[]
+static float zoom_min, zoom_max;
 
+/* x init*/
 static Colormap cmap;
 //static Drawable xpix = 0;
 static int depth;
@@ -165,7 +170,7 @@ static void (*handler[LASTEvent])(XEvent *) = {
 #include "cmd.c"
 
 void
-cleanup()
+cleanup(void)
 {
 	unsigned int i;
 
@@ -205,7 +210,7 @@ update_title()
 	char title[512];
 
 	snprintf(title, LENGTH(title), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
-	             filecnt, (int) (zoom * 100.0), filenames[fileidx]);
+	             filecnt, (int) (zoomlvl * 100.0), filenames[fileidx]);
 
 	XChangeProperty(xw.dpy, xw.win, atom[WMName],
 	                XInternAtom(xw.dpy, "UTF8_STRING", False), 8,
@@ -224,7 +229,7 @@ drawbar(void)
 	if (showbar) //hack? to not drawbar
 		return;
 
-	tw = TEXTW(stext1) - lrpad + 2; /* 2px right padding */
+	tw = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
@@ -233,13 +238,13 @@ drawbar(void)
 	drw_setscheme(drw, scheme[SchemeBar]);
 	/* left text */
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, stext1, 0);
-	snprintf(left, LENGTH(left), "<%d%%> [%d/%d]", (int) (zoom * 100.0), fileidx + 1, filecnt);
-	strcpy(stext2, left);
+	snprintf(left, LENGTH(left), "%s", filenames[fileidx]);
+	strcpy(stext1, left);
 
 	/* right text */
-	drw_text(drw, xw.w/2, y, xw.w/2, bh, (xw.w/2 - (tw + (lrpad / 2)) ), stext2, 0);
-	snprintf(right, LENGTH(right), "%s", filenames[fileidx]);
-	strcpy(stext1, right);
+	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), stext2, 0);
+	snprintf(right, LENGTH(right), "<%d%%> [%d/%d]", (int)(zoomlvl * 100.0), fileidx + 1, filecnt);
+	strcpy(stext2, right);
 
 	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
@@ -308,9 +313,9 @@ expose(XEvent *e)
 	//img_load(&img, filenames[++fileidx]);
 
 	//img_display might be the right one, it's slow on big images
-	img_display(&img, &xw);
+	//img_display(&img, &xw);
+	img_render(&image, &xw);
 	drawbar();
-	//img_render(&img, &xw);
 
 	//if (0 == e->xexpose.count) {
 	//	//printf("expose\n");
@@ -353,18 +358,6 @@ usage()
 	die("usage: %s [-hv] file...", argv0);
 }
 
-//void
-//setup(void)
-//{
-//	xinit();
-//	//updatebarpos();
-//	drawbar();
-//
-//	/* imlib */
-//	imlib_init(&xw);
-//	img_load(&img, fnames[fileidx]);
-//	img_display(&img, &xw);
-//}
 void
 setup(void)
 {
@@ -383,15 +376,6 @@ setup(void)
 	cmap   = DefaultColormap(xw.dpy, xw.scr);
 	depth  = DefaultDepth(xw.dpy, xw.scr);
 
-	//xpix = XCreatePixmap(xw.dpy, xw.win, xw.w, xw.h, depth);
-//	if (xw.w > xw.scrw)
-//		xw.w = xw.scrw;
-//	if (xw.h > xw.scrh)
-//		xw.h = xw.scrh;
-//	xw.x = (xw.scrw - xw.w) / 2;
-//	xw.y = (xw.scrh - xw.h) / 2;
-
-	//TODO handle inital window size (width - height) respectively (configurenotify?)
 	if (!xw.w)
 		xw.w = xw.scrw;
 	if (!xw.h)
@@ -401,7 +385,6 @@ setup(void)
 	//xw.attrs.background_pixel = 0;
 	//xw.attrs.border_pixel = 0;
 	xw.attrs.save_under = False;
-
 	xw.attrs.bit_gravity = CenterGravity;
 	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
 	                      ButtonMotionMask | ButtonPressMask;
@@ -422,6 +405,8 @@ setup(void)
 	/* init atoms */
 	atom[WMDelete] = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
 	atom[WMName] = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
+	atom[WMFullscreen] = XInternAtom(xw.dpy, "_NET_WM_STATE_FULLSCREEN", False);
+	atom[WMState] = XInternAtom(xw.dpy, "_NET_WM_STATE", False);
 
 	XSetWMProtocols(xw.dpy, xw.win, &atom[WMDelete], 1);
 
@@ -454,8 +439,12 @@ setup(void)
 
 	/* init imlib */
 	imlib_init(&xw);
-	img_load(&img, filenames[fileidx]);
-	img_display(&img, &xw);
+	img_load(&image, filenames[fileidx]);
+	img_render(&image, &xw);
+
+	zl_cnt = LENGTH(zoom_levels);
+	zoom_min = zoom_levels[0] / 100.0;
+	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
 
 	/* init title */
  	update_title();
@@ -487,20 +476,18 @@ main(int argc, char *argv[])
 	int cnt = argc - optind + 1;
 
 	//separate all the space of cnt, even if there is some that we won't use
-	if (!(filenames = (const char**) malloc(cnt * sizeof(char*))))
+	if (!(filenames =  malloc(cnt * sizeof(char*))))
 		die("could not allocate memory");
 
 
 	// tmp
-	zoom = 1.0;
+	//zoomlvl = 1.0;
 	scalemode = SCALE_DOWN;
 
-	//char **true_name = "";
-	//const char **true_name;
 	for (i = 0; i < cnt; i++)
 		//return code so you can evaluate this. This is so it can load
 		//as much images as posible
-		if (img_load(&img, files[i]) == 0)
+		if (img_load(&image, files[i]) == 0)
 			// we finally pass only files that imlib2 can load (return 0)
 			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];

@@ -17,10 +17,10 @@ imlib_destroy()
 }
 
 int
-img_load(Image *image, const char *filename)
+img_load(Image *img, const char *filename)
 {
 	Imlib_Image *im;
-	if (!image || !filename)
+	if (!img || !filename)
 		return -1;
 
 	if (imlib_context_get_image())
@@ -33,75 +33,76 @@ img_load(Image *image, const char *filename)
 
 	imlib_context_set_image(im);
 
-	image->w = imlib_image_get_width();
-	image->h = imlib_image_get_height();
+ 	img->re = 0;
+	img->w = imlib_image_get_width();
+	img->h = imlib_image_get_height();
 
 	return 0;
 }
 
-
-
 void
-img_display(Image *image, XWindow *win)
-{
-	if (!image || !win || !imlib_context_get_image())
-		return;
-
-	float zw, zh;
-	/* set zoom level to fit image into window */
-	if (scalemode != SCALE_ZOOM) {
-		zw = (float) win->w / (float) image->w;
-		zh = (float) win->h / (float) image->h;
-		zoom = MIN(zw, zh);
-
-		if (zoom * 100.0 < ZOOM_MIN)
-			zoom = ZOOM_MIN / 100.0;
-		else if (zoom * 100.0 > ZOOM_MAX)
-			zoom = ZOOM_MAX / 100.0;
-
-		if (scalemode == SCALE_DOWN && zoom > 1.0)
-			zoom = 1.0;
-	}
-
-	/* center image in window */
-	image->x = (win->w - image->w * zoom) / 2;
-	image->y = (win->h - image->h * zoom) / 2;
-
-	//im_clear(win);
-
-	img_render(image, win);
-}
-
-void
-img_render(Image *image, XWindow *win)
+img_render(Image *img, XWindow *win)
 {
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
+ 	float zw, zh;
 
-	if (!image || !win || !imlib_context_get_image())
+	if (!img || !win || !imlib_context_get_image())
 		return;
 
-	if (image->x < 0) {
-		sx = -image->x / zoom;
-		sw = win->w / zoom;
+ 	//img_check_pan(image, win);
+	if (!img->re) {
+		/* rendered for the first time */
+		img->re = 1;
+
+		/* set zoom level to fit image into window */
+		if (scalemode != SCALE_ZOOM) {
+			zw = (float) win->w / (float) img->w;
+			zh = (float) win->h / (float) img->h;
+			zoomlvl = MIN(zw, zh);
+
+			if (zoomlvl < zoom_min)
+				zoomlvl = zoom_min;
+			else if (zoomlvl > zoom_max)
+				zoomlvl = zoom_max;
+
+			if (scalemode == SCALE_DOWN && zoomlvl > 1.0)
+				zoomlvl = 1.0;
+		}
+
+		/* center image in window */
+		img->x = (win->w - img->w * zoomlvl) / 2;
+		img->y = (win->h - img->h * zoomlvl) / 2;
+	} else
+		//if (img->cp)
+		{
+		/* only useful after zooming */
+		img_check_pan(img, win);
+ 		//img->cp = 0;
+	}
+
+ 	/* calculate source and destination offsets */
+	if (img->x < 0) {
+		sx = -img->x / zoomlvl;
+		sw = win->w / zoomlvl;
 		dx = 0;
 		dw = win->w;
 	} else {
 		sx = 0;
-		sw = image->w;
-		dx = image->x;
-		dw = image->w * zoom;
+		sw = img->w;
+		dx = img->x;
+		dw = img->w * zoomlvl;
 	}
-	if (image->y < 0) {
-		sy = - image->y / zoom;
-		sh = win->h / zoom;
+	if (img->y < 0) {
+		sy = - img->y / zoomlvl;
+		sh = win->h / zoomlvl;
 		dy = 0;
 		dh = win->h;
 	} else {
 		sy = 0;
-		sh = image->h;
-		dy = image->y;
-		dh = image->h * zoom;
+		sh = img->h;
+		dy = img->y;
+		dh = img->h * zoomlvl;
 	}
 
 	//XClearWindow(win->dpy, win->win);
@@ -119,3 +120,76 @@ im_clear(void)
 {
 	XClearWindow(xw.dpy, xw.win);
 }
+
+void
+img_check_pan(Image *img, XWindow *win)
+{
+	if (!img)
+		return;
+
+	if (img->w * zoomlvl > win->w) {
+		if (img->x > 0 && img->x + img->w * zoomlvl > win->w)
+			img->x = 0;
+		if (img->x < 0 && img->x + img->w * zoomlvl < win->w)
+			img->x = win->w - img->w * zoomlvl;
+	} else {
+		img->x = (win->w - img->w * zoomlvl) / 2;
+	}
+	if (img->h * zoomlvl > win->h) {
+		if (img->y > 0 && img->y + img->h * zoomlvl > win->h)
+			img->y = 0;
+		if (img->y < 0 && img->y + img->h * zoomlvl < win->h)
+			img->y = win->h - img->h * zoomlvl;
+	} else {
+		img->y = (win->h - img->h * zoomlvl) / 2;
+	}
+}
+
+int
+img_zoom(Image *img, float z)
+{
+	if (z < zoom_min)
+		z = zoom_min;
+	else if (z > zoom_max)
+		z = zoom_max;
+
+	if (z != zoomlvl) {
+		img->x -= (img->w * z - img->w * zoomlvl) / 2;
+		img->y -= (img->h * z - img->h * zoomlvl) / 2;
+		zoomlvl = z;
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+//int
+//img_pan(Image *img, XWindow *win)
+//{
+//	int ox, oy;
+//
+//	if (!img || !win)
+//		return 0;
+//
+//	ox = img->x;
+//	oy = img->y;
+//
+//	switch (dir) {
+//		case PAN_LEFT:
+//			img->x += win->w / 5;
+//			break;
+//		case PAN_RIGHT:
+//			img->x -= win->w / 5;
+//			break;
+//		case PAN_UP:
+//			img->y += win->h / 5;
+//			break;
+//		case PAN_DOWN:
+//			img->y -= win->h / 5;
+//			break;
+//	}
+//
+//	img_check_pan(img, win);
+//
+//	return ox != img->x || oy != img->y;
+//}
