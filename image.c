@@ -1,12 +1,14 @@
 void
-imlib_init(XWindow *win)
+imlib_init(void)
 {
-	if (!win)
-		return;
-	imlib_context_set_display(win->dpy);
+	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(visual);
 	imlib_context_set_colormap(cmap);
-	imlib_context_set_drawable(win->win);
+	imlib_context_set_drawable(xw.win);
+	zl_cnt = LENGTH(zoom_levels);
+	zoom_min = zoom_levels[0] / 100.0;
+	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
+
 }
 
 void

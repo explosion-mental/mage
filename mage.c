@@ -103,7 +103,7 @@ static void kpress(XEvent *);
 static void configurenotify(XEvent *);
 
 //image
-static void imlib_init(XWindow *win);
+static void imlib_init(void);
 static void im_clear(void);
 static void imlib_destroy();
 static int img_load(Image *img, const char *filename);
@@ -438,13 +438,9 @@ setup(void)
 	XSync(xw.dpy, False);
 
 	/* init imlib */
-	imlib_init(&xw);
+	imlib_init();
 	img_load(&image, filenames[fileidx]);
 	img_render(&image, &xw);
-
-	zl_cnt = LENGTH(zoom_levels);
-	zoom_min = zoom_levels[0] / 100.0;
-	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
 
 	/* init title */
  	update_title();
