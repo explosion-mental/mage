@@ -15,7 +15,7 @@ togglebar(const Arg *arg)
 	XSync(xw.dpy, False);
 	//img_load(&img, filenames[fileidx]);
 	//img_display(&img, &xw);
-	img_render(&image, &xw);
+	img_render(&image);
 	drawbar();
 
 	/* todo */
@@ -29,14 +29,16 @@ advance(const Arg *arg)
 	if (arg->i > 0) {
 		if (fileidx + 1 < filecnt) {
 			img_load(&image, filenames[++fileidx]);
-			img_render(&image, &xw);
+			//im_clear();
+			img_render(&image);
 			update_title();
 			drawbar();
 		}
 	} else {
 		if (fileidx > 0) {
 			img_load(&image, filenames[--fileidx]);
-			img_render(&image, &xw);
+			//im_clear();
+			img_render(&image);
 			update_title();
 			drawbar();
 		}
@@ -60,7 +62,7 @@ zoom(const Arg *arg)
 				img_zoom(&image, zoom_levels[i] / 100.0);
 				break;
 			}
-		img_render(&image, &xw);
+		img_render(&image);
 		update_title();
 		drawbar();
 		//}
@@ -68,10 +70,11 @@ zoom(const Arg *arg)
 		//if (img_zoom(&img, -125)) {
 		for (i = zl_cnt - 2; i >= 0; --i)
 			if (zoom_levels[i] < zoomlvl * 100.0) {
+				//im_clear();
 				img_zoom(&image, zoom_levels[i] / 100.0);
 				break;
 			}
-		img_render(&image, &xw);
+		img_render(&image);
 		update_title();
 		drawbar();
 		//}

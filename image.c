@@ -4,7 +4,9 @@ imlib_init(void)
 	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(visual);
 	imlib_context_set_colormap(cmap);
-	imlib_context_set_drawable(xw.win);
+	imlib_context_set_drawable(xw.pm);
+	//imlib_context_set_drawable(xw.win);
+
 	zl_cnt = LENGTH(zoom_levels);
 	zoom_min = zoom_levels[0] / 100.0;
 	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
@@ -43,24 +45,23 @@ img_load(Image *img, const char *filename)
 }
 
 void
-img_render(Image *img, XWindow *win)
+img_render(Image *img)
 {
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
  	float zw, zh;
 
-	if (!img || !win || !imlib_context_get_image())
+	if (!img || !imlib_context_get_image())
 		return;
 
- 	//img_check_pan(image, win);
 	if (!img->re) {
 		/* rendered for the first time */
 		img->re = 1;
 
 		/* set zoom level to fit image into window */
 		if (scalemode != SCALE_ZOOM) {
-			zw = (float) win->w / (float) img->w;
-			zh = (float) win->h / (float) img->h;
+			zw = (float) xw.w / (float) img->w;
+			zh = (float) xw.h / (float) img->h;
 			zoomlvl = MIN(zw, zh);
 
 			if (zoomlvl < zoom_min)
@@ -73,22 +74,20 @@ img_render(Image *img, XWindow *win)
 		}
 
 		/* center image in window */
-		img->x = (win->w - img->w * zoomlvl) / 2;
-		img->y = (win->h - img->h * zoomlvl) / 2;
-	} else
-		//if (img->cp)
-		{
+		img->x = (xw.w - img->w * zoomlvl) / 2;
+		img->y = (xw.h - img->h * zoomlvl) / 2;
+	} else if (img->cp) {
 		/* only useful after zooming */
-		img_check_pan(img, win);
- 		//img->cp = 0;
+		img_check_pan(img);
+ 		img->cp = 0;
 	}
 
  	/* calculate source and destination offsets */
 	if (img->x < 0) {
 		sx = -img->x / zoomlvl;
-		sw = win->w / zoomlvl;
+		sw = xw.w / zoomlvl;
 		dx = 0;
-		dw = win->w;
+		dw = xw.w;
 	} else {
 		sx = 0;
 		sw = img->w;
@@ -96,10 +95,10 @@ img_render(Image *img, XWindow *win)
 		dw = img->w * zoomlvl;
 	}
 	if (img->y < 0) {
-		sy = - img->y / zoomlvl;
-		sh = win->h / zoomlvl;
+		sy = -img->y / zoomlvl;
+		sh = xw.h / zoomlvl;
 		dy = 0;
-		dh = win->h;
+		dh = xw.h;
 	} else {
 		sy = 0;
 		sh = img->h;
@@ -108,42 +107,63 @@ img_render(Image *img, XWindow *win)
 	}
 
 	//XClearWindow(win->dpy, win->win);
-
 	//imlib_context_set_drawable(win->pm);
-	im_clear();
-	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
-	//XClearWindow(win->dpy, win->win);
+	//if (img->cp == 0)
+	//	im_clear();
+	//drw_resize(drw, xw.scrw, xw.scrh);
+	//drw_rect(drw, 0, 0, xw.scrw, xw.scrh, 0, 0);
+	//XFillRectangle(xw.dpy, drw->drawable, bgc, 0, 0, e->scrw, e->scrh);
 
+	if (xw.pm)
+		XFreePixmap(xw.dpy, xw.pm);
+	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, depth);
+	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
+
+	//drw_rect(drw, 0, 0, xw.scrw, xw.scrh, 0, 0);
+	//XFillRectangle(xw.dpy, xw.pm, , 0, 0, xw.scrw, xw.scrh);
+
+ 	imlib_context_set_drawable(xw.pm);
+	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
+
+	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
+	XClearWindow(xw.dpy, xw.win);
+
+	//XSetWindowBackgroundPixmap(xw.dpy, xw.win, drw->drawable);
+	//XClearWindow(xw.dpy, xw.win);
+	//XClearWindow(xw.dpy, bh);
+	//XClearArea(xw.dpy, xw.win, 0, xw.h, xw.w, bh, True);
+	//XClearWindow(win->dpy, win->win);
 }
 
 
 void
 im_clear(void)
 {
+	drw_resize(drw, xw.scrw, xw.scrh);
 	XClearWindow(xw.dpy, xw.win);
 }
 
 void
-img_check_pan(Image *img, XWindow *win)
+img_check_pan(Image *img)
 {
 	if (!img)
 		return;
 
-	if (img->w * zoomlvl > win->w) {
-		if (img->x > 0 && img->x + img->w * zoomlvl > win->w)
+	if (img->w * zoomlvl > xw.w) {
+		if (img->x > 0 && img->x + img->w * zoomlvl > xw.w)
 			img->x = 0;
-		if (img->x < 0 && img->x + img->w * zoomlvl < win->w)
-			img->x = win->w - img->w * zoomlvl;
+		if (img->x < 0 && img->x + img->w * zoomlvl < xw.w)
+			img->x = xw.w - img->w * zoomlvl;
 	} else {
-		img->x = (win->w - img->w * zoomlvl) / 2;
+		img->x = (xw.w - img->w * zoomlvl) / 2;
 	}
-	if (img->h * zoomlvl > win->h) {
-		if (img->y > 0 && img->y + img->h * zoomlvl > win->h)
+	if (img->h * zoomlvl > xw.h) {
+		if (img->y > 0 && img->y + img->h * zoomlvl > xw.h)
 			img->y = 0;
-		if (img->y < 0 && img->y + img->h * zoomlvl < win->h)
-			img->y = win->h - img->h * zoomlvl;
+		if (img->y < 0 && img->y + img->h * zoomlvl < xw.h)
+			img->y = xw.h - img->h * zoomlvl;
 	} else {
-		img->y = (win->h - img->h * zoomlvl) / 2;
+		img->y = (xw.h - img->h * zoomlvl) / 2;
 	}
 }
 
@@ -159,39 +179,41 @@ img_zoom(Image *img, float z)
 		img->x -= (img->w * z - img->w * zoomlvl) / 2;
 		img->y -= (img->h * z - img->h * zoomlvl) / 2;
 		zoomlvl = z;
+		img->cp = 1;
 		return 1;
 	} else {
 		return 0;
 	}
 }
 
-//int
-//img_pan(Image *img, XWindow *win)
-//{
-//	int ox, oy;
-//
-//	if (!img || !win)
-//		return 0;
-//
-//	ox = img->x;
-//	oy = img->y;
-//
-//	switch (dir) {
-//		case PAN_LEFT:
-//			img->x += win->w / 5;
-//			break;
-//		case PAN_RIGHT:
-//			img->x -= win->w / 5;
-//			break;
-//		case PAN_UP:
-//			img->y += win->h / 5;
-//			break;
-//		case PAN_DOWN:
-//			img->y -= win->h / 5;
-//			break;
-//	}
-//
-//	img_check_pan(img, win);
-//
-//	return ox != img->x || oy != img->y;
-//}
+void
+pan(const Arg *arg)
+{
+	int ox, oy;
+
+	//if (!&image)
+	//	return 0;
+
+	ox = image.x;
+	oy = image.y;
+
+	switch (arg->i) {
+		case LEFT:
+			image.x += xw.w / 5;
+			break;
+		case RIGHT:
+			image.x -= xw.w / 5;
+			break;
+		case UP:
+			image.y += xw.h / 5;
+			break;
+		case DOWN:
+			image.y -= xw.h / 5;
+			break;
+	}
+
+	img_check_pan(&image);
+
+	if (ox != image.x || oy != image.y)
+		img_render(&image);
+}

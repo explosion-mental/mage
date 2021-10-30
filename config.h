@@ -26,12 +26,16 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_Escape,     quit,           {0} },
 	{ 0,            XK_q,          quit,           {0} },
 	{ 0,            XK_b,          togglebar,      {0} },
-	{ 0,            XK_k,          advance,        {.i = +1} },
-	{ 0,            XK_j,          advance,        {.i = -1} },
+	{ 0,            XK_BackSpace,     advance,        {.i = -1} },
+	{ 0,            XK_space,      advance,        {.i = +1} },
 	{ 0,            XK_p,          printfile,      {0} },
 	{ 0,            XK_minus,      zoom,           {.i = -1} },
 	{ 0,            XK_equal,      zoom,           {.i = +1} },
 	{ 0,            XK_f,       togglefullscreen,     {0} },
+	{ 0,            XK_h,          pan,            {.i = LEFT} },
+	{ 0,            XK_j,          pan,            {.i = DOWN} },
+	{ 0,            XK_k,          pan,            {.i = UP} },
+	{ 0,            XK_l,          pan,            {.i = RIGHT} },
 };
 
 static Mousekey mshortcuts[] = {

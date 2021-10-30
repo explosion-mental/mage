@@ -29,11 +29,11 @@ char *argv0;
 
 /* macros */
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-#define LENGTH(a)         (sizeof(a) / sizeof(a)[0])
-#define TEXTW(X)          (drw_fontset_getwidth(drw, (X)) + lrpad)
+#define LENGTH(a)               (sizeof(a) / sizeof(a)[0])
+#define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
-enum { LEFT, RIGHT, UP, DOWN }; /* 2d directions */
+enum { LEFT = 0, RIGHT, UP, DOWN }; /* 2d directions */
 enum { WMDelete, WMName, WMFullscreen, WMState,
 	WMLast }; /* atoms */
 
@@ -42,8 +42,6 @@ typedef struct {
 	Display *dpy;
 	//Colormap cmap;
 	Window win;
-	Atom wmdeletewin, netwmname;
-	//Atom xembed, wmdeletewin, netwmname, netwmpid;
 	//Visual *vis;
 	XSetWindowAttributes attrs;
 	//int depth; /* bit depth */
@@ -52,14 +50,15 @@ typedef struct {
 	//int x, y;
 	int w, h;
 	//pixmap needed?
-	//Pixmap pm;
+	Pixmap pm;
+	GC gc;
 	//unsigned int pmw, pmh;
 	//int gm; /* geometry mask */
 } XWindow;
 
 typedef struct {
  	//Imlib_Image *im;
- 	unsigned char re; /* rendered */
+ 	unsigned char re, cp; /* rendered */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -85,6 +84,7 @@ typedef struct {
 } Shortcut;
 
 
+/* function declarations */
 static void cleanup(void);
 static void quit(const Arg *arg);
 static void run(void);
@@ -107,9 +107,9 @@ static void imlib_init(void);
 static void im_clear(void);
 static void imlib_destroy();
 static int img_load(Image *img, const char *filename);
-static void img_render(Image *img, XWindow *win);
+static void img_render(Image *img);
 static int img_zoom(Image *img, float z);
-static void img_check_pan(Image *img, XWindow *win);
+static void img_check_pan(Image *img);
 
 /* commands */
 static void togglebar(const Arg *arg);
@@ -119,6 +119,7 @@ static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
+static void pan(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -130,7 +131,7 @@ enum {
 } scalemode;
 
 
-/* Globals */
+/* variables */
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
 static Atom atom[WMLast];
@@ -146,6 +147,7 @@ static int running = 1;
 static int bh = 0;      /* bar geometry */
 static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
+
 
 /* zoom */
 static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)
@@ -298,32 +300,20 @@ bpress(XEvent *e)
 void
 cmessage(XEvent *e)
 {
-	if (e->xclient.data.l[0] == xw.wmdeletewin)
+	if (e->xclient.data.l[0] == atom[WMDelete])
 		running = 0;
 }
 
-//to expose or not
 void
 expose(XEvent *e)
 {
-	//img_render doesn't update position
-	//img_render(&img, &xw);
-
-	//img_load
-	//img_load(&img, filenames[++fileidx]);
-
-	//img_display might be the right one, it's slow on big images
-	//img_display(&img, &xw);
-	img_render(&image, &xw);
-	drawbar();
-
-	//if (0 == e->xexpose.count) {
-	//	//printf("expose\n");
-	//img_render(&img, &xw, e->xexpose.x, e->xexpose.y, xw.w, xw.h);
-	//	img_render(&img, &xw);
-	//	//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
-	//	//drawbar();
-	//}
+	if (0 == e->xexpose.count) {
+		//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
+		//drw_resize(drw, e->xexpose.width, e->xexpose.height);
+		img_render(&image);
+		drawbar();
+		//printf("expose\n");
+	}
 }
 void
 kpress(XEvent *e)
@@ -344,6 +334,7 @@ void
 configurenotify(XEvent *e)
 {
 	XConfigureEvent *ev = &e->xconfigure;
+
 	if (xw.w != ev->width || xw.h != ev->height) {
 		xw.w = ev->width;
 		xw.h = ev->height;
@@ -363,6 +354,7 @@ setup(void)
 {
 	int i;
 	XTextProperty prop;
+	XGCValues gcval;
 
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
@@ -371,10 +363,10 @@ setup(void)
 	xw.scr  = DefaultScreen(xw.dpy);
 	xw.scrw = DisplayWidth(xw.dpy, xw.scr);
 	xw.scrh = DisplayHeight(xw.dpy, xw.scr);
-
 	visual = DefaultVisual(xw.dpy, xw.scr);
 	cmap   = DefaultColormap(xw.dpy, xw.scr);
 	depth  = DefaultDepth(xw.dpy, xw.scr);
+	xw.pm = 0;
 
 	if (!xw.w)
 		xw.w = xw.scrw;
@@ -419,6 +411,9 @@ setup(void)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
+	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
+	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval);
+	xw.pm = 0;
 
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
@@ -440,7 +435,7 @@ setup(void)
 	/* init imlib */
 	imlib_init();
 	img_load(&image, filenames[fileidx]);
-	img_render(&image, &xw);
+	img_render(&image);
 
 	/* init title */
  	update_title();
@@ -477,7 +472,6 @@ main(int argc, char *argv[])
 
 
 	// tmp
-	//zoomlvl = 1.0;
 	scalemode = SCALE_DOWN;
 
 	for (i = 0; i < cnt; i++)
