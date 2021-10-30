@@ -38,6 +38,8 @@ img_load(Image *img, const char *filename)
 	imlib_context_set_image(im);
 
  	img->re = 0;
+	img->checkpan = 0;
+	img->zoomed = 0;
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 
@@ -54,32 +56,30 @@ img_render(Image *img)
 	if (!img || !imlib_context_get_image())
 		return;
 
+ 	if ((!img->re || !img->zoomed) && scalemode != SCALE_ZOOM) {
+		zw = (float) xw.w / (float) img->w;
+		zh = (float) xw.h / (float) img->h;
+		zoomlvl = MIN(zw, zh);
+
+		if (zoomlvl < zoom_min)
+			zoomlvl = zoom_min;
+		else if (zoomlvl > zoom_max)
+			zoomlvl = zoom_max;
+
+		if (scalemode == SCALE_DOWN && zoomlvl > 1.0)
+				zoomlvl = 1.0;
+	}
+
 	if (!img->re) {
 		/* rendered for the first time */
 		img->re = 1;
-
-		/* set zoom level to fit image into window */
-		if (scalemode != SCALE_ZOOM) {
-			zw = (float) xw.w / (float) img->w;
-			zh = (float) xw.h / (float) img->h;
-			zoomlvl = MIN(zw, zh);
-
-			if (zoomlvl < zoom_min)
-				zoomlvl = zoom_min;
-			else if (zoomlvl > zoom_max)
-				zoomlvl = zoom_max;
-
-			if (scalemode == SCALE_DOWN && zoomlvl > 1.0)
-				zoomlvl = 1.0;
-		}
-
 		/* center image in window */
 		img->x = (xw.w - img->w * zoomlvl) / 2;
 		img->y = (xw.h - img->h * zoomlvl) / 2;
-	} else if (img->cp) {
+	} else if (img->checkpan) {
 		/* only useful after zooming */
 		img_check_pan(img);
- 		img->cp = 0;
+ 		img->checkpan = 0;
 	}
 
  	/* calculate source and destination offsets */
@@ -179,7 +179,8 @@ img_zoom(Image *img, float z)
 		img->x -= (img->w * z - img->w * zoomlvl) / 2;
 		img->y -= (img->h * z - img->h * zoomlvl) / 2;
 		zoomlvl = z;
-		img->cp = 1;
+		img->checkpan = 1;
+		img->zoomed = 1;
 		return 1;
 	} else {
 		return 0;

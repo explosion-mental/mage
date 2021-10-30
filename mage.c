@@ -58,7 +58,7 @@ typedef struct {
 
 typedef struct {
  	//Imlib_Image *im;
- 	unsigned char re, cp; /* rendered */
+ 	unsigned char re, checkpan, zoomed; /* rendered */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -310,6 +310,7 @@ expose(XEvent *e)
 	if (0 == e->xexpose.count) {
 		//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
 		//drw_resize(drw, e->xexpose.width, e->xexpose.height);
+		image.checkpan = 1;
 		img_render(&image);
 		drawbar();
 		//printf("expose\n");
