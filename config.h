@@ -36,6 +36,8 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_j,          pan,            {.i = DOWN} },
 	{ 0,            XK_k,          pan,            {.i = UP} },
 	{ 0,            XK_l,          pan,            {.i = RIGHT} },
+	{ 0,            XK_g,          first,          {0} },
+	{ ShiftMask,    XK_g,          last,           {0} },
 };
 
 static Mousekey mshortcuts[] = {

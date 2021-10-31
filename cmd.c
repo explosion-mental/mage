@@ -134,3 +134,25 @@ pan(const Arg *arg)
 		drawbar(); //panning without bar?
 	}
 }
+
+void
+first(const Arg *arg)
+{
+	if (fileidx != 0) {
+		fileidx = 0;
+		img_load(&image, filenames[fileidx]);
+		img_render(&image);
+		drawbar();
+	}
+}
+
+void
+last(const Arg *arg)
+{
+	if (fileidx != filecnt - 1) {
+		fileidx = filecnt - 1;
+		img_load(&image, filenames[fileidx]);
+		img_render(&image);
+		drawbar();
+	}
+}
