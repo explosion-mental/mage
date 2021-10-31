@@ -1,19 +1,15 @@
 /* See LICENSE file for copyright and license details. */
 
+static int showbar         = 1;        /* 0 means no bar */
+static const int topbar    = 0;        /* 0 means bottom bar */
+static int antialiasing    = 1;        /* 0 means pixelize images */
+static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT - SCALE_ZOOM */
+static const char *fonts[] = { "monospace" };
+
 /* how much screen estate is to be used at max for the content */
 static const float zoom_levels[] = {
 	 12.5,  25.0,  50.0,  75.0,
 	100.0, 150.0, 200.0, 400.0, 800.0
-};
-
-static int showbar      = 1;        /* 0 means no bar */
-static const int topbar = 0;        /* 0 means bottom bar */
-static int antialiasing = 1;        /* 0 means pixelize images */
-static scaling scalemode = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT - SCALE_ZOOM */
-static const char *fonts[] = {
-	"SauceCodePro Nerd Font:pixelsize=14:antialias=true:autohint=true",
-//	"Noto Color Emoji:pixelsize=16:antialias=true:autohint=true: style=Regular", /* Emojis */
-	"JoyPixels:pixelsize=14:antialias=true:autohint=true"
 };
 
 static const char *colors[][3] = {
@@ -33,7 +29,8 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_p,          printfile,      {0} },
 	{ 0,            XK_minus,      zoom,           {.i = -1} },
 	{ 0,            XK_equal,      zoom,           {.i = +1} },
-	{ 0,            XK_f,       togglefullscreen,     {0} },
+	{ ShiftMask,    XK_f,       togglefullscreen,     {0} },
+	{ 0,            XK_f,          img_fit,        {0} },
 	{ 0,            XK_a,       toggleantialias,     {0} },
 	{ 0,            XK_h,          pan,            {.i = LEFT} },
 	{ 0,            XK_j,          pan,            {.i = DOWN} },

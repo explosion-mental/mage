@@ -17,6 +17,7 @@ hack on, which means patches! (which means features..)
   same size as the `zoom_lvl` or does this needs a separate variable to store
   this value?
 - start fullscreen with `-f` (or whatever) argument
+- scalemode with `-s 'fit,down,zoom'`
 
 
 # decisions

@@ -126,6 +126,8 @@ static void first(const Arg *arg);
 static void last(const Arg *arg);
 static void rotate(const Arg *arg);
 static void toggleantialias(const Arg *arg);
+static void img_center(const Arg *arg);
+static void img_fit(const Arg *arg);
 
 /* variables */
 static Atom atom[WMLast];
@@ -235,6 +237,7 @@ drawbar(void)
 	y = xw.h - bh;
 
 	drw_setscheme(drw, scheme[SchemeBar]);
+
 	/* left text */
 	snprintf(left, LENGTH(left), "%s", filenames[fileidx]);
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
@@ -438,7 +441,7 @@ setup(void)
 void
 usage()
 {
-	die("usage: %s [-hnpv] file...", argv0);
+	die("usage: %s [-hpv] [-n class] file...", argv0);
 }
 
 int

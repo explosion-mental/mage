@@ -170,7 +170,6 @@ rotate(const Arg *arg)
 
 	imlib_image_orientate(d);
 
-
 	img->x = oy + (xw.w - xw.h) / 2;
 	img->y = ox + (xw.h - xw.w) / 2;
 
