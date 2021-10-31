@@ -44,6 +44,6 @@ static Mousekey mshortcuts[] = {
 	/* button         function        argument */
 	{ Button1,        advance,     {.i = +1} },
 	{ Button3,        quit,        {0} },
-//	{ Button4,        quit,        {0} },
-//	{ Button5,        quit,        {0} },
+	{ Button4,        zoom,        {.i = +1} },
+	{ Button5,        zoom,        {.i = -1} },
 };
