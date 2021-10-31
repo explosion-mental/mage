@@ -129,7 +129,7 @@ static void toggleantialias(const Arg *arg);
 
 /* variables */
 static Atom atom[WMLast];
-static char stext1[128], stext2[128];
+static char right[128], left[128];
 static const char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
 
@@ -222,7 +222,6 @@ void
 drawbar(void)
 {
 	int y, tw = 0;
-	char right[256], left[256];
 	/* bar elements */
 	//int bzoom = (int) zoom * 100.0;
 	//int bidx = fileidx + 1;
@@ -230,7 +229,6 @@ drawbar(void)
 	if (showbar) //hack? to not drawbar
 		return;
 
-	tw = TEXTW(stext2) - lrpad + 2; /* 2px right padding */
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
@@ -239,13 +237,12 @@ drawbar(void)
 	drw_setscheme(drw, scheme[SchemeBar]);
 	/* left text */
 	snprintf(left, LENGTH(left), "%s", filenames[fileidx]);
-	strcpy(stext1, left);
-	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, stext1, 0);
+	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
 	snprintf(right, LENGTH(right), "<%d%%> [%d/%d]", (int)(zoomlvl * 100.0), fileidx + 1, filecnt);
-	strcpy(stext2, right);
-	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), stext2, 0);
+	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
+	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
 	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
