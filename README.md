@@ -3,13 +3,12 @@ iMAGE viewer
 
 
 mage is a re-write of sxiv which goal is to be less complex in order for you to
-hack on.
+hack on, which means patches! (which means features..)
 
 
 # TODO
-- Get to the same state of sxiv, functionally
-- top status bar
-- man page
-- better variable/function names (specially for zoom)
-- simpler code. there is only one window in use, why is there a need to make a
-  window to be an arg?
+- Get to a similiar but simpler (and only functional) state of sxiv
+- Top status bar
+- Man page
+- Better variable/function names (specially for zoom)
+- Simpler code

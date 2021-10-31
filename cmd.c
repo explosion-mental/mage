@@ -81,7 +81,6 @@ zoom(const Arg *arg)
 	}
 }
 
-
 void
 togglefullscreen(const Arg *arg)
 {
@@ -100,4 +99,38 @@ togglefullscreen(const Arg *arg)
 
 	XSendEvent(xw.dpy, DefaultRootWindow(xw.dpy), False,
 	           SubstructureNotifyMask | SubstructureRedirectMask, &ev);
+}
+
+void
+pan(const Arg *arg)
+{
+	int ox, oy;
+
+	//if (!&image)
+	//	return 0;
+
+	ox = image.x;
+	oy = image.y;
+
+	switch (arg->i) {
+		case LEFT:
+			image.x += xw.w / 5;
+			break;
+		case RIGHT:
+			image.x -= xw.w / 5;
+			break;
+		case UP:
+			image.y += xw.h / 5;
+			break;
+		case DOWN:
+			image.y -= xw.h / 5;
+			break;
+	}
+
+	img_check_pan(&image);
+
+	if (ox != image.x || oy != image.y) {
+		img_render(&image);
+		drawbar(); //panning without bar?
+	}
 }

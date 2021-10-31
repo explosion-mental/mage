@@ -24,6 +24,7 @@ int
 img_load(Image *img, const char *filename)
 {
 	Imlib_Image *im;
+
 	if (!img || !filename)
 		return -1;
 
@@ -139,7 +140,7 @@ img_render(Image *img)
 void
 im_clear(void)
 {
-	drw_resize(drw, xw.scrw, xw.scrh);
+	//drw_resize(drw, xw.scrw, xw.scrh);
 	XClearWindow(xw.dpy, xw.win);
 }
 
@@ -185,36 +186,4 @@ img_zoom(Image *img, float z)
 	} else {
 		return 0;
 	}
-}
-
-void
-pan(const Arg *arg)
-{
-	int ox, oy;
-
-	//if (!&image)
-	//	return 0;
-
-	ox = image.x;
-	oy = image.y;
-
-	switch (arg->i) {
-		case LEFT:
-			image.x += xw.w / 5;
-			break;
-		case RIGHT:
-			image.x -= xw.w / 5;
-			break;
-		case UP:
-			image.y += xw.h / 5;
-			break;
-		case DOWN:
-			image.y -= xw.h / 5;
-			break;
-	}
-
-	img_check_pan(&image);
-
-	if (ox != image.x || oy != image.y)
-		img_render(&image);
 }
