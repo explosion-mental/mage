@@ -37,7 +37,12 @@ enum { LEFT = 0, RIGHT, UP, DOWN }; /* 2d directions */
 enum { WMDelete, WMName, WMFullscreen, WMState,
 	WMLast }; /* atoms */
 
-/* Purely graphic info */
+typedef enum {
+	SCALE_DOWN,
+	SCALE_FIT,
+	SCALE_ZOOM
+} scaling;
+
 typedef struct {
 	Display *dpy;
 	//Colormap cmap;
@@ -84,14 +89,11 @@ typedef struct {
 	const Arg arg;
 } Shortcut;
 
-
 /* function declarations */
 static void cleanup(void);
-static void quit(const Arg *arg);
 static void run(void);
 static void usage(void);
 static void xhints(void);
-//static void xinit();
 static void setup(void);
 static void drawbar(void);
 static void update_title(void);
@@ -103,10 +105,10 @@ static void expose(XEvent *);
 static void kpress(XEvent *);
 static void configurenotify(XEvent *);
 
-//image
+/* image */
 static void imlib_init(void);
 static void im_clear(void);
-static void imlib_destroy();
+static void imlib_destroy(void);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static int img_zoom(Image *img, float z);
@@ -114,8 +116,7 @@ static void img_check_pan(Image *img);
 
 /* commands */
 static void togglebar(const Arg *arg);
-//static void next_img(const Arg *arg);
-//static void prev_img(const Arg *arg);
+static void quit(const Arg *arg);
 static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
@@ -126,20 +127,9 @@ static void last(const Arg *arg);
 static void rotate(const Arg *arg);
 static void toggleantialias(const Arg *arg);
 
-typedef enum {
-	SCALE_DOWN,
-	SCALE_FIT,
-	SCALE_ZOOM
-} scaling;
-
-/* config.h for applying patches and the configuration. */
-#include "config.h"
-
 /* variables */
-static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
-
 static Atom atom[WMLast];
-static char stext1[256], stext2[256];
+static char stext1[128], stext2[128];
 static const char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
 
@@ -151,7 +141,9 @@ static int running = 1;
 static int bh = 0;      /* bar geometry */
 static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
+static char *wmname = "mage";
 
+static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
 /* zoom */
 static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)h
@@ -163,6 +155,9 @@ static Colormap cmap;
 //static Drawable xpix = 0;
 static int depth;
 static Visual *visual;
+
+/* config.h for applying patches and the configuration. */
+#include "config.h"
 
 static void (*handler[LASTEvent])(XEvent *) = {
 	[ButtonPress] = bpress,
@@ -243,14 +238,14 @@ drawbar(void)
 
 	drw_setscheme(drw, scheme[SchemeBar]);
 	/* left text */
-	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, stext1, 0);
 	snprintf(left, LENGTH(left), "%s", filenames[fileidx]);
 	strcpy(stext1, left);
+	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, stext1, 0);
 
 	/* right text */
-	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), stext2, 0);
 	snprintf(right, LENGTH(right), "<%d%%> [%d/%d]", (int)(zoomlvl * 100.0), fileidx + 1, filecnt);
 	strcpy(stext2, right);
+	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), stext2, 0);
 
 	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
@@ -276,7 +271,10 @@ run(void)
 void
 xhints()
 {
-	XClassHint class = {.res_name = "mage", .res_class = "mage"};
+	XClassHint class;
+	class.res_name = wmname;
+	class.res_class = "mage";
+
 	XWMHints wm = {.flags = InputHint, .input = True};
 	XSizeHints *sizeh = NULL;
 
@@ -346,12 +344,6 @@ configurenotify(XEvent *e)
 		//scalemode = SCALE_DOWN;
 		drw_resize(drw, xw.w, xw.h);
 	}
-}
-
-void
-usage()
-{
-	die("usage: %s [-hv] file...", argv0);
 }
 
 void
@@ -446,6 +438,12 @@ setup(void)
  	update_title();
 }
 
+void
+usage()
+{
+	die("usage: %s [-hnpv] file...", argv0);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -458,6 +456,9 @@ main(int argc, char *argv[])
 		usage();
 	case 'p':
 		antialiasing = 0;
+		break;
+	case 'n':
+		wmname = EARGF(usage());
 		break;
 	default:
 		usage();
