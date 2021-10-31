@@ -38,6 +38,10 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_l,          pan,            {.i = RIGHT} },
 	{ 0,            XK_g,          first,          {0} },
 	{ ShiftMask,    XK_g,          last,           {0} },
+	//{ 0,            XK_greater,    rotate,         {.i = +1 } },
+	//{ 0,            XK_less,       rotate,         {.i = -1 } },
+	{ ShiftMask,    XK_period,     rotate,         {.i = +1 } },
+	{ ShiftMask,    XK_comma,      rotate,         {.i = -1 } },
 };
 
 static Mousekey mshortcuts[] = {

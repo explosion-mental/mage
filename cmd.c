@@ -156,3 +156,32 @@ last(const Arg *arg)
 		drawbar();
 	}
 }
+
+void
+rotate(const Arg *arg)
+{
+	Image *img = &image;
+
+	int ox, oy, tmp, d;
+
+	if (arg->i > 0)
+		d = 1;
+	else
+		d = 3;
+
+	ox = d == 1 ? img->x : xw.w - img->x - img->w * zoomlvl;
+	oy = d == 3 ? img->y : xw.h - img->y - img->h * zoomlvl;
+
+	imlib_image_orientate(d);
+
+
+	img->x = oy + (xw.w - xw.h) / 2;
+	img->y = ox + (xw.h - xw.w) / 2;
+
+	tmp = img->w;
+	img->w = img->h;
+	img->h = tmp;
+
+	img->checkpan = 1;
+	img_render(img);
+}

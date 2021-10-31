@@ -122,6 +122,7 @@ static void togglefullscreen(const Arg *arg);
 static void pan(const Arg *arg);
 static void first(const Arg *arg);
 static void last(const Arg *arg);
+static void rotate(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"

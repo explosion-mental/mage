@@ -57,6 +57,7 @@ img_render(Image *img)
 	if (!img || !imlib_context_get_image())
 		return;
 
+ 	//if (!img->zoomed && scalemode != SCALE_ZOOM) {
  	if ((!img->re || !img->zoomed) && scalemode != SCALE_ZOOM) {
 		zw = (float) xw.w / (float) img->w;
 		zh = (float) xw.h / (float) img->h;
