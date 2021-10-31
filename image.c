@@ -1,15 +1,20 @@
 void
 imlib_init(void)
 {
-	imlib_context_set_display(xw.dpy);
-	imlib_context_set_visual(visual);
-	imlib_context_set_colormap(cmap);
-	imlib_context_set_drawable(xw.pm);
-	//imlib_context_set_drawable(xw.win);
+	Image *img = &image;
 
 	zl_cnt = LENGTH(zoom_levels);
 	zoom_min = zoom_levels[0] / 100.0;
 	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
+
+	zoomlvl = 1.0;
+	img->aa = 1;
+
+	imlib_context_set_display(xw.dpy);
+	imlib_context_set_visual(visual);
+	imlib_context_set_colormap(cmap);
+	//imlib_context_set_drawable(xw.pm);
+	//imlib_context_set_drawable(xw.win);
 
 }
 
@@ -37,6 +42,7 @@ img_load(Image *img, const char *filename)
 	}
 
 	imlib_context_set_image(im);
+	imlib_context_set_anti_alias(img->aa);
 
  	img->re = 0;
 	img->checkpan = 0;

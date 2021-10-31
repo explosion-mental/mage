@@ -185,3 +185,13 @@ rotate(const Arg *arg)
 	img->checkpan = 1;
 	img_render(img);
 }
+
+void
+toggleantialias(const Arg *arg)
+{
+	Image *img = &image;
+
+	img->aa ^= 1;
+	imlib_context_set_anti_alias(img->aa);
+	img_render(img);
+}

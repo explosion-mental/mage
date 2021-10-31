@@ -32,6 +32,7 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_minus,      zoom,           {.i = -1} },
 	{ 0,            XK_equal,      zoom,           {.i = +1} },
 	{ 0,            XK_f,       togglefullscreen,     {0} },
+	{ 0,            XK_a,       toggleantialias,     {0} },
 	{ 0,            XK_h,          pan,            {.i = LEFT} },
 	{ 0,            XK_j,          pan,            {.i = DOWN} },
 	{ 0,            XK_k,          pan,            {.i = UP} },

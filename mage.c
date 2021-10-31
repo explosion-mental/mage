@@ -58,7 +58,8 @@ typedef struct {
 
 typedef struct {
  	//Imlib_Image *im;
- 	unsigned char re, checkpan, zoomed; /* rendered */
+ 	unsigned char re, checkpan, zoomed;
+	unsigned char aa; /* rendered */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -123,6 +124,7 @@ static void pan(const Arg *arg);
 static void first(const Arg *arg);
 static void last(const Arg *arg);
 static void rotate(const Arg *arg);
+static void toggleantialias(const Arg *arg);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
