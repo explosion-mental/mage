@@ -126,15 +126,14 @@ static void last(const Arg *arg);
 static void rotate(const Arg *arg);
 static void toggleantialias(const Arg *arg);
 
-/* config.h for applying patches and the configuration. */
-#include "config.h"
-
-enum {
+typedef enum {
 	SCALE_DOWN,
 	SCALE_FIT,
 	SCALE_ZOOM
-} scalemode;
+} scaling;
 
+/* config.h for applying patches and the configuration. */
+#include "config.h"
 
 /* variables */
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
@@ -155,7 +154,7 @@ static int lrpad;       /* sum of left and right padding for text */
 
 
 /* zoom */
-static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)
+static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)h
 static int zl_cnt;	//idx of the zoom[]
 static float zoom_min, zoom_max;
 
@@ -454,13 +453,12 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'v':
-		fprintf(stderr, "mage-"VERSION"\n");
-		return 0;
+		die("mage-"VERSION);
 	case 'h':
 		usage();
-	case 'j':
-		printf("This is optind %d\n", optind);
-		printf("This is argc %d\n", argc);
+	case 'p':
+		antialiasing = 0;
+		break;
 	default:
 		usage();
 	} ARGEND
@@ -474,11 +472,7 @@ main(int argc, char *argv[])
 
 	//separate all the space of cnt, even if there is some that we won't use
 	if (!(filenames =  malloc(cnt * sizeof(char*))))
-		die("could not allocate memory");
-
-
-	// tmp
-	scalemode = SCALE_DOWN;
+		die("mage: could not allocate memory");
 
 	for (i = 0; i < cnt; i++)
 		//return code so you can evaluate this. This is so it can load
@@ -489,7 +483,7 @@ main(int argc, char *argv[])
 			filenames[filecnt++] = files[i];
 
 	if (!filecnt)
-		die("no valid image filename given, aborting");
+		die("mage: no valid image filename given, aborting");
 
 	setup();
 

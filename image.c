@@ -8,7 +8,7 @@ imlib_init(void)
 	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
 
 	zoomlvl = 1.0;
-	img->aa = 1;
+	img->aa = antialiasing;
 
 	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(visual);

@@ -16,3 +16,8 @@ hack on, which means patches! (which means features..)
   the arg it's NULL then use zoom_lvl. Should the zoom steps be infinite or the
   same size as the `zoom_lvl` or does this needs a separate variable to store
   this value?
+- start fullscreen with `-f` (or whatever) argument
+
+
+# decisions
+- global variables outside of the `Image` struct like `zoomlvl` and `aa` (antialias flag) because they are applied 'globally', which means it doesn't store this for every image, like it does for the width, height, x, and y..

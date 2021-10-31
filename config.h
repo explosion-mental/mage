@@ -6,8 +6,10 @@ static const float zoom_levels[] = {
 	100.0, 150.0, 200.0, 400.0, 800.0
 };
 
-static int showbar              = 1;        /* 0 means no bar */
-static const int topbar         = 0;        /* 0 means bottom bar */
+static int showbar      = 1;        /* 0 means no bar */
+static const int topbar = 0;        /* 0 means bottom bar */
+static int antialiasing = 1;        /* 0 means pixelize images */
+static scaling scalemode = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT - SCALE_ZOOM */
 static const char *fonts[] = {
 	"SauceCodePro Nerd Font:pixelsize=14:antialias=true:autohint=true",
 //	"Noto Color Emoji:pixelsize=16:antialias=true:autohint=true: style=Regular", /* Emojis */
@@ -48,7 +50,8 @@ static Shortcut shortcuts[] = {
 static Mousekey mshortcuts[] = {
 	/* button         function        argument */
 	{ Button1,        advance,     {.i = +1} },
-	{ Button3,        quit,        {0} },
+	{ Button2,        quit,        {0} },
+	{ Button3,        advance,     {.i = -1} },
 	{ Button4,        zoom,        {.i = +1} },
 	{ Button5,        zoom,        {.i = -1} },
 };

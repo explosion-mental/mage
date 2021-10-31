@@ -84,21 +84,17 @@ zoom(const Arg *arg)
 void
 togglefullscreen(const Arg *arg)
 {
-	XEvent ev;
-	XClientMessageEvent *cm;
+	XEvent e;
 
-	memset(&ev, 0, sizeof(ev));
-	ev.type = ClientMessage;
-
-	cm = &ev.xclient;
-	cm->window = xw.win;
-	cm->message_type = atom[WMState];
-	cm->format = 32;
-	cm->data.l[0] = 2;
-	cm->data.l[1] = atom[WMFullscreen];
-
+	e.type = ClientMessage;
+	e.xclient.window = xw.win;
+	e.xclient.message_type = atom[WMState];
+	e.xclient.format = 32;
+	e.xclient.data.l[0] = 2;
+	e.xclient.data.l[1] = atom[WMFullscreen];
+	e.xclient.data.l[2] = 0;
 	XSendEvent(xw.dpy, DefaultRootWindow(xw.dpy), False,
-	           SubstructureNotifyMask | SubstructureRedirectMask, &ev);
+	           SubstructureNotifyMask | SubstructureRedirectMask, &e);
 }
 
 void
