@@ -16,7 +16,7 @@ It works on X11 and has been confirmed to work on sway with XWayland
 
 * SYNOPSIS
 
-imv [path-to-imgs]
+mage [path-to-imgs]
 
 * OPTIONS
 
