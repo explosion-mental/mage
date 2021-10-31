@@ -1,0 +1,45 @@
+#+TITLE: Mage
+
+#+AUTHOR: Arya K
+
+* NAME
+
+mage - Suckless Image viewer for X11
+
+* DESCRIPTION
+
+mage is a re-write of sxiv which goal is to be less complex in order for you to
+
+hack on, which means patches!
+
+It works on X11 and has been confirmed to work on sway with XWayland
+
+* SYNOPSIS
+
+imv [path-to-imgs]
+
+* OPTIONS
+
+-h - Show help message and quit
+
+-v - Show version and quit
+
+* KEYBINDINGS
+
+Keybindings are given in the config.h files and can be customized.
+
+Here are the default keybinds
+
+ESC, q - Quit mage
+
+b - Toggle the status bar (modeline)
+
+SPC, BackSpace - Move to next picture
+
+Equal & Minus - Zoom
+
+f - toggle fullscreen
+
+hjkl - move in a zoomed image
+
+. & , - rotate image

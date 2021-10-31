@@ -15,7 +15,7 @@ options:
 	@echo "CC       = ${CC}"
 
 config.h:
-	cp config.def.h config.h
+cp config.def.h config.h
 
 .c.o:
 	${CC} -c ${CFLAGS} $<
@@ -35,6 +35,11 @@ dist: clean
 	gzip mage-${VERSION}.tar
 	rm -rf mage-${VERSION}
 
+doc:
+    pandoc -s -t man mage.org -o mage.1
+    gzip mage.1
+    install -Dm 644 mage.1.gz /usr/share/man/man1/mage.1.gz
+
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f mage ${DESTDIR}${PREFIX}/bin
@@ -49,4 +54,4 @@ install: all
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/mage
 
-.PHONY: all options clean dist install uninstall
+.PHONY: all options clean dist doc install uninstall
