@@ -37,7 +37,8 @@ img_load(Image *img, const char *filename)
 		imlib_free_image();
 
 	if (!(im = imlib_load_image(filename))) {
-		printf("could not open image: %s\n", filename);
+		if (!quiet)
+			printf("could not open image: %s\n", filename);
 		return -1;
 	}
 

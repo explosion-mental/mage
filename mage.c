@@ -447,7 +447,8 @@ usage()
 int
 main(int argc, char *argv[])
 {
-	int i, fs = 0;
+	int i;
+	int fs = 0;
 
 	ARGBEGIN {
 	case 'v':
@@ -462,6 +463,9 @@ main(int argc, char *argv[])
 		break;
 	case 'n':
 		wmname = EARGF(usage());
+		break;
+	case 'q':
+		quiet = 1;
 		break;
 	default:
 		usage();
@@ -486,7 +490,7 @@ main(int argc, char *argv[])
 			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];
 
-	if (!filecnt)
+	if (!filecnt && !quiet)
 		die("mage: no valid image filename given, aborting");
 
 	setup();
