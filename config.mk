@@ -1,5 +1,5 @@
 # mage version
-VERSION = 0.1
+VERSION = 0.2
 
 # Customize below to fit your system
 
@@ -17,8 +17,10 @@ FREETYPEINC = /usr/include/freetype2
 # includes and libs
 INCS = -I. -I/usr/include -I/usr/include/freetype2 -I${X11INC}
 LIBS = -L/usr/lib -lc -lm -L${X11LIB} -lXft -lfontconfig -lX11 -lImlib2
+
 # OpenBSD (uncomment)
 #INCS = -I. -I${X11INC} -I${X11INC}/freetype2
+
 # FreeBSD (uncomment)
 #INCS = -I. -I/usr/local/include -I/usr/local/include/freetype2 -I${X11INC}
 #LIBS = -L/usr/local/lib -lc -lm -L${X11LIB} -lXft -lfontconfig -lX11
