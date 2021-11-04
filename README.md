@@ -2,8 +2,7 @@
 iMAGE viewer
 
 
-mage is a re-write of sxiv which goal is to be less complex in order for you to
-hack on, which means patches! (which means features..)
+A re-write of sxiv which sucks less.
 
 
 # TODO
