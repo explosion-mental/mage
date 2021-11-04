@@ -1,5 +1,5 @@
 void
-imlib_init(void)
+im_init(void)
 {
 	Image *img = &image;
 
@@ -19,30 +19,44 @@ imlib_init(void)
 }
 
 void
-imlib_destroy()
+im_destroy()
 {
 	if (imlib_context_get_image())
 		imlib_free_image();
 }
 
 int
-img_load(Image *img, const char *filename)
+im_load(const char *filename)
 {
 	Imlib_Image *im;
 
-	if (!img || !filename)
+	if (!filename)
 		return -1;
-
-	if (imlib_context_get_image())
-		imlib_free_image();
 
 	if (!(im = imlib_load_image(filename))) {
 		if (!quiet)
-			printf("could not open image: %s\n", filename);
+			fprintf(stderr, "could not open image %s\n", filename);
 		return -1;
 	}
 
 	imlib_context_set_image(im);
+	imlib_image_set_changes_on_disk();
+
+	return 0;
+}
+
+
+int
+img_load(Image *img, const char *filename)
+{
+	if (!img || !filename)
+		return -1;
+
+	im_destroy();
+
+	if (im_load(filename) != 0)
+		return -1;
+
 	imlib_context_set_anti_alias(img->aa);
 
  	img->re = 0;
@@ -202,4 +216,15 @@ img_center(const Arg *arg)
 	Image *img = &image;
 	img->x = (xw.w - img->w * zoomlvl) / 2;
 	img->y = (xw.h - img->h * zoomlvl) / 2;
+}
+
+int
+img_check(const char *filename)
+{
+	int ret = im_load(filename);
+
+	if (ret == 0)
+		imlib_free_image();
+
+	return ret;
 }

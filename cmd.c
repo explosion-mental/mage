@@ -187,3 +187,11 @@ toggleantialias(const Arg *arg)
 	imlib_context_set_anti_alias(img->aa);
 	img_render(img);
 }
+
+void
+reload(const Arg *arg)
+{
+	img_load(&image, filenames[fileidx]);
+	img_render(&image);
+	drawbar();
+}

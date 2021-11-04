@@ -106,13 +106,15 @@ static void kpress(XEvent *);
 static void configurenotify(XEvent *);
 
 /* image */
-static void imlib_init(void);
+static void im_init(void);
 static void im_clear(void);
-static void imlib_destroy(void);
+static void im_destroy(void);
+static int im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static int img_zoom(Image *img, float z);
 static void img_check_pan(Image *img);
+static int img_check(const char *filename);
 
 /* commands */
 static void togglebar(const Arg *arg);
@@ -128,6 +130,7 @@ static void rotate(const Arg *arg);
 static void toggleantialias(const Arg *arg);
 static void img_center(const Arg *arg);
 static void img_fit(const Arg *arg);
+static void reload(const Arg *arg);
 
 /* variables */
 static Atom atom[WMLast];
@@ -177,7 +180,7 @@ cleanup(void)
 {
 	unsigned int i;
 
-	imlib_destroy();
+	im_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(filenames); //this should be free'ed?
@@ -430,7 +433,7 @@ setup(void)
 	XSync(xw.dpy, False);
 
 	/* init imlib */
-	imlib_init();
+	im_init();
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
 
@@ -485,7 +488,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < cnt; i++)
 		//return code so you can evaluate this. This is so it can load
 		//as much images as posible
-		if (img_load(&image, files[i]) == 0)
+		if (img_check(files[i]) == 0)
 			// we finally pass only files that imlib2 can load (return 0)
 			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];

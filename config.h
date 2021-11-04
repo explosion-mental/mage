@@ -28,6 +28,7 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_BackSpace,  advance,        {.i = -1} },
 	{ 0,            XK_space,      advance,        {.i = +1} },
 	{ 0,            XK_p,          printfile,      {0} },
+	{ 0,            XK_r,          reload,         {0} },
 	{ 0,            XK_minus,      zoom,           {.i = -1} },
 	{ 0,            XK_equal,      zoom,           {.i = +1} },
 	{ ShiftMask,    XK_f,       togglefullscreen,     {0} },
