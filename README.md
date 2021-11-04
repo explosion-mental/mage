@@ -20,3 +20,4 @@ A re-write of sxiv which sucks less.
 
 # decisions
 - global variables outside of the `Image` struct like `zoomlvl` and `aa` (antialias flag) because they are applied 'globally', which means it doesn't store this for every image, like it does for the width, height, x, and y..
+- mouse support? (cursors)

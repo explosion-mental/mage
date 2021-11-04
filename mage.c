@@ -183,6 +183,7 @@ cleanup(void)
 	free(filenames); //this should be free'ed?
 	free(scheme);
 	drw_free(drw);
+ 	XFreeGC(xw.dpy, xw.gc);
 	XDestroyWindow(xw.dpy, xw.win);
 	XSync(xw.dpy, False);
 	XCloseDisplay(xw.dpy);

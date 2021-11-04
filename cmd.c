@@ -102,9 +102,6 @@ pan(const Arg *arg)
 {
 	int ox, oy;
 
-	//if (!&image)
-	//	return 0;
-
 	ox = image.x;
 	oy = image.y;
 
