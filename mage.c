@@ -490,7 +490,7 @@ main(int argc, char *argv[])
 			//imo this is better than using fopen (since it may be a file but not an image)
 			filenames[filecnt++] = files[i];
 
-	if (!filecnt && !quiet)
+	if (!filecnt)
 		die("mage: no valid image filename given, aborting");
 
 	setup();
