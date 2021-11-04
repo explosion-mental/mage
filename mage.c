@@ -188,7 +188,6 @@ cleanup(void)
 	XCloseDisplay(xw.dpy);
 }
 
-
 void
 updatebarpos()
 {
@@ -441,17 +440,20 @@ setup(void)
 void
 usage()
 {
-	die("usage: %s [-hpv] [-n class] file...", argv0);
+	die("usage: %s [-fhpv] [-n class] file...", argv0);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int i;
+	int i, fs = 0;
 
 	ARGBEGIN {
 	case 'v':
 		die("mage-"VERSION);
+	case 'f':
+		fs = 1;
+		break;
 	case 'h':
 		usage();
 	case 'p':
@@ -487,6 +489,8 @@ main(int argc, char *argv[])
 		die("mage: no valid image filename given, aborting");
 
 	setup();
+
+	if (fs) togglefullscreen(0);
 
 	run();
 

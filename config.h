@@ -24,7 +24,7 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_Escape,     quit,           {0} },
 	{ 0,            XK_q,          quit,           {0} },
 	{ 0,            XK_b,          togglebar,      {0} },
-	{ 0,            XK_BackSpace,     advance,        {.i = -1} },
+	{ 0,            XK_BackSpace,  advance,        {.i = -1} },
 	{ 0,            XK_space,      advance,        {.i = +1} },
 	{ 0,            XK_p,          printfile,      {0} },
 	{ 0,            XK_minus,      zoom,           {.i = -1} },
