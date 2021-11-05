@@ -6,9 +6,8 @@ A re-write of sxiv which sucks less.
 
 
 # TODO
-- Get to a similiar but simpler (and only functional) state of sxiv
+- Thumbnail mode
 - Top status bar
-- Man page
 - Better variable/function names (specially for zoom)
 - Simpler code
 - `zoom` function to take zoom steps on the argument (positive or negative), if
