@@ -1,0 +1,58 @@
+.TH MAGE 1 mage\-VERSION
+.SH NAME
+mage \- image viewer
+.SH SYNOPSIS
+.B mage
+.RB [ \-fhpv ]
+.RB [ \-n
+.IR class ] .RI [ "file ..." ]
+.SH DESCRIPTION
+.B mage
+is a image viewer for X.
+.P
+.SH OPTIONS
+.TP
+.B \-f
+Starts the window in fullscreen.
+.TP
+.B \-h
+Prints the usage and exits.
+.TP
+.B \-p
+Pixelate images.
+.TP
+.B \-v
+Prints the version and exits.
+.TP
+.BI \-n " class"
+Will set the WM_CLASS attribute to
+.I name.
+.SH USAGE
+Keybindings are defined on config.h. These are the default bindings.
+.TP
+.B b
+Toggles the bar.
+.TP
+.B Space, BackSpace
+Moves to the next/prev image.
+.TP
+.B Equal, Minus
+Adds/decrease index of
+.I zoom_lvl
+declared on config.h.
+.TP
+.B Shift\-f
+Toggles fullscreen.
+.TP
+.B h/j/k/l
+Pan while the image is bigger than the window (zoommed).
+.TP
+.B Shift\-,
+Rotate image 90 degrees right.
+.TP
+.B Shift\-.
+Rotate image 90 degrees left.
+.SH SEE ALSO
+.IR feh (1),
+.IR imv (1),
+.IR sxiv (1)

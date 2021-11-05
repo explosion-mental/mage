@@ -39,14 +39,12 @@ install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f mage ${DESTDIR}${PREFIX}/bin
 	chmod 755 ${DESTDIR}${PREFIX}/bin/mage
-
-
-#@echo installing manual page to ${DESTDIR}${MANPREFIX}/man1
-#@mkdir -p ${DESTDIR}${MANPREFIX}/man1
-#@cp mage.1 ${DESTDIR}${MANPREFIX}/man1/mage.1
-#@chmod 644 ${DESTDIR}${MANPREFIX}/man1/mage.1
+	mkdir -p ${DESTDIR}${MANPREFIX}/man1
+	sed "s/VERSION/${VERSION}/g" < mage.1 > ${DESTDIR}${MANPREFIX}/man1/mage.1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/mage.1
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/mage
+	rm -f ${DESTDIR}${PREFIX}/bin/mage \
+		${DESTDIR}${MANPREFIX}/man1/mage.1
 
 .PHONY: all options clean dist install uninstall
