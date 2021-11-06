@@ -249,10 +249,15 @@ check_file(const char *file)
 	DIR *dir;
 
 	//todo handle first if the file exist
-
-	/* check if it's an image */
-	if (img_check(file) == 0)
+	if (access(file, F_OK) != -1 ) {
+		/* check if it's an image */
+		if (img_check(file) == 0)
+			return;
+	} else {
+		if (!quiet)
+			fprintf(stderr, "mage: file %s does not exist\n", file);
 		return;
+	}
 
 	diridx = first = 1;
 	if (!(dirnames = (const char**) malloc(dircnt * sizeof(const char*))))
@@ -260,6 +265,7 @@ check_file(const char *file)
 	dirnames[0] = file;
 
 	/* check if it's a directory */
+	//do we need to check this? if it isn't a file then what is this?
 	if ((dir = opendir(file))) {
 		/* handle directory */
 		while (diridx > 0) {
