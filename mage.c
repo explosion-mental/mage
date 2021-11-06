@@ -25,6 +25,10 @@
 #include "util.h"
 #include "drw.h"
 
+#define FNAME_CNT 4096
+//to handle directories
+#include <dirent.h>
+
 char *argv0;
 
 /* macros */
@@ -131,6 +135,9 @@ static void toggleantialias(const Arg *arg);
 static void img_center(const Arg *arg);
 static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
+
+/* dir */
+static void check_file(const char *file);
 
 /* variables */
 static Atom atom[WMLast];
@@ -441,6 +448,50 @@ setup(void)
  	update_title();
 }
 
+//sxiv read_dir (testing)
+void
+read_dir(const char *dirname)
+{
+	char *filename;
+	const char **dirnames;
+	int dircnt, diridx;
+	unsigned char first;
+	size_t len;
+	DIR *dir;
+	struct dirent *dentry;
+	//struct stat fstats;
+
+	if (!dirname)
+		return;
+
+	//dircnt = DNAME_CNT;
+	diridx = first = 1;
+	if (!(dirnames = (const char**) malloc(dircnt * sizeof(const char*))))
+		die("could not allocate memory");
+	dirnames[0] = dirname;
+
+	while (diridx > 0) {
+		dirname = dirnames[--diridx];
+		if (!(dir = opendir(dirname)))
+			fprintf(stderr, "could not open directory: %s", dirname);
+		while ((dentry = readdir(dir))) {
+			if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
+				continue;
+			len = strlen(dirname) + strlen(dentry->d_name) + 2;
+			if (!(filename = (char*) malloc(len * sizeof(char))))
+				die("could not allocate memory");
+			snprintf(filename, len, "%s/%s", dirname, dentry->d_name);
+			//check_append(filename);
+		}
+		closedir(dir);
+		if (!first)
+			free((void*) dirname);
+		else
+			first = 0;
+	}
+	free(dirnames);
+}
+
 void
 usage()
 {
@@ -480,18 +531,47 @@ main(int argc, char *argv[])
 	//temporal variables so we can later evaluate if they truly are files
 	const char **files = (const char**) argv + optind - 1;
 	int cnt = argc - optind + 1;
+	//struct stat fstats;
+
+	//filecnt = 256;
 
 	//separate all the space of cnt, even if there is some that we won't use
+	//we later reallocate the necesary size instead of giving an arbitrary
+	//size like '4096'
 	if (!(filenames =  malloc(cnt * sizeof(char*))))
 		die("mage: could not allocate memory");
 
-	for (i = 0; i < cnt; i++)
-		//return code so you can evaluate this. This is so it can load
-		//as much images as posible
-		if (img_check(files[i]) == 0)
-			// we finally pass only files that imlib2 can load (return 0)
-			//imo this is better than using fopen (since it may be a file but not an image)
-			filenames[filecnt++] = files[i];
+	fileidx = 0;
+
+	for (i = 0; i < cnt; i++) {
+	//	if (img_check(files[i]) == 0)
+	//		// if is an image add it to filenames (which gets +1)
+	//		//filenames[filecnt++] = files[i];
+	//	else //is a directory
+	//		read_dir(files[i]);
+
+		//if (img_check(files[i]) == 0)
+		//	filenames[filecnt++] = files[i];
+		//else //is a directory
+		//	read_dir(files[i]);
+
+		//if (img_check(files[i]) == 0 || read_dir(files[i]))
+		//	filenames[filecnt++] = files[i];
+
+	//	if (img_check(files[i]) == 0) {
+	//		if (fileidx == filecnt) {
+	//			filecnt *= 2;
+	//			if (!(filenames = (const char**) realloc(filenames, filecnt * sizeof(const char*))))
+	//				die("could not allocate memory");
+	//		}
+	//		filenames[fileidx++] = files[i];
+	//	} else
+	//		read_dir(files[i]);
+		check_file(files[i]);
+	}
+
+	filecnt = fileidx;
+	fileidx = 0;
 
 	if (!filecnt)
 		die("mage: no valid image filename given, aborting");

@@ -223,8 +223,68 @@ img_check(const char *filename)
 {
 	int ret = im_load(filename);
 
-	if (ret == 0)
+	if (ret == 0) {
 		imlib_free_image();
+		if (fileidx == filecnt) {
+			//filecnt *= 2;
+			filecnt++;
+			if (!(filenames = realloc(filenames, filecnt * sizeof(const char *))))
+				die("mage: could not allocate memory img_check");
+		}
+		filenames[fileidx++] = filename;
+	}
 
 	return ret;
+}
+
+void
+check_file(const char *file)
+{
+	char *filename;
+	const char **dirnames;
+	int dircnt = 256, diridx;
+	unsigned char first;
+	size_t len;
+	struct dirent *dentry;
+	DIR *dir;
+
+	//todo handle first if the file exist
+
+	/* check if it's an image */
+	if (img_check(file) == 0)
+		return;
+
+	diridx = first = 1;
+	if (!(dirnames = (const char**) malloc(dircnt * sizeof(const char*))))
+		die("could not allocate memory");
+	dirnames[0] = file;
+
+	/* check if it's a directory */
+	if ((dir = opendir(file))) {
+		/* handle directory */
+		while (diridx > 0) {
+			file = dirnames[--diridx];
+			while ((dentry = readdir(dir))) {
+				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
+					continue;
+				len = strlen(file) + strlen(dentry->d_name) + 2;
+				if (!(filename = malloc(len * sizeof(char))))
+					die("could not allocate memory");
+				snprintf(filename, len, "%s/%s", file, dentry->d_name);
+				img_check(filename);
+			}
+			closedir(dir);
+			if (!first)
+				free((void*) file);
+			else
+				first = 0;
+		}
+		return;
+	} else if (ENOENT == errno) {
+		/* Directory does not exist. */
+		fprintf(stderr, "mage: directory doesn't exist %s", file);
+		return;
+	} else
+		/* opendir() failed for some other reason. */
+		return;
 }
