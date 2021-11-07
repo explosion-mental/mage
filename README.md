@@ -16,6 +16,7 @@ A re-write of sxiv which sucks less.
 - Handling directories recursively (`mage .` or `mage Wallpapers/`)
 - A patch that removes bar functionality (so no font loading are
   needed), which detaches mage from drw.c and drw.h and it's xft dep.
+- Order functions alphabetically
 
 
 # decisions

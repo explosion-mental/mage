@@ -25,9 +25,9 @@
 #include "util.h"
 #include "drw.h"
 
-#define FNAME_CNT 4096
 //to handle directories
 #include <dirent.h>
+//TODO verify what headers are really needed
 
 char *argv0;
 
@@ -37,7 +37,7 @@ char *argv0;
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
-enum { LEFT = 0, RIGHT, UP, DOWN }; /* 2d directions */
+enum { LEFT, RIGHT, UP, DOWN }; /* 2d directions */
 enum { WMDelete, WMName, WMFullscreen, WMState,
 	WMLast }; /* atoms */
 
@@ -58,17 +58,15 @@ typedef struct {
 	int scrw, scrh;
 	//int x, y;
 	int w, h;
-	//pixmap needed?
 	Pixmap pm;
 	GC gc;
-	//unsigned int pmw, pmh;
 	//int gm; /* geometry mask */
 } XWindow;
 
 typedef struct {
- 	//Imlib_Image *im;
- 	unsigned char re, checkpan, zoomed;
-	unsigned char aa; /* rendered */
+ 	unsigned char re; /* rendered */
+	unsigned char checkpan, zoomed;
+	unsigned char aa; /* antialias */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -118,7 +116,6 @@ static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static int img_zoom(Image *img, float z);
 static void img_check_pan(Image *img);
-static int img_check(const char *filename);
 
 /* commands */
 static void togglebar(const Arg *arg);
@@ -136,7 +133,8 @@ static void img_center(const Arg *arg);
 static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
 
-/* dir */
+/* handling files */
+static int img_check(const char *filename);
 static void check_file(const char *file);
 
 /* variables */
@@ -164,7 +162,6 @@ static float zoom_min, zoom_max;
 
 /* x init*/
 static Colormap cmap;
-//static Drawable xpix = 0;
 static int depth;
 static Visual *visual;
 
@@ -179,6 +176,7 @@ static void (*handler[LASTEvent])(XEvent *) = {
 	[KeyPress] = kpress,
 };
 
+//at the end everything should be merged
 #include "image.c"
 #include "cmd.c"
 
@@ -217,16 +215,17 @@ updatebarpos()
 	}
 
 }
+
 void
 update_title()
 {
 	char title[512];
 
 	snprintf(title, LENGTH(title), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
-	             filecnt, (int) (zoomlvl * 100.0), filenames[fileidx]);
+			filecnt, (int) (zoomlvl * 100.0), filenames[fileidx]);
 
 	XChangeProperty(xw.dpy, xw.win, atom[WMName],
-	                XInternAtom(xw.dpy, "UTF8_STRING", False), 8,
+			XInternAtom(xw.dpy, "UTF8_STRING", False), 8,
 	                PropModeReplace, (unsigned char *) title, strlen(title));
 }
 
@@ -234,13 +233,9 @@ void
 drawbar(void)
 {
 	int y, tw = 0;
-	/* bar elements */
-	//int bzoom = (int) zoom * 100.0;
-	//int bidx = fileidx + 1;
 
-	if (showbar) //hack? to not drawbar
+	if (showbar) //hack to not drawbar
 		return;
-
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
@@ -322,10 +317,9 @@ expose(XEvent *e)
 	if (0 == e->xexpose.count) {
 		//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
 		//drw_resize(drw, e->xexpose.width, e->xexpose.height);
-		image.checkpan = 1;
+		image.checkpan = 1; //hack to redraw image
 		img_render(&image);
 		drawbar();
-		//printf("expose\n");
 	}
 }
 void
@@ -354,6 +348,85 @@ configurenotify(XEvent *e)
 		//scalemode = SCALE_DOWN;
 		drw_resize(drw, xw.w, xw.h);
 	}
+}
+
+int
+img_check(const char *filename)
+{
+	int ret = im_load(filename);
+
+	if (ret == 0) {
+		imlib_free_image();
+		if (fileidx == filecnt) {
+			//filecnt *= 2;
+			filecnt++; //+ 1 for every new arg we add
+			if (!(filenames = realloc(filenames, filecnt * sizeof(const char *))))
+				die("mage: could not allocate memory img_check");
+		}
+		filenames[fileidx++] = filename;
+	}
+
+	return ret;
+}
+
+void
+check_file(const char *file)
+{
+	char *filename;
+	const char **dirnames;
+	int dircnt = 256, diridx;
+	unsigned char first;
+	size_t len;
+	struct dirent *dentry;
+	DIR *dir;
+
+	//todo handle first if the file exist
+
+	if (access(file, F_OK) != -1 ) {
+		/* check if it's an image */
+		if (img_check(file) == 0)
+			//if it isn't an image we don't return, but rather pass
+			//to check if it's a directory (hack)
+			return;
+	} else {
+		if (!quiet)
+			fprintf(stderr, "mage: file %s does not exist\n", file);
+		return;
+	}
+
+	diridx = first = 1;
+	if (!(dirnames = (const char**) malloc(dircnt * sizeof(const char*))))
+		die("could not allocate memory");
+	dirnames[0] = file;
+
+	/* check if it's a directory */
+	//do we need to check this? if it isn't a file then what is this?
+	if ((dir = opendir(file))) {
+		/* handle directory */
+		while (diridx > 0) {
+			file = dirnames[--diridx];
+			while ((dentry = readdir(dir))) {
+				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
+					continue;
+				len = strlen(file) + strlen(dentry->d_name) + 2;
+				if (!(filename = malloc(len * sizeof(char))))
+					die("could not allocate memory");
+				snprintf(filename, len, "%s/%s", file, dentry->d_name);
+				img_check(filename);
+			}
+			closedir(dir);
+			if (!first)
+				free((void*) file);
+			else
+				first = 0;
+		}
+		return;
+	} else if (ENOENT == errno) { /* directory does not exist */
+		if (!quiet)
+			fprintf(stderr, "mage: directory doesn't exist %s", file);
+		return;
+	} else /* opendir() failed for some other reason */
+		return;
 }
 
 void
@@ -417,7 +490,7 @@ setup(void)
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
-	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
+	//XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
 	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval);
 	xw.pm = 0;
@@ -446,50 +519,6 @@ setup(void)
 
 	/* init title */
  	update_title();
-}
-
-//sxiv read_dir (testing)
-void
-read_dir(const char *dirname)
-{
-	char *filename;
-	const char **dirnames;
-	int dircnt, diridx;
-	unsigned char first;
-	size_t len;
-	DIR *dir;
-	struct dirent *dentry;
-	//struct stat fstats;
-
-	if (!dirname)
-		return;
-
-	//dircnt = DNAME_CNT;
-	diridx = first = 1;
-	if (!(dirnames = (const char**) malloc(dircnt * sizeof(const char*))))
-		die("could not allocate memory");
-	dirnames[0] = dirname;
-
-	while (diridx > 0) {
-		dirname = dirnames[--diridx];
-		if (!(dir = opendir(dirname)))
-			fprintf(stderr, "could not open directory: %s", dirname);
-		while ((dentry = readdir(dir))) {
-			if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
-				continue;
-			len = strlen(dirname) + strlen(dentry->d_name) + 2;
-			if (!(filename = (char*) malloc(len * sizeof(char))))
-				die("could not allocate memory");
-			snprintf(filename, len, "%s/%s", dirname, dentry->d_name);
-			//check_append(filename);
-		}
-		closedir(dir);
-		if (!first)
-			free((void*) dirname);
-		else
-			first = 0;
-	}
-	free(dirnames);
 }
 
 void
@@ -543,32 +572,9 @@ main(int argc, char *argv[])
 
 	fileidx = 0;
 
-	for (i = 0; i < cnt; i++) {
-	//	if (img_check(files[i]) == 0)
-	//		// if is an image add it to filenames (which gets +1)
-	//		//filenames[filecnt++] = files[i];
-	//	else //is a directory
-	//		read_dir(files[i]);
-
-		//if (img_check(files[i]) == 0)
-		//	filenames[filecnt++] = files[i];
-		//else //is a directory
-		//	read_dir(files[i]);
-
-		//if (img_check(files[i]) == 0 || read_dir(files[i]))
-		//	filenames[filecnt++] = files[i];
-
-	//	if (img_check(files[i]) == 0) {
-	//		if (fileidx == filecnt) {
-	//			filecnt *= 2;
-	//			if (!(filenames = (const char**) realloc(filenames, filecnt * sizeof(const char*))))
-	//				die("could not allocate memory");
-	//		}
-	//		filenames[fileidx++] = files[i];
-	//	} else
-	//		read_dir(files[i]);
+	/* extract only images or directories */
+	for (i = 0; i < cnt; i++)
 		check_file(files[i]);
-	}
 
 	filecnt = fileidx;
 	fileidx = 0;
