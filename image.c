@@ -61,7 +61,7 @@ img_load(Image *img, const char *filename)
 
  	img->re = 0;
 	img->checkpan = 0;
-	img->zoomed = 0;
+	//img->zoomed = 0;
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 

@@ -2,13 +2,13 @@ void
 togglebar(const Arg *arg)
 {
 	showbar = !showbar;
-	if (showbar) {
-		bh = 0;
-		printf("BAR ON\n");
-	} else {
-		bh = drw->fonts->h + 2;
-		printf("bar off\n");
-	}
+	//if (showbar) {
+	//	bh = 0;
+	//	//printf("BAR ON\n");
+	//} else {
+	//	bh = drw->fonts->h + 2;
+	//	printf("bar off\n");
+	//}
 	//updatebarpos();
 	//XClearWindow(xw.dpy, bh);
 	//XClearArea(xw.dpy, xw.win, 0, xw.h, xw.w, bh, True);
@@ -18,7 +18,7 @@ togglebar(const Arg *arg)
 	img_render(&image);
 	drawbar();
 
-	/* todo */
+	/* TODO */
 	/* while changing images; shall the image have a 'dirty' stage where it
 	 * updates everything, or just call that function directly? */
 }

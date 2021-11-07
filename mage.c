@@ -420,6 +420,7 @@ check_file(const char *file)
 			else
 				first = 0;
 		}
+		free(dirnames);
 		return;
 	} else if (ENOENT == errno) { /* directory does not exist */
 		if (!quiet)
