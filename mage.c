@@ -109,7 +109,7 @@ static void configurenotify(XEvent *);
 
 /* image */
 static void im_init(void);
-static void im_clear(void);
+//static void im_clear(void);
 static void im_destroy(void);
 static int im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
@@ -134,7 +134,7 @@ static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
 
 /* handling files */
-static int img_check(const char *filename);
+static int check_img(const char *filename);
 static void check_file(const char *file);
 
 /* variables */
@@ -149,7 +149,7 @@ static Drw *drw;
 static Clr **scheme;
 static int running = 1;
 static int bh = 0;      /* bar geometry */
-static int by;		/* bar y */
+//static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
 
@@ -351,7 +351,7 @@ configurenotify(XEvent *e)
 }
 
 int
-img_check(const char *filename)
+check_img(const char *filename)
 {
 	int ret = im_load(filename);
 
@@ -384,7 +384,7 @@ check_file(const char *file)
 
 	if (access(file, F_OK) != -1 ) {
 		/* check if it's an image */
-		if (img_check(file) == 0)
+		if (check_img(file) == 0)
 			//if it isn't an image we don't return, but rather pass
 			//to check if it's a directory (hack)
 			return;
@@ -412,7 +412,7 @@ check_file(const char *file)
 				if (!(filename = malloc(len * sizeof(char))))
 					die("could not allocate memory");
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
-				img_check(filename);
+				check_img(filename);
 			}
 			closedir(dir);
 			if (!first)
