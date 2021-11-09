@@ -65,7 +65,9 @@ typedef struct {
 
 typedef struct {
  	unsigned char re; /* rendered */
-	unsigned char checkpan, zoomed;
+	unsigned char checkpan;
+	//zoomed;
+	scaling scalemode;
 	unsigned char aa; /* antialias */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
@@ -132,6 +134,7 @@ static void toggleantialias(const Arg *arg);
 static void img_center(const Arg *arg);
 static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
+static void cyclescale(const Arg *arg);
 
 /* handling files */
 static int check_img(const char *filename);
@@ -152,6 +155,7 @@ static int bh = 0;      /* bar geometry */
 //static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
+//static char *scales[] = { "ScaleDown}
 
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
@@ -248,7 +252,7 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "<%d%%> [%d/%d]", (int)(zoomlvl * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "~%d <%d%%> [%d/%d]", scalemode, (int)(zoomlvl * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -561,9 +565,6 @@ main(int argc, char *argv[])
 	//temporal variables so we can later evaluate if they truly are files
 	const char **files = (const char**) argv + optind - 1;
 	int cnt = argc - optind + 1;
-	//struct stat fstats;
-
-	//filecnt = 256;
 
 	//separate all the space of cnt, even if there is some that we won't use
 	//we later reallocate the necesary size instead of giving an arbitrary
@@ -571,9 +572,7 @@ main(int argc, char *argv[])
 	if (!(filenames =  malloc(cnt * sizeof(char*))))
 		die("mage: could not allocate memory");
 
-	fileidx = 0;
-
-	/* extract only images or directories */
+	/* handle only images or directories */
 	for (i = 0; i < cnt; i++)
 		check_file(files[i]);
 

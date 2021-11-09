@@ -44,6 +44,8 @@ static Shortcut shortcuts[] = {
 	//{ 0,            XK_less,       rotate,         {.i = -1 } },
 	{ ShiftMask,    XK_period,     rotate,         {.i = +1 } },
 	{ ShiftMask,    XK_comma,      rotate,         {.i = -1 } },
+	{ 0,            XK_backslash,  cyclescale,     {.i = +1 } },
+	{ ShiftMask,    XK_backslash,  cyclescale,     {.i = -1 } },
 };
 
 static Mousekey mshortcuts[] = {

@@ -59,6 +59,14 @@ img_load(Image *img, const char *filename)
 
 	imlib_context_set_anti_alias(img->aa);
 
+	//Sets these variables for every image, so the value differs between
+	//images (if this doesn't existed all images will be treated the same,
+	//e.g. if I comment out `img->zommed = 0` then the zoom level would
+	//stay constant)
+	//Update: instead of zoomed we look if the scalemode is SCALE_ZOOM,
+	//probably in the future I would revert this behaviour
+
+ 	img->scalemode = scalemode;
  	img->re = 0;
 	img->checkpan = 0;
 	//img->zoomed = 0;
@@ -77,9 +85,13 @@ img_render(Image *img)
 	if (!img || !imlib_context_get_image())
 		return;
 
-	if (!img->zoomed && scalemode != SCALE_ZOOM) {
+	//if (!img->zoomed && scalemode != SCALE_ZOOM) {
+	//	img_fit(0);
+	//	if (scalemode == SCALE_DOWN && zoomlvl > 1.0)
+
+	if (img->scalemode != SCALE_ZOOM) {
 		img_fit(0);
-		if (scalemode == SCALE_DOWN && zoomlvl > 1.0)
+		if (img->scalemode == SCALE_DOWN && zoomlvl > 1.0)
 				zoomlvl = 1.0;
 	}
 
@@ -183,13 +195,14 @@ img_zoom(Image *img, float z)
 {
 	z = MAX(z, zoom_min);
 	z = MIN(z, zoom_max);
+ 	img->scalemode = SCALE_ZOOM;
 
 	if (z != zoomlvl) {
 		img->x -= (img->w * z - img->w * zoomlvl) / 2;
 		img->y -= (img->h * z - img->h * zoomlvl) / 2;
 		zoomlvl = z;
 		img->checkpan = 1;
-		img->zoomed = 1;
+		//img->zoomed = 1;
 		return 1;
 	} else {
 		return 0;

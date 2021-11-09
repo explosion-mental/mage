@@ -154,6 +154,7 @@ void
 rotate(const Arg *arg)
 {
 	Image *img = &image;
+	//Imlib_Image *im;
 
 	int ox, oy, tmp, d;
 
@@ -166,6 +167,9 @@ rotate(const Arg *arg)
 	oy = d == 3 ? img->y : xw.h - img->y - img->h * zoomlvl;
 
 	imlib_image_orientate(d);
+	//the below commands overwrites the current state of the buffer image
+	//into the real image (file)
+	//imlib_save_image(filenames[fileidx]);
 
 	img->x = oy + (xw.w - xw.h) / 2;
 	img->y = ox + (xw.h - xw.w) / 2;
@@ -176,6 +180,7 @@ rotate(const Arg *arg)
 
 	img->checkpan = 1;
 	img_render(img);
+	drawbar();
 }
 
 void
@@ -193,5 +198,28 @@ reload(const Arg *arg)
 {
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
+	update_title();
 	drawbar();
+}
+
+void
+cyclescale(const Arg *arg)
+{
+	if (arg->i > 0) {
+		if (scalemode < 2)
+			scalemode++;
+		else
+			scalemode = 0;
+		//here I invoke reload in order to invoke img_load which sets
+		//`img->scalemode = scalemode`, in the future I would probably
+		//remove scalemode from the Image struct since right now
+		//doesn't seem very useful
+		reload(0);
+	} else {
+		if (scalemode > 0)
+			scalemode--;
+		else
+			scalemode = 2;
+		reload(0);
+	}
 }
