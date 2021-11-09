@@ -13,10 +13,12 @@ A re-write of sxiv which sucks less.
 - `zoom` function to take zoom steps on the argument (positive or negative), if
   the arg it's NULL then use zoom_lvl steps. A separate variable to store `max_steps`.
 - scalemode with `mage -s 'fit,down,zoom'`
-- Handling directories recursively (`mage .` or `mage Wallpapers/`)
 - A patch that removes bar functionality (so no font loading are
   needed), which detaches mage from drw.c and drw.h and it's xft dep.
 - Order functions alphabetically
+- Handling directories with true recursiveness, with a configurable flag
+  (currently it only handles whats inside a subdirectory but it doesn't go and
+  loads subdirs)
 
 
 # decisions
