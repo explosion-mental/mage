@@ -139,6 +139,7 @@ static void cyclescale(const Arg *arg);
 /* handling files */
 static int check_img(const char *filename);
 static void check_file(const char *file);
+static char *readstdin(FILE *stream);
 
 /* variables */
 static Atom atom[WMLast];
@@ -248,7 +249,7 @@ drawbar(void)
 	drw_setscheme(drw, scheme[SchemeBar]);
 
 	/* left text */
-	snprintf(left, LENGTH(left), "%s", filenames[fileidx]);
+	snprintf(left, LENGTH(left), "%s %dx%d", filenames[fileidx], image.w, image.h);
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
@@ -432,10 +433,47 @@ check_file(const char *file)
 		return;
 	} else if (ENOENT == errno) { /* directory does not exist */
 		if (!quiet)
-			fprintf(stderr, "mage: directory doesn't exist %s", file);
+			fprintf(stderr, "mage: directory doesn't exist %s\n", file);
 		return;
 	} else /* opendir() failed for some other reason */
 		return;
+}
+
+char *
+readstdin(FILE *stream)
+{
+	size_t len;
+	char *buf, *s, *end;
+
+	if (!stream || feof(stream) || ferror(stream))
+		return NULL;
+
+	len = 4096;
+	if (!(s = buf = (char*) malloc(len * sizeof(char))))
+		die("mage: could not allocate memory");
+
+	do {
+		*s = '\0';
+		fgets(s, len - (s - buf), stream);
+		if ((end = strchr(s, '\n'))) {
+			*end = '\0';
+		} else if (strlen(s) + 1 == len - (s - buf)) {
+			buf = (char*) realloc(buf, 2 * len * sizeof(char));
+			s = buf + len - 1;
+			len *= 2;
+		} else
+			s += strlen(s);
+	} while (!end && !feof(stream) && !ferror(stream));
+
+	if (!ferror(stream) && *buf) {
+		s = (char*) malloc((strlen(buf) + 1) * sizeof(char));
+		strcpy(s, buf);
+	} else
+		s = NULL;
+
+	free(buf);
+
+	return s;
 }
 
 void
@@ -572,16 +610,16 @@ main(int argc, char *argv[])
 	//temporal variables so we can later evaluate if they truly are files
 	const char **files = (const char**) argv + optind - 1;
 	int cnt = argc - optind + 1;
-
-	//separate all the space of cnt, even if there is some that we won't use
-	//we later reallocate the necesary size instead of giving an arbitrary
-	//size like '4096'
-	if (!(filenames =  malloc(cnt * sizeof(char*))))
-		die("mage: could not allocate memory");
+	const char *input;
 
 	/* handle only images or directories */
-	for (i = 0; i < cnt; i++)
-		check_file(files[i]);
+	if (!strcmp(argv[0], "-")) {
+		while ((input = readstdin(stdin)))
+			check_file(input);
+	} else {
+		for (i = 0; i < cnt; i++)
+			check_file(files[i]);
+	}
 
 	filecnt = fileidx;
 	fileidx = 0;

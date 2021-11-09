@@ -12,6 +12,11 @@ mage \- image viewer
 is a image viewer for X.
 .P
 .SH OPTIONS
+When
+.I FILE
+is
+.B \-
+, read standard input.
 .TP
 .B \-f
 Starts the window in fullscreen.
@@ -23,7 +28,7 @@ Prints the usage and exits.
 Pixelate images.
 .TP
 .B \-r
-True recursiveness. If the argument is a directory, mage by default will not load sub-directories (what
+True recursiveness. If the argument is a directory, mage by default will not load sub-directories (similar to what
 .I find -maxdepth 1
 does), unless you specify otherwise.
 .TP

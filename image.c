@@ -35,7 +35,7 @@ im_load(const char *filename)
 
 	if (!(im = imlib_load_image(filename))) {
 		if (!quiet)
-			fprintf(stderr, "could not open image %s\n", filename);
+			fprintf(stderr, "mage: could not open image %s\n", filename);
 		return -1;
 	}
 
