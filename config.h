@@ -4,6 +4,7 @@ static int showbar         = 1;        /* 0 means no bar */
 static const int topbar    = 0;        /* 0 means bottom bar */
 static int antialiasing    = 1;        /* 0 means pixelize images */
 static int quiet           = 0;        /* 1 means print warnings (if any image can't be loaded) */
+static int recursive       = 0;        /* 1 means load subdirs */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT - SCALE_ZOOM */
 static const char *fonts[] = { "monospace" };
 

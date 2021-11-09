@@ -416,7 +416,11 @@ check_file(const char *file)
 				if (!(filename = malloc(len * sizeof(char))))
 					die("could not allocate memory");
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
-				check_img(filename);
+				if (recursive)
+					check_file(filename);
+				else
+					if (check_img(filename) != 0)
+						free(filename);
 			}
 			closedir(dir);
 			if (!first)
@@ -529,7 +533,7 @@ setup(void)
 void
 usage()
 {
-	die("usage: %s [-fhpv] [-n class] file...", argv0);
+	die("usage: %s [-fhprv] [-n class] file...", argv0);
 }
 
 int
@@ -548,6 +552,9 @@ main(int argc, char *argv[])
 		usage();
 	case 'p':
 		antialiasing = 0;
+		break;
+	case 'r':
+		recursive = 1;
 		break;
 	case 'n':
 		wmname = EARGF(usage());
