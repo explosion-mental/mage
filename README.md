@@ -16,7 +16,6 @@ A re-write of sxiv which sucks less.
 - A patch that removes bar functionality (so no font loading are
   needed), which detaches mage from drw.c and drw.h and it's xft dep.
 - Order functions alphabetically
-- Handling directories with true recursiveness, with a configurable flag. Currently it only handles whats inside a directory but it doesn't handles if the loaded file is a directory, tldr it loads `find -maxdepth 1 <directory>`.
 
 
 # decisions
