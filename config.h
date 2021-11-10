@@ -10,7 +10,7 @@ static const char *fonts[] = { "monospace" };
 
 /* how much screen estate is to be used at max for the content */
 static const float zoom_levels[] = {
-	 12.5,  25.0,  50.0,  75.0,
+	12.5,  25.0,  50.0,  75.0,
 	100.0, 150.0, 200.0, 400.0, 800.0
 };
 

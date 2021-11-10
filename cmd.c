@@ -57,8 +57,8 @@ zoom(const Arg *arg)
 	int i;
 	if (arg->i > 0) {
 		//if (img_zoom(&img, 125)) {
-		for (i = 1; i < zl_cnt; ++i)
-			if (zoom_levels[i] > zoomlvl * 100.0) {
+		for (i = 1; i < zoomcnt; ++i)
+			if (zoom_levels[i] > zoomstate * 100.0) {
 				img_zoom(&image, zoom_levels[i] / 100.0);
 				break;
 			}
@@ -68,8 +68,8 @@ zoom(const Arg *arg)
 		//}
 	} else {
 		//if (img_zoom(&img, -125)) {
-		for (i = zl_cnt - 2; i >= 0; --i)
-			if (zoom_levels[i] < zoomlvl * 100.0) {
+		for (i = zoomcnt - 2; i >= 0; --i)
+			if (zoom_levels[i] < zoomstate * 100.0) {
 				//im_clear();
 				img_zoom(&image, zoom_levels[i] / 100.0);
 				break;
@@ -161,8 +161,8 @@ rotate(const Arg *arg)
 	else
 		d = 3;
 
-	ox = d == 1 ? img->x : xw.w - img->x - img->w * zoomlvl;
-	oy = d == 3 ? img->y : xw.h - img->y - img->h * zoomlvl;
+	ox = d == 1 ? img->x : xw.w - img->x - img->w * zoomstate;
+	oy = d == 3 ? img->y : xw.h - img->y - img->h * zoomstate;
 
 	imlib_image_orientate(d);
 	//the below commands overwrites the current state of the buffer image

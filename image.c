@@ -1,11 +1,10 @@
 void
 im_init(void)
 {
-	zl_cnt = LENGTH(zoom_levels);
+	zoomcnt = LENGTH(zoom_levels);
 	zoom_min = zoom_levels[0] / 100.0;
-	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
-
-	zoomlvl = 1.0;
+	zoom_max = zoom_levels[zoomcnt - 1] / 100.0;
+	zoomstate = 1.0;
 	image.aa = antialiasing;
 
 	imlib_context_set_display(xw.dpy);
@@ -81,12 +80,12 @@ img_render(Image *img)
 
 	//if (!img->zoomed && scalemode != SCALE_ZOOM) {
 	//	img_fit(0);
-	//	if (scalemode == SCALE_DOWN && zoomlvl > 1.0)
+	//	if (scalemode == SCALE_DOWN && zoomstate > 1.0)
 
 	if (img->scalemode != SCALE_ZOOM) {
 		img_fit(0);
-		if (img->scalemode == SCALE_DOWN && zoomlvl > 1.0)
-				zoomlvl = 1.0;
+		if (img->scalemode == SCALE_DOWN && zoomstate > 1.0)
+				zoomstate = 1.0;
 	}
 
 	if (!img->re) {
@@ -101,26 +100,26 @@ img_render(Image *img)
 
  	/* calculate source and destination offsets */
 	if (img->x < 0) {
-		sx = -img->x / zoomlvl;
-		sw = xw.w / zoomlvl;
+		sx = -img->x / zoomstate;
+		sw = xw.w / zoomstate;
 		dx = 0;
 		dw = xw.w;
 	} else {
 		sx = 0;
 		sw = img->w;
 		dx = img->x;
-		dw = img->w * zoomlvl;
+		dw = img->w * zoomstate;
 	}
 	if (img->y < 0) {
-		sy = -img->y / zoomlvl;
-		sh = xw.h / zoomlvl;
+		sy = -img->y / zoomstate;
+		sh = xw.h / zoomstate;
 		dy = 0;
 		dh = xw.h;
 	} else {
 		sy = 0;
 		sh = img->h;
 		dy = img->y;
-		dh = img->h * zoomlvl;
+		dh = img->h * zoomstate;
 	}
 
 	//XClearWindow(win->dpy, win->win);
@@ -166,21 +165,21 @@ img_check_pan(Image *img)
 	if (!img)
 		return;
 
-	if (img->w * zoomlvl > xw.w) {
-		if (img->x > 0 && img->x + img->w * zoomlvl > xw.w)
+	if (img->w * zoomstate > xw.w) {
+		if (img->x > 0 && img->x + img->w * zoomstate > xw.w)
 			img->x = 0;
-		if (img->x < 0 && img->x + img->w * zoomlvl < xw.w)
-			img->x = xw.w - img->w * zoomlvl;
+		if (img->x < 0 && img->x + img->w * zoomstate < xw.w)
+			img->x = xw.w - img->w * zoomstate;
 	} else {
-		img->x = (xw.w - img->w * zoomlvl) / 2;
+		img->x = (xw.w - img->w * zoomstate) / 2;
 	}
-	if (img->h * zoomlvl > xw.h) {
-		if (img->y > 0 && img->y + img->h * zoomlvl > xw.h)
+	if (img->h * zoomstate > xw.h) {
+		if (img->y > 0 && img->y + img->h * zoomstate > xw.h)
 			img->y = 0;
-		if (img->y < 0 && img->y + img->h * zoomlvl < xw.h)
-			img->y = xw.h - img->h * zoomlvl;
+		if (img->y < 0 && img->y + img->h * zoomstate < xw.h)
+			img->y = xw.h - img->h * zoomstate;
 	} else {
-		img->y = (xw.h - img->h * zoomlvl) / 2;
+		img->y = (xw.h - img->h * zoomstate) / 2;
 	}
 }
 
@@ -191,10 +190,10 @@ img_zoom(Image *img, float z)
 	z = MIN(z, zoom_max);
  	img->scalemode = SCALE_ZOOM;
 
-	if (z != zoomlvl) {
-		img->x -= (img->w * z - img->w * zoomlvl) / 2;
-		img->y -= (img->h * z - img->h * zoomlvl) / 2;
-		zoomlvl = z;
+	if (z != zoomstate) {
+		img->x -= (img->w * z - img->w * zoomstate) / 2;
+		img->y -= (img->h * z - img->h * zoomstate) / 2;
+		zoomstate = z;
 		img->checkpan = 1;
 		//img->zoomed = 1;
 		return 1;
@@ -211,15 +210,15 @@ img_fit(const Arg *arg)
 	zw = (float) xw.w / (float) image.w;
 	zh = (float) xw.h / (float) image.h;
 
-	zoomlvl = MIN(zw, zh);
-	zoomlvl = MAX(zoomlvl, zoom_min);
-	zoomlvl = MIN(zoomlvl, zoom_max);
+	zoomstate = MIN(zw, zh);
+	zoomstate = MAX(zoomstate, zoom_min);
+	zoomstate = MIN(zoomstate, zoom_max);
 }
 
 void
 img_center(const Arg *arg)
 {
 	Image *img = &image;
-	img->x = (xw.w - img->w * zoomlvl) / 2;
-	img->y = (xw.h - img->h * zoomlvl) / 2;
+	img->x = (xw.w - img->w * zoomstate) / 2;
+	img->y = (xw.h - img->h * zoomstate) / 2;
 }

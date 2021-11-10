@@ -161,8 +161,8 @@ static char *wmname = "mage";
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
 /* zoom */
-static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)h
-static int zl_cnt;	//idx of the zoom[]
+static float zoomstate;	//this variable is global since functionally it's a global feature (applies to all images)h
+static int zoomcnt;	//idx of the zoom[]
 static float zoom_min, zoom_max;
 
 /* config.h for applying patches and the configuration. */
@@ -222,7 +222,7 @@ update_title()
 	char title[512];
 
 	snprintf(title, LENGTH(title), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
-			filecnt, (int) (zoomlvl * 100.0), filenames[fileidx]);
+			filecnt, (int) (zoomstate * 100.0), filenames[fileidx]);
 
 	XChangeProperty(xw.dpy, xw.win, atom[WMName],
 			XInternAtom(xw.dpy, "UTF8_STRING", False), 8,
@@ -248,7 +248,7 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "~%d <%d%%> [%d/%d]", scalemode, (int)(zoomlvl * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "~%d <%d%%> [%d/%d]", scalemode, (int)(zoomstate * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -351,6 +351,7 @@ configurenotify(XEvent *e)
 }
 
 //ALT return filename or NULL
+//handle whether it's a directory or not
 int
 check_img(const char *filename)
 {
