@@ -220,3 +220,9 @@ cyclescale(const Arg *arg)
 		reload(0);
 	}
 }
+
+void
+savestate(const Arg *arg)
+{
+	imlib_save_image(filenames[fileidx]);
+}

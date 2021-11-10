@@ -136,6 +136,7 @@ static void img_center(const Arg *arg);
 static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
 static void cyclescale(const Arg *arg);
+static void savestate(const Arg *arg);
 
 /* handling files */
 static int check_img(const char *filename);
