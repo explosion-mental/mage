@@ -64,6 +64,7 @@ typedef struct {
 } XWindow;
 
 typedef struct {
+	//Imlib_Image *im;
  	unsigned char re; /* rendered */
 	unsigned char checkpan;
 	//zoomed;
@@ -139,7 +140,7 @@ static void cyclescale(const Arg *arg);
 /* handling files */
 static int check_img(const char *filename);
 static void check_file(const char *file);
-static char *readstdin();
+static char *readstdin(void);
 
 /* variables */
 static Atom atom[WMLast];

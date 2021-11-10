@@ -16,6 +16,7 @@ A re-write of sxiv which sucks less.
 - A patch that removes bar functionality (so no font loading are
   needed), which detaches mage from drw.c and drw.h and it's xft dep.
 - Order functions alphabetically
+- Sort directory entries whether by giving `mage` a directory as an argument or by using `-r`
 
 
 # decisions
