@@ -49,11 +49,11 @@ typedef enum {
 
 typedef struct {
 	Display *dpy;
-	//Colormap cmap;
+	Colormap cmap;
 	Window win;
-	//Visual *vis;
+	Visual *vis;
 	XSetWindowAttributes attrs;
-	//int depth; /* bit depth */
+	int depth; /* bit depth */
 	int scr;
 	int scrw, scrh;
 	//int x, y;
@@ -139,7 +139,7 @@ static void cyclescale(const Arg *arg);
 /* handling files */
 static int check_img(const char *filename);
 static void check_file(const char *file);
-static char *readstdin(FILE *stream);
+static char *readstdin();
 
 /* variables */
 static Atom atom[WMLast];
@@ -164,11 +164,6 @@ static unsigned int numlockmask = 0; //should this be handled at all? (updatenum
 static float zoomlvl;	//this variable is global since functionally it's a global feature (applies to all images)h
 static int zl_cnt;	//idx of the zoom[]
 static float zoom_min, zoom_max;
-
-/* x init*/
-static Colormap cmap;
-static int depth;
-static Visual *visual;
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -358,20 +353,23 @@ configurenotify(XEvent *e)
 int
 check_img(const char *filename)
 {
-	int ret = im_load(filename);
-
-	if (ret == 0) {
-		imlib_free_image();
-		if (fileidx == filecnt) {
-			//filecnt *= 2;
-			filecnt++; //+ 1 for every new arg we add
-			if (!(filenames = realloc(filenames, filecnt * sizeof(const char *))))
-				die("mage: could not allocate memory img_check");
-		}
-		filenames[fileidx++] = filename;
-	}
-
-	return ret;
+	if (access(filename, F_OK) != -1) {
+		//the file exist
+		if (im_load(filename) == 0) {
+			//the file is an image
+			imlib_free_image();
+			if (fileidx == filecnt) {
+				filecnt++; //+ 1 for every new arg we add
+				if (!(filenames = realloc(filenames, filecnt * sizeof (const char *))))
+					die("cannot realloc %u bytes:", filecnt * sizeof (const char *));
+			}
+			filenames[fileidx++] = filename;
+			return 0;
+		} else //return 1 if the image cant be loaded
+			return 1;
+	} else //returns 2 if the file doesn't exist
+		return 2;
+	//return 0;
 }
 
 void
@@ -379,29 +377,39 @@ check_file(const char *file)
 {
 	char *filename;
 	const char **dirnames;
-	int dircnt = 256, diridx;
+	DIR *dir;
+	int dircnt, diridx;
 	unsigned char first;
 	size_t len;
 	struct dirent *dentry;
-	DIR *dir;
+	int ret;
 
 	//todo handle first if the file exist
 
-	if (access(file, F_OK) != -1 ) {
-		/* check if it's an image */
-		if (check_img(file) == 0)
-			//if it isn't an image we don't return, but rather pass
-			//to check if it's a directory (hack)
-			return;
-	} else {
+	/* check if it's an image */
+	ret = check_img(file);
+
+	if (ret == 0) {
+		//if it isn't an image we don't return, but rather pass
+		//to check if it's a directory (hack)
+		return;
+	//} else if (ret == 1) {
+		//if it isn't an image we don't return, but rather pass
+		//to check if it's a directory (hack)
+		//if (!quiet)
+		//	fprintf(stderr, "mage: %s: Can't be loaded\n", file);
+		//return;
+		//iload = 1;
+	} else if (ret == 2) {
 		if (!quiet)
-			fprintf(stderr, "mage: file %s does not exist\n", file);
+			fprintf(stderr, "mage: %s: No such file or directory\n", file);
 		return;
 	}
 
+	dircnt = 512;
 	diridx = first = 1;
-	if (!(dirnames = (const char**) malloc(dircnt * sizeof(const char*))))
-		die("could not allocate memory");
+	if (!(dirnames = malloc(dircnt * sizeof (const char *))))
+		die("cannot malloc %u bytes:", dircnt * sizeof (const char *));
 	dirnames[0] = file;
 
 	/* check if it's a directory */
@@ -415,13 +423,22 @@ check_file(const char *file)
 					continue;
 				len = strlen(file) + strlen(dentry->d_name) + 2;
 				if (!(filename = malloc(len * sizeof(char))))
-					die("could not allocate memory");
+					die("cannot malloc %u bytes:", len * sizeof (char));
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
 				if (recursive)
 					check_file(filename);
-				else
-					if (check_img(filename) != 0)
+				else {
+					ret = check_img(filename);
+					if (ret == 1) {
+						if (!quiet)
+							fprintf(stderr, "mage: %s: Ignoring directory\n", filename);
 						free(filename);
+					} else if (ret == 2) {
+						if (!quiet)
+							fprintf(stderr, "mage: %s: No such file or directory\n", filename);
+						free(filename);
+					}
+				}
 			}
 			closedir(dir);
 			if (!first)
@@ -433,40 +450,39 @@ check_file(const char *file)
 		return;
 	} else if (ENOENT == errno) { /* directory does not exist */
 		if (!quiet)
-			fprintf(stderr, "mage: directory doesn't exist %s\n", file);
+			fprintf(stderr, "mage: %s: No such directory\n", file);
 		return;
 	} else /* opendir() failed for some other reason */
 		return;
 }
 
 char *
-readstdin(FILE *stream)
+readstdin(void)
 {
 	size_t len;
 	char *buf, *s, *end;
 
-	if (!stream || feof(stream) || ferror(stream))
-		return NULL;
-
-	len = 4096;
-	if (!(s = buf = (char*) malloc(len * sizeof(char))))
-		die("mage: could not allocate memory");
+	len = 1024;
+	if (!(s = buf = malloc(len * sizeof (char))))
+		die("cannot malloc %u bytes:", len * sizeof (char));
 
 	do {
 		*s = '\0';
-		fgets(s, len - (s - buf), stream);
-		if ((end = strchr(s, '\n'))) {
+		fgets(s, len - (s - buf), stdin);
+		if ((end = strchr(s, '\n')))
 			*end = '\0';
-		} else if (strlen(s) + 1 == len - (s - buf)) {
-			buf = (char*) realloc(buf, 2 * len * sizeof(char));
+		else if (strlen(s) + 1 == len - (s - buf)) {
+			if (!(buf = realloc(buf, 2 * len * sizeof (char))))
+				die("cannot realloc %u bytes:", 2 * len * sizeof (char));
 			s = buf + len - 1;
 			len *= 2;
 		} else
 			s += strlen(s);
-	} while (!end && !feof(stream) && !ferror(stream));
+	} while (!end && !feof(stdin) && !ferror(stdin));
 
-	if (!ferror(stream) && *buf) {
-		s = (char*) malloc((strlen(buf) + 1) * sizeof(char));
+	if (!ferror(stdin) && *buf) {
+		if (!(s = malloc((strlen(buf) + 1) * sizeof (char))))
+			die("cannot malloc %u bytes:", (strlen(buf) + 1) * sizeof (char));
 		strcpy(s, buf);
 	} else
 		s = NULL;
@@ -487,12 +503,12 @@ setup(void)
 		die("mage: Unable to open display");
 
 	/* init screen */
-	xw.scr  = DefaultScreen(xw.dpy);
-	xw.scrw = DisplayWidth(xw.dpy, xw.scr);
-	xw.scrh = DisplayHeight(xw.dpy, xw.scr);
-	visual = DefaultVisual(xw.dpy, xw.scr);
-	cmap   = DefaultColormap(xw.dpy, xw.scr);
-	depth  = DefaultDepth(xw.dpy, xw.scr);
+	xw.scr   = DefaultScreen(xw.dpy);
+	xw.scrw  = DisplayWidth(xw.dpy, xw.scr);
+	xw.scrh  = DisplayHeight(xw.dpy, xw.scr);
+	xw.vis   = DefaultVisual(xw.dpy, xw.scr);
+	xw.cmap  = DefaultColormap(xw.dpy, xw.scr);
+	xw.depth = DefaultDepth(xw.dpy, xw.scr);
 	xw.pm = 0;
 
 	if (!xw.w)
@@ -500,7 +516,7 @@ setup(void)
 	if (!xw.h)
 		xw.h = xw.scrh;
 
- 	xw.attrs.colormap = cmap;
+ 	xw.attrs.colormap = xw.cmap;
 	//xw.attrs.background_pixel = 0;
 	//xw.attrs.border_pixel = 0;
 	xw.attrs.save_under = False;
@@ -509,7 +525,7 @@ setup(void)
 	                      ButtonMotionMask | ButtonPressMask;
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
-				xw.w, xw.h, 0, depth, InputOutput, visual,
+				xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
 				0, &xw.attrs);
 				//CWBackPixel | CWColormap | CWBorderPixel, &xw.attrs);
 				//CWBitGravity | CWEventMask, &xw.attrs);
@@ -577,17 +593,19 @@ usage()
 int
 main(int argc, char *argv[])
 {
-	int i;
-	int fs = 0;
+	int i, fs = 0;
+	char *input;
 
 	ARGBEGIN {
 	case 'v':
 		die("mage-"VERSION);
+		break;
 	case 'f':
 		fs = 1;
 		break;
 	case 'h':
 		usage();
+		break;
 	case 'p':
 		antialiasing = 0;
 		break;
@@ -607,25 +625,18 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	//temporal variables so we can later evaluate if they truly are files
-	const char **files = (const char**) argv + optind - 1;
-	int cnt = argc - optind + 1;
-	const char *input;
-
-	/* handle only images or directories */
-	if (!strcmp(argv[0], "-")) {
-		while ((input = readstdin(stdin)))
+	if (!strcmp(argv[0], "-"))
+		while ((input = readstdin()))
 			check_file(input);
-	} else {
-		for (i = 0; i < cnt; i++)
-			check_file(files[i]);
-	}
+	else /* handle only images or directories */
+		for (i = 0; i < argc; i++)
+			check_file(argv[i]);
 
 	filecnt = fileidx;
 	fileidx = 0;
 
 	if (!filecnt)
-		die("mage: no valid image filename given, aborting");
+		die("mage: No more images to display");
 
 	setup();
 

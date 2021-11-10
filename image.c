@@ -11,8 +11,8 @@ im_init(void)
 	img->aa = antialiasing;
 
 	imlib_context_set_display(xw.dpy);
-	imlib_context_set_visual(visual);
-	imlib_context_set_colormap(cmap);
+	imlib_context_set_visual(xw.vis);
+	imlib_context_set_colormap(xw.cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 
@@ -33,11 +33,8 @@ im_load(const char *filename)
 	if (!filename)
 		return -1;
 
-	if (!(im = imlib_load_image(filename))) {
-		if (!quiet)
-			fprintf(stderr, "mage: could not open image %s\n", filename);
+	if (!(im = imlib_load_image(filename)))
 		return -1;
-	}
 
 	imlib_context_set_image(im);
 	imlib_image_set_changes_on_disk();
@@ -139,7 +136,7 @@ img_render(Image *img)
 
 	if (xw.pm)
 		XFreePixmap(xw.dpy, xw.pm);
-	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, depth);
+	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 
 	//drw_rect(drw, 0, 0, xw.scrw, xw.scrh, 0, 0);
