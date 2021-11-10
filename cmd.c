@@ -154,8 +154,6 @@ void
 rotate(const Arg *arg)
 {
 	Image *img = &image;
-	//Imlib_Image *im;
-
 	int ox, oy, tmp, d;
 
 	if (arg->i > 0)
@@ -186,11 +184,10 @@ rotate(const Arg *arg)
 void
 toggleantialias(const Arg *arg)
 {
-	Image *img = &image;
-
-	img->aa ^= 1;
-	imlib_context_set_anti_alias(img->aa);
-	img_render(img);
+	image.aa ^= 1;
+	imlib_context_set_anti_alias(image.aa);
+	img_render(&image);
+	drawbar();
 }
 
 void

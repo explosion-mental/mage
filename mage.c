@@ -350,6 +350,7 @@ configurenotify(XEvent *e)
 	}
 }
 
+//ALT return filename or NULL
 int
 check_img(const char *filename)
 {

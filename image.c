@@ -1,21 +1,18 @@
 void
 im_init(void)
 {
-	Image *img = &image;
-
 	zl_cnt = LENGTH(zoom_levels);
 	zoom_min = zoom_levels[0] / 100.0;
 	zoom_max = zoom_levels[zl_cnt - 1] / 100.0;
 
 	zoomlvl = 1.0;
-	img->aa = antialiasing;
+	image.aa = antialiasing;
 
 	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(xw.vis);
 	imlib_context_set_colormap(xw.cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
-
 }
 
 void
@@ -209,11 +206,10 @@ img_zoom(Image *img, float z)
 void
 img_fit(const Arg *arg)
 {
-	Image *img = &image;
 	float zw, zh;
 
-	zw = (float) xw.w / (float) img->w;
-	zh = (float) xw.h / (float) img->h;
+	zw = (float) xw.w / (float) image.w;
+	zh = (float) xw.h / (float) image.h;
 
 	zoomlvl = MIN(zw, zh);
 	zoomlvl = MAX(zoomlvl, zoom_min);
