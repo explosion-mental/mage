@@ -226,3 +226,18 @@ savestate(const Arg *arg)
 {
 	imlib_save_image(filenames[fileidx]);
 }
+
+void
+spawn(const Arg *arg)
+{
+	strcpy(imagename, filenames[fileidx]);
+	if (fork() == 0) {
+		if (xw.dpy)
+			close(ConnectionNumber(xw.dpy));
+		setsid();
+		execvp(((char **)arg->v)[0], (char **)arg->v);
+		fprintf(stderr, "mage: execvp %s", ((char **)arg->v)[0]);
+		perror(" failed");
+		exit(EXIT_SUCCESS);
+	}
+}

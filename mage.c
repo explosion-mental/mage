@@ -137,6 +137,7 @@ static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
 static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
+static void spawn(const Arg *arg);
 
 /* handling files */
 static int check_img(const char *filename);
@@ -160,6 +161,7 @@ static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
 //static char *scales[] = { "ScaleDown}
 
+static char imagename[BUFSIZ];
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
 /* zoom */
@@ -362,7 +364,7 @@ check_img(const char *filename)
 		if (im_load(filename) == 0) {
 			//the file is an image
 			imlib_free_image();
-			if (fileidx == filecnt) {
+			if (fileidx == filecnt) { //condition not revelant anymore
 				filecnt++; //+ 1 for every new arg we add
 				if (!(filenames = realloc(filenames, filecnt * sizeof (const char *))))
 					die("cannot realloc %u bytes:", filecnt * sizeof (const char *));
