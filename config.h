@@ -21,15 +21,10 @@ static const char *colors[][3] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
-#define SHCMD(cmd)	spawn, { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
-
-static const char *notify[] = { "notify-send", imagename, NULL };
-
 static Shortcut shortcuts[] = {
 	/* mod          keysym         function        argument */
 	{ 0,            XK_Escape,     quit,           {0} },
 	{ 0,            XK_q,          quit,           {0} },
-	{ 0,            XK_t,          spawn,          {.v = notify} },
 	{ 0,            XK_b,          togglebar,      {0} },
 	{ 0,            XK_BackSpace,  advance,        {.i = -1} },
 	{ 0,            XK_space,      advance,        {.i = +1} },
