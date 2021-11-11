@@ -17,8 +17,9 @@ A re-write of sxiv which sucks less.
   needed), which detaches mage from drw.c and drw.h and it's xft dep.
 - Order functions alphabetically
 - Sort directory entries whether by giving `mage` a directory as an argument or by using `-r`
+- Handle external commands
 
 
-# decisions
+# Questions
 - global variables outside of the `Image` struct like `zoomlvl` and `aa` (antialias flag) because they are applied 'globally', which means it doesn't store this for every image, like it does for the width, height, x, and y..
 - mouse support? (cursors)
