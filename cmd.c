@@ -26,24 +26,14 @@ togglebar(const Arg *arg)
 void
 advance(const Arg *arg)
 {
-	if (arg->i > 0) {
-		if (fileidx + 1 < filecnt) {
-			fileidx = fileidx + arg->i;
-			img_load(&image, filenames[fileidx]);
-			//im_clear();
-			img_render(&image);
-			update_title();
-			drawbar();
-		}
-	} else {
-		if (fileidx > 0) {
-			fileidx = fileidx + arg->i;
-			img_load(&image, filenames[fileidx]);
-			//im_clear();
-			img_render(&image);
-			update_title();
-			drawbar();
-		}
+	if ((arg->i > 0 && fileidx + arg->i < filecnt)
+	|| (arg->i < 0 && fileidx >= -arg->i)) {
+		fileidx = fileidx + arg->i;
+		img_load(&image, filenames[fileidx]);
+		//im_clear();
+		img_render(&image);
+		update_title();
+		drawbar();
 	}
 }
 
