@@ -28,7 +28,8 @@ advance(const Arg *arg)
 {
 	if (arg->i > 0) {
 		if (fileidx + 1 < filecnt) {
-			img_load(&image, filenames[++fileidx]);
+			fileidx = fileidx + arg->i;
+			img_load(&image, filenames[fileidx]);
 			//im_clear();
 			img_render(&image);
 			update_title();
@@ -36,7 +37,8 @@ advance(const Arg *arg)
 		}
 	} else {
 		if (fileidx > 0) {
-			img_load(&image, filenames[--fileidx]);
+			fileidx = fileidx + arg->i;
+			img_load(&image, filenames[fileidx]);
 			//im_clear();
 			img_render(&image);
 			update_title();
