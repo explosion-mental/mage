@@ -90,31 +90,36 @@ togglefullscreen(const Arg *arg)
 }
 
 void
-pan(const Arg *arg)
+panhorz(const Arg *arg)
 {
-	int ox, oy;
+	int x = image.x, y = image.y;
 
-	ox = image.x;
-	oy = image.y;
-
-	switch (arg->i) {
-		case LEFT:
-			image.x += xw.w / 5;
-			break;
-		case RIGHT:
-			image.x -= xw.w / 5;
-			break;
-		case UP:
-			image.y += xw.h / 5;
-			break;
-		case DOWN:
-			image.y -= xw.h / 5;
-			break;
-	}
+	if (arg->i > 0)
+		image.x -= xw.w / arg->i;
+	else
+		image.x += xw.w / -arg->i;
 
 	img_check_pan(&image);
 
-	if (ox != image.x || oy != image.y) {
+	if (x != image.x || y != image.y) {
+		img_render(&image);
+		drawbar();
+	}
+}
+
+void
+panvert(const Arg *arg)
+{
+	int x = image.x, y = image.y;
+
+	if (arg->i > 0)
+		image.y += xw.h / arg->i;
+	else
+		image.y -= xw.h / -arg->i;
+
+	img_check_pan(&image);
+
+	if (x != image.x || y != image.y) {
 		img_render(&image);
 		drawbar(); //panning without bar?
 	}

@@ -35,9 +35,7 @@ char *argv0;
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
-enum { LEFT, RIGHT, UP, DOWN }; /* 2d directions */
-enum { WMDelete, WMName, WMFullscreen, WMState,
-	WMLast }; /* atoms */
+enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 
 typedef enum {
 	SCALE_DOWN,
@@ -125,7 +123,8 @@ static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
-static void pan(const Arg *arg);
+static void panhorz(const Arg *arg);
+static void panvert(const Arg *arg);
 static void first(const Arg *arg);
 static void last(const Arg *arg);
 static void rotate(const Arg *arg);
