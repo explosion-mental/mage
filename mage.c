@@ -316,9 +316,10 @@ expose(XEvent *e)
 	if (0 == e->xexpose.count) {
 		//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
 		//drw_resize(drw, e->xexpose.width, e->xexpose.height);
-		image.checkpan = 1; //hack to redraw image
-		img_render(&image);
-		drawbar();
+		//image.checkpan = 1; //hack to redraw image
+		//img_render(&image);
+		//drawbar();
+		reload(0);
 	}
 }
 void
