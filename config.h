@@ -7,9 +7,7 @@ static int quiet           = 0;        /* 1 means print warnings */
 static int recursive       = 0;        /* 1 means load subdirs */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT - SCALE_ZOOM */
 static const char *fonts[] = { "monospace" };
-
-/* how much screen estate is to be used at max for the content */
-static const float zoom_levels[] = {
+static const float zoom_levels[] = {   /* from min to max */
 	12.5,  25.0,  50.0,  75.0,
 	100.0, 150.0, 200.0, 400.0, 800.0
 };
@@ -22,32 +20,29 @@ static const char *colors[][3] = {
 };
 
 static Shortcut shortcuts[] = {
-	/* mod          keysym         function        argument */
-	{ 0,            XK_Escape,     quit,           {0} },
-	{ 0,            XK_q,          quit,           {0} },
-	{ 0,            XK_b,          togglebar,      {0} },
-	{ 0,            XK_BackSpace,  advance,        {.i = -1} },
-	{ 0,            XK_space,      advance,        {.i = +1} },
-	{ 0,            XK_p,          printfile,      {0} },
-	{ 0,            XK_r,          reload,         {0} },
-	{ 0,            XK_minus,      zoom,           {.i = -1} },
-	{ 0,            XK_equal,      zoom,           {.i = +1} },
-	{ ShiftMask,    XK_f,       togglefullscreen,  {0} },
-	{ 0,            XK_f,          img_fit,        {0} },
-	{ 0,            XK_a,       toggleantialias,   {0} },
-	{ 0,            XK_s,          savestate,      {0} },
-	{ 0,            XK_h,          pan,            {.i = LEFT} },
-	{ 0,            XK_j,          pan,            {.i = DOWN} },
-	{ 0,            XK_k,          pan,            {.i = UP} },
-	{ 0,            XK_l,          pan,            {.i = RIGHT} },
-	{ 0,            XK_g,          first,          {0} },
-	{ ShiftMask,    XK_g,          last,           {0} },
-	//{ 0,            XK_greater,    rotate,         {.i = +1 } },
-	//{ 0,            XK_less,       rotate,         {.i = -1 } },
-	{ ShiftMask,    XK_period,     rotate,         {.i = +1 } },
-	{ ShiftMask,    XK_comma,      rotate,         {.i = -1 } },
-	{ 0,            XK_backslash,  cyclescale,     {.i = +1 } },
-	{ ShiftMask,    XK_backslash,  cyclescale,     {.i = -1 } },
+	/* mod          keysym         function            argument */
+	{ 0,            XK_Escape,     quit,               {0} },
+	{ 0,            XK_q,          quit,               {0} },
+	{ 0,            XK_b,          togglebar,          {0} },
+	{ 0,            XK_BackSpace,  advance,            {.i = -1} },
+	{ 0,            XK_space,      advance,            {.i = +1} },
+	{ 0,            XK_p,          printfile,          {0} },
+	{ 0,            XK_r,          reload,             {0} },
+	{ 0,            XK_minus,      zoom,               {.i = -1} },
+	{ 0,            XK_equal,      zoom,               {.i = +1} },
+	{ 0,            XK_f,          togglefullscreen,   {0} },
+	{ 0,            XK_a,          toggleantialias,    {0} },
+	{ 0,            XK_s,          savestate,          {0} },
+	{ 0,            XK_h,          pan,                {.i = LEFT} },
+	{ 0,            XK_j,          pan,                {.i = DOWN} },
+	{ 0,            XK_k,          pan,                {.i = UP} },
+	{ 0,            XK_l,          pan,                {.i = RIGHT} },
+	{ 0,            XK_g,          first,              {0} },
+	{ ShiftMask,    XK_g,          last,               {0} },
+	{ ShiftMask,    XK_period,     rotate,             {.i = +1 } },
+	{ ShiftMask,    XK_comma,      rotate,             {.i = -1 } },
+	{ 0,            XK_backslash,  cyclescale,         {.i = +1 } },
+	{ ShiftMask,    XK_backslash,  cyclescale,         {.i = -1 } },
 };
 
 static Mousekey mshortcuts[] = {

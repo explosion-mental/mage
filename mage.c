@@ -4,8 +4,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <math.h>
-#include <regex.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -591,7 +589,7 @@ setup(void)
 void
 usage()
 {
-	die("usage: %s [-fhprv] [-n class] file...", argv0);
+	die("usage: %s [-fhpqrv] [-n class] file...", argv0);
 }
 
 int
@@ -601,9 +599,6 @@ main(int argc, char *argv[])
 	char *input;
 
 	ARGBEGIN {
-	case 'v':
-		die("mage-"VERSION);
-		break;
 	case 'f':
 		fs = 1;
 		break;
@@ -613,14 +608,17 @@ main(int argc, char *argv[])
 	case 'p':
 		antialiasing = 0;
 		break;
+	case 'q':
+		quiet = 1;
+		break;
 	case 'r':
 		recursive = 1;
 		break;
 	case 'n':
 		wmname = EARGF(usage());
 		break;
-	case 'q':
-		quiet = 1;
+	case 'v':
+		die("mage-"VERSION);
 		break;
 	default:
 		usage();

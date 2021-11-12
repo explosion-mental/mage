@@ -3,17 +3,17 @@
 mage \- image viewer
 .SH SYNOPSIS
 .B mage
-.RB [ \-fhpv ]
+.RB [ \-fhpqrv ]
 .RB [ \-n
 .IR class ]
 .RI [ "file \- directory ..." ]
 .SH DESCRIPTION
 .B mage
-is a image viewer for X.
+is an image viewer for X.
 .P
 .SH OPTIONS
 When
-.I FILE
+.I file
 is
 .B \-
 , read standard input.
@@ -26,6 +26,11 @@ Prints the usage and exits.
 .TP
 .B \-p
 Pixelate images.
+.TP
+.B \-q
+Quiet. Does not print different warnings, whether it's ignoring a directory because it's missing the
+.I \-r
+flag or whether the file isn't an image or doesn't exist, etc.
 .TP
 .B \-r
 True recursiveness. If the argument is a directory, mage by default will not load sub-directories (similar to what
@@ -48,11 +53,11 @@ Toggles the bar.
 Moves to the next/prev image.
 .TP
 .B Equal, Minus
-Adds/decrease index of
-.I zoom_lvl
-declared on config.h.
+Adds/decrease zoom acording to what's defined in
+.I zoom_levels
+array.
 .TP
-.B Shift\-f
+.B f
 Toggles fullscreen.
 .TP
 .B h/j/k/l
@@ -65,10 +70,19 @@ Rotate image 90 degrees right.
 Rotate image 90 degrees left.
 .TP
 .B backslash
-cycles scale modes +1
+Cycles scale modes +1.
 .TP
 .B Shitft\-backslash
-cycles scale modes -1
+Cycles scale modes -1.
+.TP
+.B s
+Saves the state of the current 'image buffer' into the 'real image'. If you rotate the image with the commands above it won't modify the file.
+.TP
+.B r
+Reloads the current image.
+.TP
+.B g/G
+Go to the first/last image.
 .SH SEE ALSO
 .IR feh (1),
 .IR imv (1),
