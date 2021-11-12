@@ -1,5 +1,5 @@
 # mage version
-VERSION = git-20211105
+VERSION = 0.4
 
 # Customize below to fit your system
 
