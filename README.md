@@ -9,8 +9,6 @@ A re-write of sxiv which sucks less.
 - Thumbnail mode
 - Top status bar
 - Better variable/function names (specially for zoom)
-- `zoom` function to take zoom steps on the argument (positive or negative), if
-  the arg it's NULL then use zoom_lvl steps. A separate variable to store `max_steps`.
 - A patch that removes bar functionality (so no font loading are
   needed), which detaches mage from drw.c and drw.h and it's xft dep.
 - Order functions alphabetically
