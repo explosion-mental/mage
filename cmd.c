@@ -83,12 +83,12 @@ togglefullscreen(const Arg *arg)
 void
 panhorz(const Arg *arg)
 {
-	int x = image.x, y = image.y;
+	float x = image.x, y = image.y;
 
 	if (arg->i > 0)
-		image.x -= xw.w / arg->i;
+		image.x -= xw.w / (float) arg->i;
 	else
-		image.x += xw.w / -arg->i;
+		image.x += xw.w / (float) -arg->i;
 
 	img_check_pan(&image);
 
@@ -101,12 +101,12 @@ panhorz(const Arg *arg)
 void
 panvert(const Arg *arg)
 {
-	int x = image.x, y = image.y;
+	float x = image.x, y = image.y;
 
 	if (arg->i > 0)
-		image.y += xw.h / arg->i;
+		image.y += xw.h / (float) arg->i;
 	else
-		image.y -= xw.h / -arg->i;
+		image.y -= xw.h / (float) -arg->i;
 
 	img_check_pan(&image);
 
