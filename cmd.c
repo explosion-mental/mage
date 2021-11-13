@@ -195,17 +195,15 @@ cyclescale(const Arg *arg)
 			scalemode++;
 		else
 			scalemode = 0;
-		//here I invoke reload in order to invoke img_load which sets
-		//`img->scalemode = scalemode`, in the future I would probably
-		//remove scalemode from the Image struct since right now
-		//doesn't seem very useful
-		reload(0);
+		img_render(&image);
+		drawbar();
 	} else {
 		if (scalemode > 0)
 			scalemode--;
 		else
 			scalemode = LENGTH(scales) - 1;
-		reload(0);
+		img_render(&image);
+		drawbar();
 	}
 }
 
