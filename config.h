@@ -7,7 +7,7 @@ static int quiet           = 0;        /* 1 means print warnings */
 static int recursive       = 0;        /* 1 means load subdirs */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT */
 static const char *fonts[] = { "monospace" };
-static const float zoom_levels[] = {   /* from min to max */
+static const float zoom_levels[] = {   /* from min to max, used by zoom_steps */
 	12.5,  25.0,  50.0,  75.0,
 	100.0, 150.0, 200.0, 400.0, 800.0
 };
@@ -30,8 +30,8 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_bracketleft,  advance,            {.i = -5} },
 	{ 0,            XK_p,            printfile,          {0} },
 	{ 0,            XK_r,            reload,             {0} },
-	{ 0,            XK_minus,        zoom,               {.i = -1} },
-	{ 0,            XK_equal,        zoom,               {.i = +1} },
+	{ 0,            XK_minus,        zoom,               {.f = -12.5} },
+	{ 0,            XK_equal,        zoom,               {.f = +12.5} },
 	{ 0,            XK_f,            togglefullscreen,   {0} },
 	{ 0,            XK_a,            toggleantialias,    {0} },
 	{ 0,            XK_s,            savestate,          {0} },

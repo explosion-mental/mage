@@ -121,6 +121,7 @@ static void quit(const Arg *arg);
 static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
+static void zoom_steps(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
 static void panhorz(const Arg *arg);
 static void panvert(const Arg *arg);

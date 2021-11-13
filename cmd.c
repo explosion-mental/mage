@@ -44,7 +44,7 @@ printfile(const Arg *arg)
 }
 
 void
-zoom(const Arg *arg)
+zoom_steps(const Arg *arg)
 {
 	int i;
 	if (arg->i > 0) {
@@ -71,6 +71,18 @@ zoom(const Arg *arg)
 		drawbar();
 		//}
 	}
+}
+
+void
+zoom(const Arg *arg)
+{
+	if (arg->i > 0)
+		img_zoom(&image, zoomstate + arg->f / 100.0);
+	else
+		img_zoom(&image, zoomstate - -arg->f / 100.0);
+	img_render(&image);
+	update_title();
+	drawbar();
 }
 
 void
