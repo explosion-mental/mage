@@ -121,7 +121,7 @@ static void quit(const Arg *arg);
 static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
-static void zoom_steps(const Arg *arg);
+static void set_zoom(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
 static void panhorz(const Arg *arg);
 static void panvert(const Arg *arg);
@@ -159,8 +159,6 @@ static unsigned int numlockmask = 0; //should this be handled at all? (updatenum
 
 /* zoom */
 static float zoomstate;	//this variable is global since functionally it's a global feature (applies to all images)h
-static int zoomcnt;	//idx of the zoom[]
-static float zoom_min, zoom_max;
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"

@@ -1,9 +1,6 @@
 void
 im_init(void)
 {
-	zoomcnt = LENGTH(zoom_levels);
-	zoom_min = zoom_levels[0] / 100.0;
-	zoom_max = zoom_levels[zoomcnt - 1] / 100.0;
 	zoomstate = 1.0;
 	image.aa = antialiasing;
 
@@ -50,6 +47,7 @@ img_load(Image *img, const char *filename)
 	if (im_load(filename) != 0)
 		return -1;
 
+
 	/* sets defaults when opening image */
 	img->aa = 1;
 	img->checkpan = 0;
@@ -74,13 +72,12 @@ img_render(Image *img)
 		return;
 
 	if (img->zoomed == 0) {
-		//img_fit(0);
 		zw = (float) xw.w / (float) image.w;
 		zh = (float) xw.h / (float) image.h;
 
 		zoomstate = MIN(zw, zh);
-		zoomstate = MAX(zoomstate, zoom_min);
-		zoomstate = MIN(zoomstate, zoom_max);
+		zoomstate = MAX(zoomstate, minzoom / 100.0);
+		zoomstate = MIN(zoomstate, maxzoom / 100.0);
 
 		if (scalemode == SCALE_DOWN && zoomstate > 1.0)
 			zoomstate = 1.0;
@@ -168,8 +165,8 @@ img_zoom(Image *img, float z)
 	if (!img)
 		return 0;
 
-	z = MAX(z, zoom_min);
-	z = MIN(z, zoom_max);
+	z = MAX(z, minzoom / 100.0);
+	z = MIN(z, maxzoom / 100.0);
 	img->zoomed = 1;
 
 	if (z != zoomstate) {

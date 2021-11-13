@@ -44,33 +44,12 @@ printfile(const Arg *arg)
 }
 
 void
-zoom_steps(const Arg *arg)
+set_zoom(const Arg *arg)
 {
-	int i;
-	if (arg->i > 0) {
-		//if (img_zoom(&img, 125)) {
-		for (i = 1; i < zoomcnt; ++i)
-			if (zoom_levels[i] > zoomstate * 100.0) {
-				img_zoom(&image, zoom_levels[i] / 100.0);
-				break;
-			}
-		img_render(&image);
-		update_title();
-		drawbar();
-		//}
-	} else {
-		//if (img_zoom(&img, -125)) {
-		for (i = zoomcnt - 2; i >= 0; --i)
-			if (zoom_levels[i] < zoomstate * 100.0) {
-				//im_clear();
-				img_zoom(&image, zoom_levels[i] / 100.0);
-				break;
-			}
-		img_render(&image);
-		update_title();
-		drawbar();
-		//}
-	}
+	img_zoom(&image, arg->f / 100.0);
+	img_render(&image);
+	update_title();
+	drawbar();
 }
 
 void

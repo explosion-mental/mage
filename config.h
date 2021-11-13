@@ -1,16 +1,13 @@
 /* See LICENSE file for copyright and license details. */
 
-static int showbar         = 1;        /* 0 means no bar */
-static const int topbar    = 0;        /* 0 means bottom bar */
-static int antialiasing    = 1;        /* 0 means pixelize images */
-static int quiet           = 0;        /* 1 means print warnings */
-static int recursive       = 0;        /* 1 means load subdirs */
+static int showbar         = 1;          /* 0 means no bar */
+static int antialiasing    = 1;          /* 0 means pixelize images */
+static int quiet           = 0;          /* 1 means print warnings */
+static int recursive       = 0;          /* 1 means load subdirs */
+static const float maxzoom = 800.0;      /* max value that zoom can reach */
+static const float minzoom = 12.5;       /* min value that zoom can reach */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT */
 static const char *fonts[] = { "monospace" };
-static const float zoom_levels[] = {   /* from min to max, used by zoom_steps */
-	12.5,  25.0,  50.0,  75.0,
-	100.0, 150.0, 200.0, 400.0, 800.0
-};
 
 static const char *colors[][3] = {
       			/*  fg       bg     */
@@ -32,6 +29,7 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_r,            reload,             {0} },
 	{ 0,            XK_minus,        zoom,               {.f = -12.5} },
 	{ 0,            XK_equal,        zoom,               {.f = +12.5} },
+	{ ShiftMask,    XK_equal,        set_zoom,           {.f = 100} },
 	{ 0,            XK_f,            togglefullscreen,   {0} },
 	{ 0,            XK_a,            toggleantialias,    {0} },
 	{ 0,            XK_s,            savestate,          {0} },
