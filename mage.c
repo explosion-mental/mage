@@ -589,14 +589,14 @@ setup(void)
 void
 usage()
 {
-	die("usage: %s [-fhpqrv] [-n class] file...", argv0);
+	die("usage: %s [-fhpqrv] [-s scalemode] [-n class] file...", argv0);
 }
 
 int
 main(int argc, char *argv[])
 {
 	int i, fs = 0;
-	char *input;
+	char *input, *mode;
 
 	ARGBEGIN {
 	case 'f':
@@ -616,6 +616,14 @@ main(int argc, char *argv[])
 		break;
 	case 'n':
 		wmname = EARGF(usage());
+		break;
+	case 's':
+		mode = EARGF(usage());
+		for (i = 0; i < LENGTH(scales); i++)
+			if (!strcmp(mode, scales[i])) {
+				scalemode = i;
+				break;
+			}
 		break;
 	case 'v':
 		die("mage-"VERSION);

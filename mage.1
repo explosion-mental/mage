@@ -4,6 +4,8 @@ mage \- image viewer
 .SH SYNOPSIS
 .B mage
 .RB [ \-fhpqrv ]
+.RB [ \-s
+.IR scalemode ]
 .RB [ \-n
 .IR class ]
 .RI [ "file \- directory ..." ]
@@ -39,6 +41,11 @@ does), unless you specify otherwise.
 .TP
 .B \-v
 Prints the version and exits.
+.TP
+.BI \-s " scalemode"
+Will set the scale mode to
+.I scalemode
+, there are 2 methods: down and fit.
 .TP
 .BI \-n " class"
 Will set the WM_CLASS attribute to
