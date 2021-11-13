@@ -14,5 +14,5 @@ A re-write of sxiv which sucks less.
 
 
 # Questions
-- global variables outside of the `Image` struct like `zoomlvl` and `aa` (antialias flag) because they are applied 'globally', which means it doesn't store this for every image, like it does for the width, height, x, and y..
-- mouse support? (cursors)
+- mouse support? handling icon cursos and positions
+- prefix commands by default? looks 'simple' enough to add but I think this should be a patch.
