@@ -5,7 +5,7 @@ static const int topbar    = 0;        /* 0 means bottom bar */
 static int antialiasing    = 1;        /* 0 means pixelize images */
 static int quiet           = 0;        /* 1 means print warnings */
 static int recursive       = 0;        /* 1 means load subdirs */
-static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT - SCALE_ZOOM */
+static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT */
 static const char *fonts[] = { "monospace" };
 static const float zoom_levels[] = {   /* from min to max */
 	12.5,  25.0,  50.0,  75.0,

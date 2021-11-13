@@ -181,7 +181,7 @@ rotate(const Arg *arg)
 void
 toggleantialias(const Arg *arg)
 {
-	image.aa ^= 1;
+	image.aa = !image.aa;
 	imlib_context_set_anti_alias(image.aa);
 	img_render(&image);
 	drawbar();
@@ -200,7 +200,7 @@ void
 cyclescale(const Arg *arg)
 {
 	if (arg->i > 0) {
-		if (scalemode < 2)
+		if (scalemode < LENGTH(scales) - 1)
 			scalemode++;
 		else
 			scalemode = 0;
@@ -213,7 +213,7 @@ cyclescale(const Arg *arg)
 		if (scalemode > 0)
 			scalemode--;
 		else
-			scalemode = 2;
+			scalemode = LENGTH(scales) - 1;
 		reload(0);
 	}
 }

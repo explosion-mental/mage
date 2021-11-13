@@ -40,7 +40,6 @@ enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 typedef enum {
 	SCALE_DOWN,
 	SCALE_FIT,
-	SCALE_ZOOM
 } scaling;
 
 typedef struct {
@@ -61,11 +60,11 @@ typedef struct {
 
 typedef struct {
 	//Imlib_Image *im;
- 	unsigned char re; /* rendered */
-	unsigned char checkpan;
-	//zoomed;
+ 	int re; /* rendered */
+	int checkpan;
+	int zoomed;
 	scaling scalemode;
-	unsigned char aa; /* antialias */
+	char aa; /* antialias */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -129,8 +128,6 @@ static void first(const Arg *arg);
 static void last(const Arg *arg);
 static void rotate(const Arg *arg);
 static void toggleantialias(const Arg *arg);
-static void img_center(const Arg *arg);
-static void img_fit(const Arg *arg);
 static void reload(const Arg *arg);
 static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
@@ -155,7 +152,7 @@ static int bh = 0;      /* bar geometry */
 //static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
-static char *scales[] = { "down", "fit", "zoomed" };
+static char *scales[] = { "down", "fit" };
 
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
@@ -317,8 +314,10 @@ expose(XEvent *e)
 		//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
 		//drw_resize(drw, e->xexpose.width, e->xexpose.height);
 		//image.checkpan = 1; //hack to redraw image
+		//image.checkpan = 1; //hack to redraw image
 		//img_render(&image);
 		//drawbar();
+		//TODO handle redraws better
 		reload(0);
 	}
 }
@@ -347,6 +346,7 @@ configurenotify(XEvent *e)
 		xw.h = ev->height;
 		//scalemode = SCALE_DOWN;
 		drw_resize(drw, xw.w, xw.h);
+		reload(0);
 	}
 }
 

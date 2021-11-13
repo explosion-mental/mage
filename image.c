@@ -50,21 +50,15 @@ img_load(Image *img, const char *filename)
 	if (im_load(filename) != 0)
 		return -1;
 
-	imlib_context_set_anti_alias(img->aa);
-
-	//Sets these variables for every image, so the value differs between
-	//images (if this doesn't existed all images will be treated the same,
-	//e.g. if I comment out `img->zommed = 0` then the zoom level would
-	//stay constant)
-	//Update: instead of zoomed we look if the scalemode is SCALE_ZOOM,
-	//probably in the future I would revert this behaviour
-
- 	img->scalemode = scalemode;
- 	img->re = 0;
+	/* sets defaults when opening image */
+	img->aa = 1;
 	img->checkpan = 0;
-	//img->zoomed = 0;
+ 	img->re = 0;
+	img->zoomed = 0;
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
+
+	imlib_context_set_anti_alias(img->aa);
 
 	return 0;
 }
@@ -74,24 +68,30 @@ img_render(Image *img)
 {
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
+	float zw, zh;
 
 	if (!img || !imlib_context_get_image())
 		return;
 
-	//if (!img->zoomed && scalemode != SCALE_ZOOM) {
-	//	img_fit(0);
-	//	if (scalemode == SCALE_DOWN && zoomstate > 1.0)
+	if (img->zoomed == 0) {
+		//img_fit(0);
+		zw = (float) xw.w / (float) image.w;
+		zh = (float) xw.h / (float) image.h;
 
-	if (img->scalemode != SCALE_ZOOM) {
-		img_fit(0);
-		if (img->scalemode == SCALE_DOWN && zoomstate > 1.0)
-				zoomstate = 1.0;
+		zoomstate = MIN(zw, zh);
+		zoomstate = MAX(zoomstate, zoom_min);
+		zoomstate = MIN(zoomstate, zoom_max);
+
+		if (scalemode == SCALE_DOWN && zoomstate > 1.0)
+			zoomstate = 1.0;
 	}
 
 	if (!img->re) {
 		/* rendered for the first time */
 		img->re = 1;
-		img_center(0);
+		Image *img = &image;
+		img->x = (xw.w - img->w * zoomstate) / 2;
+		img->y = (xw.h - img->h * zoomstate) / 2;
 	} else if (img->checkpan) {
 		/* only useful after zooming */
 		img_check_pan(img);
@@ -122,40 +122,18 @@ img_render(Image *img)
 		dh = img->h * zoomstate;
 	}
 
-	//XClearWindow(win->dpy, win->win);
-	//imlib_context_set_drawable(win->pm);
-	//if (img->cp == 0)
-	//	im_clear();
-	//drw_resize(drw, xw.scrw, xw.scrh);
-	//drw_rect(drw, 0, 0, xw.scrw, xw.scrh, 0, 0);
-	//XFillRectangle(xw.dpy, drw->drawable, bgc, 0, 0, e->scrw, e->scrh);
-
+	/* clear and set pixmap */
 	if (xw.pm)
 		XFreePixmap(xw.dpy, xw.pm);
 	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 
-	//drw_rect(drw, 0, 0, xw.scrw, xw.scrh, 0, 0);
-	//XFillRectangle(xw.dpy, xw.pm, , 0, 0, xw.scrw, xw.scrh);
-
+	/* render image */
  	imlib_context_set_drawable(xw.pm);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
+	/* window background */
 	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
-	XClearWindow(xw.dpy, xw.win);
-
-	//XSetWindowBackgroundPixmap(xw.dpy, xw.win, drw->drawable);
-	//XClearWindow(xw.dpy, xw.win);
-	//XClearWindow(xw.dpy, bh);
-	//XClearArea(xw.dpy, xw.win, 0, xw.h, xw.w, bh, True);
-	//XClearWindow(win->dpy, win->win);
-}
-
-
-void
-im_clear(void)
-{
-	//drw_resize(drw, xw.scrw, xw.scrh);
 	XClearWindow(xw.dpy, xw.win);
 }
 
@@ -173,6 +151,7 @@ img_check_pan(Image *img)
 	} else {
 		img->x = (xw.w - img->w * zoomstate) / 2;
 	}
+
 	if (img->h * zoomstate > xw.h) {
 		if (img->y > 0 && img->y + img->h * zoomstate > xw.h)
 			img->y = 0;
@@ -186,39 +165,20 @@ img_check_pan(Image *img)
 int
 img_zoom(Image *img, float z)
 {
+	if (!img)
+		return 0;
+
 	z = MAX(z, zoom_min);
 	z = MIN(z, zoom_max);
- 	img->scalemode = SCALE_ZOOM;
+	img->zoomed = 1;
 
 	if (z != zoomstate) {
 		img->x -= (img->w * z - img->w * zoomstate) / 2;
 		img->y -= (img->h * z - img->h * zoomstate) / 2;
 		zoomstate = z;
 		img->checkpan = 1;
-		//img->zoomed = 1;
 		return 1;
 	} else {
 		return 0;
 	}
-}
-
-void
-img_fit(const Arg *arg)
-{
-	float zw, zh;
-
-	zw = (float) xw.w / (float) image.w;
-	zh = (float) xw.h / (float) image.h;
-
-	zoomstate = MIN(zw, zh);
-	zoomstate = MAX(zoomstate, zoom_min);
-	zoomstate = MIN(zoomstate, zoom_max);
-}
-
-void
-img_center(const Arg *arg)
-{
-	Image *img = &image;
-	img->x = (xw.w - img->w * zoomstate) / 2;
-	img->y = (xw.h - img->h * zoomstate) / 2;
 }
