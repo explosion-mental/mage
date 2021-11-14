@@ -6,7 +6,7 @@ static int quiet           = 0;          /* 1 means print warnings */
 static int recursive       = 0;          /* 1 means load subdirectories */
 static const float maxzoom = 800.0;      /* max value that zoom can reach */
 static const float minzoom = 12.5;       /* min value that zoom can reach */
-static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT */
+static scaling scalemode   = SCALE_DOWN; /* SCALE_{DOWN - FIT - WIDTH - HEIGHT} */
 static const char *fonts[] = { "monospace" };
 
 static const char *colors[][3] = {
