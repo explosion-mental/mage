@@ -10,9 +10,11 @@ sucks less.
 - Sort directory entries whether by giving `mage` a directory as an argument or
   by using `-r` (respecting LC)
 - Top status bar
+- Handle bar whether is on or off to not appear on top of images
+  (configurenotify and window height operations)
 - Order functions alphabetically
-- Handle external commands (if simple enough)
-- Thumbnail mode, requires to cache images to work 'smooth' (if simple enough)
+- Handle external commands **(if simple enough)**
+- Thumbnail mode, requires to cache images to work 'smooth' **(if simple enough)**
 
 
 # Questions

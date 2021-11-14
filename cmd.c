@@ -14,7 +14,6 @@ advance(const Arg *arg)
 	|| (arg->i < 0 && fileidx >= -arg->i)) {
 		fileidx = fileidx + arg->i;
 		img_load(&image, filenames[fileidx]);
-		//im_clear();
 		img_render(&image);
 		update_title();
 		drawbar();
@@ -137,9 +136,6 @@ rotate(const Arg *arg)
 	oy = d == 3 ? img->y : xw.h - img->y - img->h * zoomstate;
 
 	imlib_image_orientate(d);
-	//the below commands overwrites the current state of the buffer image
-	//into the real image (file)
-	//imlib_save_image(filenames[fileidx]);
 
 	img->x = oy + (xw.w - xw.h) / 2;
 	img->y = ox + (xw.h - xw.w) / 2;

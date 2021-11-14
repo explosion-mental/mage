@@ -34,9 +34,7 @@ img_load(Image *img, const char *filename)
 	if (im_load(filename) != 0)
 		return -1;
 
-
 	/* sets defaults when opening image */
-	//img->aa = 1;
 	img->checkpan = 0;
  	img->re = 0;
 	img->zoomed = 0;
