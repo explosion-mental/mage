@@ -64,7 +64,7 @@ typedef struct {
 	int checkpan;
 	int zoomed;
 	scaling scalemode;
-	char aa; /* antialias */
+	//char aa; /* antialias */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -106,8 +106,6 @@ static void kpress(XEvent *);
 static void configurenotify(XEvent *);
 
 /* image */
-static void im_init(void);
-//static void im_clear(void);
 static void im_destroy(void);
 static int im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
@@ -234,7 +232,7 @@ drawbar(void)
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
-	y = xw.h - bh;
+	y = xw.h;
 
 	drw_setscheme(drw, scheme[SchemeBar]);
 
@@ -265,6 +263,8 @@ run(void)
 		XNextEvent(xw.dpy, &ev);
 		if (handler[ev.type])
 			(handler[ev.type])(&ev);
+		//if (image.dirty)
+		//	img_render();
 	}
 }
 
@@ -342,9 +342,9 @@ configurenotify(XEvent *e)
 
 	if (xw.w != ev->width || xw.h != ev->height) {
 		xw.w = ev->width;
-		xw.h = ev->height;
+		xw.h = ev->height - bh;
 		//scalemode = SCALE_DOWN;
-		drw_resize(drw, xw.w, xw.h);
+		drw_resize(drw, xw.w, xw.h + bh);
 		reload(0);
 	}
 }
@@ -516,6 +516,7 @@ setup(void)
 		xw.w = xw.scrw;
 	if (!xw.h)
 		xw.h = xw.scrh;
+	//xw.h -= bh;
 
  	xw.attrs.colormap = xw.cmap;
 	//xw.attrs.background_pixel = 0;
@@ -577,7 +578,12 @@ setup(void)
 	XSync(xw.dpy, False);
 
 	/* init imlib */
-	im_init();
+	zoomstate = 1.0;
+	imlib_context_set_display(xw.dpy);
+	imlib_context_set_visual(xw.vis);
+	imlib_context_set_colormap(xw.cmap);
+	//imlib_context_set_drawable(xw.pm);
+	//imlib_context_set_drawable(xw.win);
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
 

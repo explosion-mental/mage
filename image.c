@@ -1,17 +1,4 @@
 void
-im_init(void)
-{
-	zoomstate = 1.0;
-	image.aa = antialiasing;
-
-	imlib_context_set_display(xw.dpy);
-	imlib_context_set_visual(xw.vis);
-	imlib_context_set_colormap(xw.cmap);
-	//imlib_context_set_drawable(xw.pm);
-	//imlib_context_set_drawable(xw.win);
-}
-
-void
 im_destroy()
 {
 	if (imlib_context_get_image())
@@ -49,14 +36,14 @@ img_load(Image *img, const char *filename)
 
 
 	/* sets defaults when opening image */
-	img->aa = 1;
+	//img->aa = 1;
 	img->checkpan = 0;
  	img->re = 0;
 	img->zoomed = 0;
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 
-	imlib_context_set_anti_alias(img->aa);
+	imlib_context_set_anti_alias(antialiasing);
 
 	return 0;
 }
@@ -71,7 +58,7 @@ img_render(Image *img)
 	if (!img || !imlib_context_get_image())
 		return;
 
-	if (img->zoomed == 0) {
+	if (!img->zoomed) {
 		zw = (float) xw.w / (float) image.w;
 		zh = (float) xw.h / (float) image.h;
 
@@ -86,7 +73,6 @@ img_render(Image *img)
 	if (!img->re) {
 		/* rendered for the first time */
 		img->re = 1;
-		Image *img = &image;
 		img->x = (xw.w - img->w * zoomstate) / 2;
 		img->y = (xw.h - img->h * zoomstate) / 2;
 	} else if (img->checkpan) {

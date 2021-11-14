@@ -2,25 +2,9 @@ void
 togglebar(const Arg *arg)
 {
 	showbar = !showbar;
-	//if (showbar) {
-	//	bh = 0;
-	//	//printf("BAR ON\n");
-	//} else {
-	//	bh = drw->fonts->h + 2;
-	//	printf("bar off\n");
-	//}
-	//updatebarpos();
-	//XClearWindow(xw.dpy, bh);
-	//XClearArea(xw.dpy, xw.win, 0, xw.h, xw.w, bh, True);
 	XSync(xw.dpy, False);
-	//img_load(&img, filenames[fileidx]);
-	//img_display(&img, &xw);
 	img_render(&image);
 	drawbar();
-
-	/* TODO */
-	/* while changing images; shall the image have a 'dirty' stage where it
-	 * updates everything, or just call that function directly? */
 }
 
 void
@@ -172,8 +156,8 @@ rotate(const Arg *arg)
 void
 toggleantialias(const Arg *arg)
 {
-	image.aa = !image.aa;
-	imlib_context_set_anti_alias(image.aa);
+	antialiasing = !antialiasing;
+	imlib_context_set_anti_alias(antialiasing);
 	img_render(&image);
 	drawbar();
 }
