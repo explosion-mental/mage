@@ -49,37 +49,45 @@ img_load(Image *img, const char *filename)
 void
 img_render(Image *img)
 {
-	//Todo handle scalemodes better
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
-	float zw, zh;
+	float zw, zh, z;
 
 	if (!img || !imlib_context_get_image())
 		return;
 
-	if (!img->zoomed) {
+	if (!img->zoomed) { /* if the image isn't zoomed */
 		zw = (float) xw.w / (float) img->w;
 		zh = (float) xw.h / (float) img->h;
 
-		zoomstate = MIN(zw, zh);
-		zoomstate = MAX(zoomstate, minzoom / 100.0);
-		zoomstate = MIN(zoomstate, maxzoom / 100.0);
+		switch (scalemode) {
+		case SCALE_WIDTH:
+			z = zw;
+			break;
+		case SCALE_HEIGHT:
+			z = zh;
+			break;
+		default:
+			z = MIN(zw, zh);
+			break;
+		}
+		z = MIN(z, scalemode == SCALE_DOWN ? 1.0 : maxzoom);
 
-		if (scalemode == SCALE_DOWN && zoomstate > 1.0)
-			zoomstate = 1.0;
+		if (ABS(zoomstate - z) > 1.0 / MAX(img->w, img->h)) {
+			zoomstate = z;
+			img->checkpan = 1;
+			img->x = xw.w / 2 - (xw.w / 2 - img->x) * zoomstate;
+			img->y = xw.h / 2 - (xw.h / 2 - img->y) * zoomstate;
+		}
 	}
 
-	if (!img->re) { /* rendered for the first time */
-		img->re = 1;
-		img->x = (xw.w - img->w * zoomstate) / 2;
-		img->y = (xw.h - img->h * zoomstate) / 2;
-	} else if (img->checkpan) { /* only useful after zooming */
+	if (img->checkpan) {
 		img_check_pan(img);
- 		img->checkpan = 0;
+		img->checkpan = 0;
 	}
 
  	/* calculate source and destination offsets */
-	if (img->x < 0) {
+	if (img->x <= 0) {
 		sx = -img->x / zoomstate;
 		sw = xw.w / zoomstate;
 		dx = 0;
@@ -90,7 +98,7 @@ img_render(Image *img)
 		dx = img->x;
 		dw = img->w * zoomstate;
 	}
-	if (img->y < 0) {
+	if (img->y <= 0) {
 		sy = -img->y / zoomstate;
 		sh = xw.h / zoomstate;
 		dy = 0;
@@ -123,42 +131,41 @@ img_check_pan(Image *img)
 	if (!img)
 		return;
 
-	if (img->w * zoomstate > xw.w) {
-		if (img->x > 0 && img->x + img->w * zoomstate > xw.w)
-			img->x = 0;
-		if (img->x < 0 && img->x + img->w * zoomstate < xw.w)
-			img->x = xw.w - img->w * zoomstate;
-	} else {
-		img->x = (xw.w - img->w * zoomstate) / 2;
-	}
+	float w = img->w * zoomstate;
+	float h = img->h * zoomstate;
+	//float ox = img->x;
+	//float oy = img->y;
 
-	if (img->h * zoomstate > xw.h) {
-		if (img->y > 0 && img->y + img->h * zoomstate > xw.h)
-			img->y = 0;
-		if (img->y < 0 && img->y + img->h * zoomstate < xw.h)
-			img->y = xw.h - img->h * zoomstate;
-	} else {
-		img->y = (xw.h - img->h * zoomstate) / 2;
-	}
+	if (w < xw.w)
+		img->x = (xw.w - w) / 2;
+	else if (img->x > 0)
+		img->x = 0;
+	else if (img->x + w < xw.w)
+		img->x = xw.w - w;
+
+	if (h < xw.h)
+		img->y = (xw.h - h) / 2;
+	else if (img->y > 0)
+		img->y = 0;
+	else if (img->y + h < xw.h)
+		img->y = xw.h - h;
+
+	//if ((ox != img->x || oy != img->y))
+	//	img->re = 0;
 }
 
-int
+void
 img_zoom(Image *img, float z)
 {
 	if (!img)
-		return 0;
+		return;
 
 	z = MAX(z, minzoom / 100.0);
 	z = MIN(z, maxzoom / 100.0);
 
-	if (z != zoomstate) {
-		img->x -= (img->w * z - img->w * zoomstate) / 2;
-		img->y -= (img->h * z - img->h * zoomstate) / 2;
-		zoomstate = z;
-		img->checkpan = 1;
-		img->zoomed = 1;
-		return 1;
-	} else {
-		return 0;
-	}
+	img->x -= (img->w * z - img->w * zoomstate) / 2;
+	img->y -= (img->h * z - img->h * zoomstate) / 2;
+	zoomstate = z;
+	img->checkpan = 1;
+	img->zoomed = 1;
 }

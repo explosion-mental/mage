@@ -33,6 +33,7 @@ char *argv0;
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define LENGTH(a)               (sizeof(a) / sizeof(a)[0])
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
+#define ABS(a)			((a) > 0 ? (a) : -(a))
 
 enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
 enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
@@ -40,6 +41,8 @@ enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 typedef enum {
 	SCALE_DOWN,
 	SCALE_FIT,
+	SCALE_WIDTH,
+	SCALE_HEIGHT,
 } scaling;
 
 typedef struct {
@@ -63,8 +66,6 @@ typedef struct {
  	int re; /* rendered */
 	int checkpan;
 	int zoomed;
-	scaling scalemode;
-	//char aa; /* antialias */
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -110,7 +111,7 @@ static void im_destroy(void);
 static int im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
-static int img_zoom(Image *img, float z);
+static void img_zoom(Image *img, float z);
 static void img_check_pan(Image *img);
 
 /* commands */
@@ -151,7 +152,7 @@ static int bh = 0;      /* bar geometry */
 //static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
-static char *scales[] = { "down", "fit" };
+static char *scales[] = { "down", "fit", "width", "height" };
 
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
