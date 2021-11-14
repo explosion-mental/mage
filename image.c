@@ -35,8 +35,8 @@ img_load(Image *img, const char *filename)
 		return -1;
 
 	/* set defaults when opening image */
-	img->checkpan = 0;
  	img->re = 0;
+	img->checkpan = 0;
 	img->zoomed = 0;
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
@@ -49,6 +49,7 @@ img_load(Image *img, const char *filename)
 void
 img_render(Image *img)
 {
+	//Todo handle scalemodes better
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
 	float zw, zh;
@@ -57,8 +58,8 @@ img_render(Image *img)
 		return;
 
 	if (!img->zoomed) {
-		zw = (float) xw.w / (float) image.w;
-		zh = (float) xw.h / (float) image.h;
+		zw = (float) xw.w / (float) img->w;
+		zh = (float) xw.h / (float) img->h;
 
 		zoomstate = MIN(zw, zh);
 		zoomstate = MAX(zoomstate, minzoom / 100.0);
@@ -149,13 +150,13 @@ img_zoom(Image *img, float z)
 
 	z = MAX(z, minzoom / 100.0);
 	z = MIN(z, maxzoom / 100.0);
-	img->zoomed = 1;
 
 	if (z != zoomstate) {
 		img->x -= (img->w * z - img->w * zoomstate) / 2;
 		img->y -= (img->h * z - img->h * zoomstate) / 2;
 		zoomstate = z;
 		img->checkpan = 1;
+		img->zoomed = 1;
 		return 1;
 	} else {
 		return 0;

@@ -2,6 +2,10 @@ void
 togglebar(const Arg *arg)
 {
 	showbar = !showbar;
+	if (showbar)
+		xw.h -= bh;
+	else
+		xw.h += bh;
 	XSync(xw.dpy, False);
 	img_render(&image);
 	drawbar();
@@ -171,17 +175,23 @@ void
 cyclescale(const Arg *arg)
 {
 	if (arg->i > 0) {
-		if (scalemode < LENGTH(scales) - 1)
-			scalemode++;
-		else
-			scalemode = 0;
+		if (!image.zoomed) { /* use the same scalemode as before if the image is zoomed */
+			if (scalemode < LENGTH(scales) - 1)
+				scalemode++;
+			else
+				scalemode = 0;
+		}
+		image.zoomed = 0;
 		img_render(&image);
 		drawbar();
 	} else {
-		if (scalemode > 0)
-			scalemode--;
-		else
-			scalemode = LENGTH(scales) - 1;
+		if (!image.zoomed) {
+			if (scalemode > 0)
+				scalemode--;
+			else
+				scalemode = LENGTH(scales) - 1;
+		}
+		image.zoomed = 0;
 		img_render(&image);
 		drawbar();
 	}

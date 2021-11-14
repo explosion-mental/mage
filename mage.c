@@ -232,7 +232,7 @@ drawbar(void)
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
-	y = xw.h;
+	y = xw.h - bh;
 
 	drw_setscheme(drw, scheme[SchemeBar]);
 
@@ -241,7 +241,7 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "~%s <%d%%> [%d/%d]", scales[scalemode], (int)(zoomstate * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : scales[scalemode], (int)(zoomstate * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -337,11 +337,14 @@ configurenotify(XEvent *e)
 {
 	XConfigureEvent *ev = &e->xconfigure;
 
-	if (xw.w != ev->width || xw.h + bh != ev->height) {
+	if (xw.w != ev->width || xw.h + bh!= ev->height) {
 		xw.w = ev->width;
 		xw.h = ev->height;
-		drw_resize(drw, xw.w, xw.h);
-		xw.h -= bh;
+		drw_resize(drw, xw.w, xw.h + bh);
+		//if (showbar)
+		//	xw.h -= bh;
+		//else
+		//	xw.h += bh;
 	}
 }
 
