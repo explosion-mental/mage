@@ -3,7 +3,7 @@
 static int showbar         = 1;          /* 0 means no bar */
 static int antialiasing    = 1;          /* 0 means pixelize images */
 static int quiet           = 0;          /* 1 means print warnings */
-static int recursive       = 0;          /* 1 means load subdirs */
+static int recursive       = 0;          /* 1 means load subdirectories */
 static const float maxzoom = 800.0;      /* max value that zoom can reach */
 static const float minzoom = 12.5;       /* min value that zoom can reach */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_DOWN - SCALE_FIT */
@@ -17,7 +17,7 @@ static const char *colors[][3] = {
 };
 
 static Shortcut shortcuts[] = {
-	/* mod          keysym           function            argument */
+	/* modifier     key              function            argument */
 	{ 0,            XK_Escape,       quit,               {0} },
 	{ 0,            XK_q,            quit,               {0} },
 	{ 0,            XK_b,            togglebar,          {0} },
