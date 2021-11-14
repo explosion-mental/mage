@@ -227,7 +227,7 @@ drawbar(void)
 {
 	int y, tw = 0;
 
-	if (showbar) //hack to not drawbar
+	if (!showbar) //hack to not drawbar
 		return;
 
 	/* currently topbar is not supported */
@@ -310,14 +310,11 @@ void
 expose(XEvent *e)
 {
 	if (0 == e->xexpose.count) {
-		//drw_map(drw, xw.win, e->xexpose.x, e->xexpose.y, e->xexpose.width, e->xexpose.height);
-		//drw_resize(drw, e->xexpose.width, e->xexpose.height);
-		//image.checkpan = 1; //hack to redraw image
-		//image.checkpan = 1; //hack to redraw image
-		//img_render(&image);
-		//drawbar();
 		//TODO handle redraws better
-		reload(0);
+		//reload(0);
+		image.re = 0;
+		img_render(&image);
+		drawbar();
 	}
 }
 void
@@ -340,12 +337,11 @@ configurenotify(XEvent *e)
 {
 	XConfigureEvent *ev = &e->xconfigure;
 
-	if (xw.w != ev->width || xw.h != ev->height) {
+	if (xw.w != ev->width || xw.h + bh != ev->height) {
 		xw.w = ev->width;
-		xw.h = ev->height - bh;
-		//scalemode = SCALE_DOWN;
-		drw_resize(drw, xw.w, xw.h + bh);
-		reload(0);
+		xw.h = ev->height;
+		drw_resize(drw, xw.w, xw.h);
+		xw.h -= bh;
 	}
 }
 
@@ -516,7 +512,6 @@ setup(void)
 		xw.w = xw.scrw;
 	if (!xw.h)
 		xw.h = xw.scrh;
-	//xw.h -= bh;
 
  	xw.attrs.colormap = xw.cmap;
 	//xw.attrs.background_pixel = 0;
@@ -574,6 +569,7 @@ setup(void)
 	XSetTextProperty(xw.dpy, xw.win, &prop, atom[WMName]);
 	XFree(prop.value);
 	XMapWindow(xw.dpy, xw.win);
+	drw_resize(drw, xw.w, xw.h);
 	xhints();
 	XSync(xw.dpy, False);
 

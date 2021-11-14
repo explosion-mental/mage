@@ -34,7 +34,7 @@ img_load(Image *img, const char *filename)
 	if (im_load(filename) != 0)
 		return -1;
 
-	/* sets defaults when opening image */
+	/* set defaults when opening image */
 	img->checkpan = 0;
  	img->re = 0;
 	img->zoomed = 0;
@@ -68,13 +68,11 @@ img_render(Image *img)
 			zoomstate = 1.0;
 	}
 
-	if (!img->re) {
-		/* rendered for the first time */
+	if (!img->re) { /* rendered for the first time */
 		img->re = 1;
 		img->x = (xw.w - img->w * zoomstate) / 2;
 		img->y = (xw.h - img->h * zoomstate) / 2;
-	} else if (img->checkpan) {
-		/* only useful after zooming */
+	} else if (img->checkpan) { /* only useful after zooming */
 		img_check_pan(img);
  		img->checkpan = 0;
 	}
