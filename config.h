@@ -9,7 +9,7 @@ static const float minzoom = 12.5;       /* min value that zoom can reach */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_{DOWN - FIT - WIDTH - HEIGHT} */
 static const char *fonts[] = { "monospace" };
 
-static const char *colors[][3] = {
+static const char *colors[][2] = {
       			/*  fg       bg     */
 	[SchemeNorm]  = { "#eeeeee", "#005577" },
 	[SchemeSel]   = { "#bbbbbb", "#882100" },
