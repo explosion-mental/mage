@@ -222,7 +222,7 @@ drawbar(void)
 	drw_setscheme(drw, scheme[SchemeBar]);
 
 	/* left text */
-	snprintf(left, LENGTH(left), "%s %dx%d", filenames[fileidx], image.w, image.h);
+	snprintf(left, LENGTH(left), "%s %dx%d |x:%f |y:%f", filenames[fileidx], image.w, image.h, image.x, image.y);
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
