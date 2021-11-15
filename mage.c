@@ -98,7 +98,6 @@ static void usage(void);
 static void xhints(void);
 static void setup(void);
 static void drawbar(void);
-static void update_title(void);
 
 /* X events */
 static void bpress(XEvent *);
@@ -206,19 +205,6 @@ updatebarpos()
 		xw.h -= bh;
 	}
 
-}
-
-void
-update_title()
-{
-	char title[512];
-
-	snprintf(title, LENGTH(title), "mage: [%d/%d] <%d%%> %s", fileidx + 1,
-			filecnt, (int) (zoomstate * 100.0), filenames[fileidx]);
-
-	XChangeProperty(xw.dpy, xw.win, atom[WMName],
-			XInternAtom(xw.dpy, "UTF8_STRING", False), 8,
-	                PropModeReplace, (unsigned char *) title, strlen(title));
 }
 
 void
@@ -582,9 +568,6 @@ setup(void)
 	//imlib_context_set_drawable(xw.win);
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
-
-	/* init title */
- 	update_title();
 }
 
 void

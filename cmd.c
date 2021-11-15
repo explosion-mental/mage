@@ -19,7 +19,6 @@ advance(const Arg *arg)
 		fileidx = fileidx + arg->i;
 		img_load(&image, filenames[fileidx]);
 		img_render(&image);
-		update_title();
 		drawbar();
 	}
 }
@@ -35,7 +34,6 @@ set_zoom(const Arg *arg)
 {
 	img_zoom(&image, arg->f / 100.0);
 	img_render(&image);
-	update_title();
 	drawbar();
 }
 
@@ -47,7 +45,6 @@ zoom(const Arg *arg)
 	else
 		img_zoom(&image, zoomstate - -arg->f / 100.0);
 	img_render(&image);
-	update_title();
 	drawbar();
 }
 
@@ -167,7 +164,6 @@ reload(const Arg *arg)
 {
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
-	update_title();
 	drawbar();
 }
 
