@@ -70,9 +70,9 @@ panhorz(const Arg *arg)
 	float x = image.x, y = image.y;
 
 	if (arg->i > 0)
-		image.x -= xw.w / (float) arg->i;
+		image.x -= xw.w / arg->f;
 	else
-		image.x += xw.w / (float) -arg->i;
+		image.x += xw.w / -arg->f;
 
 	img_check_pan(&image);
 
@@ -88,9 +88,9 @@ panvert(const Arg *arg)
 	float x = image.x, y = image.y;
 
 	if (arg->i > 0)
-		image.y += xw.h / (float) arg->i;
+		image.y += xw.h / arg->f;
 	else
-		image.y -= xw.h / (float) -arg->i;
+		image.y -= xw.h / -arg->f;
 
 	img_check_pan(&image);
 
