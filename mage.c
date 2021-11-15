@@ -62,13 +62,13 @@ typedef struct {
 } XWindow;
 
 typedef struct {
-	//Imlib_Image *im;
+	Imlib_Image *im;
  	//int re; /* rendered */
 	int checkpan;
 	int zoomed;
 	int redraw;
 	int w, h; /* position */
-	int x, y; /* dimeniton */
+	float x, y; /* dimeniton */
 } Image;
 
 typedef union {
