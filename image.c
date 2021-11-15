@@ -35,7 +35,7 @@ img_load(Image *img, const char *filename)
 		return -1;
 
 	/* set defaults when opening image */
- 	img->re = 0;
+ 	//img->re = 0;
 	img->checkpan = 0;
 	img->zoomed = 0;
 	img->w = imlib_image_get_width();
@@ -133,8 +133,8 @@ img_check_pan(Image *img)
 
 	float w = img->w * zoomstate;
 	float h = img->h * zoomstate;
-	//float ox = img->x;
-	//float oy = img->y;
+	float ox = img->x;
+	float oy = img->y;
 
 	if (w < xw.w)
 		img->x = (xw.w - w) / 2;
@@ -149,8 +149,10 @@ img_check_pan(Image *img)
 	else if (img->y + h < xw.h)
 		img->y = xw.h - h;
 
-	//if ((ox != img->x || oy != img->y))
-	//	img->re = 0;
+	if ((ox != img->x || oy != img->y)) {
+		img_render(&image);
+		drawbar(); //panning without bar?
+	}
 }
 
 void

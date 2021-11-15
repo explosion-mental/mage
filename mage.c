@@ -63,9 +63,10 @@ typedef struct {
 
 typedef struct {
 	//Imlib_Image *im;
- 	int re; /* rendered */
+ 	//int re; /* rendered */
 	int checkpan;
 	int zoomed;
+	int dirty;
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -310,7 +311,7 @@ expose(XEvent *e)
 	if (0 == e->xexpose.count) {
 		//TODO handle redraws better
 		//reload(0);
-		image.re = 0;
+		//image.re = 0;
 		img_render(&image);
 		drawbar();
 	}

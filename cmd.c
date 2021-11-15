@@ -177,7 +177,7 @@ cyclescale(const Arg *arg)
 	if (arg->i > 0) {
 		if (!image.zoomed) { /* use the same scalemode as before if the image is zoomed */
 			if (scalemode < LENGTH(scales) - 1)
-				scalemode++;
+				scalemode = scalemode + arg->i;
 			else
 				scalemode = 0;
 		}
@@ -187,7 +187,7 @@ cyclescale(const Arg *arg)
 	} else {
 		if (!image.zoomed) {
 			if (scalemode > 0)
-				scalemode--;
+				scalemode = scalemode + arg->i;
 			else
 				scalemode = LENGTH(scales) - 1;
 		}
