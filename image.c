@@ -142,7 +142,6 @@ img_check_pan(Image *img)
 		img->x = 0;
 	else if (img->x + w < xw.w)
 		img->x = xw.w - w;
-
 	if (h < xw.h)
 		img->y = (xw.h - h) / 2;
 	else if (img->y > 0)
@@ -163,9 +162,11 @@ img_zoom(Image *img, float z)
 	z = MAX(z, minzoom / 100.0);
 	z = MIN(z, maxzoom / 100.0);
 
-	img->x -= (img->w * z - img->w * zoomstate) / 2;
-	img->y -= (img->h * z - img->h * zoomstate) / 2;
-	zoomstate = z;
-	img->checkpan = 1;
-	img->zoomed = 1;
+	if (z != zoomstate) {
+		img->x -= (img->w * z - img->w * zoomstate) / 2;
+		img->y -= (img->h * z - img->h * zoomstate) / 2;
+		zoomstate = z;
+		img->checkpan = 1;
+		img->zoomed = 1;
+	}
 }

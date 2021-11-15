@@ -152,12 +152,9 @@ static int bh = 0;      /* bar geometry */
 //static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
-static char *scales[] = { "down", "fit", "width", "height" };
-
+static const char *scales[] = { "down", "fit", "width", "height" };
+static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
-
-/* zoom */
-static float zoomstate;	//this variable is global since functionally it's a global feature (applies to all images)h
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -182,7 +179,7 @@ cleanup(void)
 	im_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
-	free(filenames); //this should be free'ed?
+	free(filenames);
 	free(scheme);
 	drw_free(drw);
  	XFreeGC(xw.dpy, xw.gc);
@@ -554,7 +551,7 @@ setup(void)
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
-	//XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
+	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
 	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval);
 	xw.pm = 0;
@@ -563,7 +560,6 @@ setup(void)
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
 	bh = drw->fonts->h + 2;
-	//by = topbar ? 0 : xw.h - bh;
 
 	/* init bars */
 	drawbar();
@@ -577,8 +573,7 @@ setup(void)
 	xhints();
 	XSync(xw.dpy, False);
 
-	/* init imlib */
-	zoomstate = 1.0;
+	/* init image */
 	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(xw.vis);
 	imlib_context_set_colormap(xw.cmap);
