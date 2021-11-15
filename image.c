@@ -29,13 +29,11 @@ img_load(Image *img, const char *filename)
 	if (!img || !filename)
 		return -1;
 
-	im_destroy();
-
 	if (im_load(filename) != 0)
 		return -1;
 
 	/* set defaults when opening image */
- 	//img->re = 0;
+ 	//img->redraw = 0;
 	img->checkpan = 0;
 	img->zoomed = 0;
 	img->w = imlib_image_get_width();

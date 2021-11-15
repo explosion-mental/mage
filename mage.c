@@ -66,7 +66,7 @@ typedef struct {
  	//int re; /* rendered */
 	int checkpan;
 	int zoomed;
-	int dirty;
+	int redraw;
 	int w, h; /* position */
 	int x, y; /* dimeniton */
 } Image;
@@ -248,7 +248,7 @@ run(void)
 		XNextEvent(xw.dpy, &ev);
 		if (handler[ev.type])
 			(handler[ev.type])(&ev);
-		//if (image.dirty)
+		//if (image.redraw)
 		//	img_render();
 	}
 }
@@ -538,13 +538,14 @@ setup(void)
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
 
+	/* color background */
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
 	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval);
-	xw.pm = 0;
 
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
+
 	lrpad = drw->fonts->h;
 	bh = drw->fonts->h + 2;
 
@@ -626,8 +627,8 @@ main(int argc, char *argv[])
 		for (i = 0; i < argc; i++)
 			check_file(argv[i]);
 
-	filecnt = fileidx;
-	fileidx = 0;
+	filecnt = fileidx; //set the number of images to cnt
+	fileidx = 0; //start at the first index
 
 	if (!filecnt)
 		die("mage: No more images to display");
