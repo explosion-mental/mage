@@ -69,7 +69,7 @@ img_render(Image *img)
 			z = MIN(zw, zh);
 			break;
 		}
-		z = MIN(z, scalemode == SCALE_DOWN ? 1.0 : maxzoom);
+		z = MIN(z, scalemode == SCALE_DOWN ? 1.0 : maxzoom / 100.0);
 
 		if (ABS(zoomstate - z) > 1.0 / MAX(img->w, img->h)) {
 			zoomstate = z;
@@ -131,8 +131,6 @@ img_check_pan(Image *img)
 
 	float w = img->w * zoomstate;
 	float h = img->h * zoomstate;
-	float ox = img->x;
-	float oy = img->y;
 
 	if (w < xw.w)
 		img->x = (xw.w - w) / 2;
@@ -147,7 +145,7 @@ img_check_pan(Image *img)
 	else if (img->y + h < xw.h)
 		img->y = xw.h - h;
 
-	if ((ox != img->x || oy != img->y)) {
+	if ((image.x != img->x || image.y != img->y)) {
 		img_render(&image);
 		drawbar(); //panning without bar?
 	}

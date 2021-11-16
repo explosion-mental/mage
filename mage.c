@@ -562,6 +562,8 @@ setup(void)
 	XSync(xw.dpy, False);
 
 	/* init image */
+	zoomstate = MAX(zoomstate, minzoom / 100.0);
+	zoomstate = MIN(zoomstate, maxzoom / 100.0);
 	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(xw.vis);
 	imlib_context_set_colormap(xw.cmap);
