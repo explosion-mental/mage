@@ -117,6 +117,8 @@ static void img_check_pan(Image *img);
 /* commands */
 static void togglebar(const Arg *arg);
 static void quit(const Arg *arg);
+static void flipvert(const Arg *arg);
+static void fliphorz(const Arg *arg);
 static void advance(const Arg *arg);
 static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);

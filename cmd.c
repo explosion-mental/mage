@@ -198,3 +198,19 @@ savestate(const Arg *arg)
 {
 	imlib_save_image(filenames[fileidx]);
 }
+
+void
+fliphorz(const Arg *arg)
+{
+	imlib_image_flip_horizontal();
+	img_render(&image);
+	drawbar();
+}
+
+void
+flipvert(const Arg *arg)
+{
+	imlib_image_flip_vertical();
+	img_render(&image);
+	drawbar();
+}

@@ -33,6 +33,8 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_f,            togglefullscreen,   {0} },
 	{ 0,            XK_a,            toggleantialias,    {0} },
 	{ 0,            XK_s,            savestate,          {0} },
+	{ 0,            XK_u,            flipvert,           {0} },
+	{ ShiftMask,    XK_u,            fliphorz,           {0} },
 	{ 0,            XK_k,            panvert,            {.f = +5} },
 	{ 0,            XK_j,            panvert,            {.f = -5} },
 	{ 0,            XK_l,            panhorz,            {.f = +5} },
