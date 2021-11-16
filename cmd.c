@@ -40,10 +40,7 @@ set_zoom(const Arg *arg)
 void
 zoom(const Arg *arg)
 {
-	if (arg->i > 0)
-		img_zoom(&image, zoomstate + arg->f / 100.0);
-	else
-		img_zoom(&image, zoomstate - -arg->f / 100.0);
+	img_zoom(&image, zoomstate + arg->f / 100.0);
 	img_render(&image);
 	drawbar();
 }
