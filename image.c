@@ -34,10 +34,10 @@ img_load(Image *img, const char *filename)
 
 	/* set defaults when opening image */
  	//img->redraw = 0;
-	img->checkpan = 0;
-	img->zoomed = 0;
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
+	img->checkpan = 0;
+	img->zoomed = 0;
 
 	imlib_context_set_anti_alias(antialiasing);
 
@@ -73,9 +73,9 @@ img_render(Image *img)
 
 		if (ABS(zoomstate - z) > 1.0 / MAX(img->w, img->h)) {
 			zoomstate = z;
-			img->checkpan = 1;
 			img->x = xw.w / 2 - (xw.w / 2 - img->x) * zoomstate;
 			img->y = xw.h / 2 - (xw.h / 2 - img->y) * zoomstate;
+			img->checkpan = 1;
 		}
 	}
 
