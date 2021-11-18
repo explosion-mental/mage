@@ -326,12 +326,10 @@ check_img(const char *filename)
 		if (im_load(filename) == 0) {
 			//the file is an image
 			imlib_free_image();
-			if (fileidx == filecnt) { //unnecesary?
-				filecnt++; //+ 1 for every new arg we add
-				if (!(filenames = realloc(filenames, filecnt * sizeof (const char *))))
-					die("cannot realloc %u bytes:", filecnt * sizeof (const char *));
-			}
-			filenames[fileidx++] = filename;
+			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
+				die("cannot realloc %u bytes:", filecnt * sizeof (const char *));
+			filenames[filecnt] = filename;
+			filecnt++;
 			return 0;
 		} else //return 1 if the image cant be loaded
 			return 1;
@@ -612,9 +610,6 @@ main(int argc, char *argv[])
 	else /* handle only images or directories */
 		for (i = 0; i < argc; i++)
 			check_file(argv[i]);
-
-	filecnt = fileidx; //set the number of images to cnt
-	fileidx = 0; //start at the first index
 
 	if (!filecnt)
 		die("mage: No more images to display");
