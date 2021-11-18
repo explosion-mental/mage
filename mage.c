@@ -340,6 +340,7 @@ check_img(const char *filename)
 	//return 0;
 }
 
+//sucks thanks to warnings, need to be simplified further
 void
 check_file(const char *file)
 {
