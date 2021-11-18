@@ -191,25 +191,6 @@ cleanup(void)
 }
 
 void
-updatebarpos()
-{
-	//img.h -= bh;
-	//img.y -= bh;
-	//bh = showbar ? drw->fonts->h + 2 : 0;
-
-	//TODO
-
-	if (bh != 0) {
-		xw.h += bh;
-		bh = 0;
-	} else {
-		bh = drw->fonts->h + 2;
-		xw.h -= bh;
-	}
-
-}
-
-void
 drawbar(void)
 {
 	int y, tw = 0;
@@ -345,7 +326,7 @@ check_img(const char *filename)
 		if (im_load(filename) == 0) {
 			//the file is an image
 			imlib_free_image();
-			if (fileidx == filecnt) {
+			if (fileidx == filecnt) { //unnecesary?
 				filecnt++; //+ 1 for every new arg we add
 				if (!(filenames = realloc(filenames, filecnt * sizeof (const char *))))
 					die("cannot realloc %u bytes:", filecnt * sizeof (const char *));
