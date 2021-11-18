@@ -2,30 +2,17 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
+#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <X11/keysym.h>
 #include <X11/XKBlib.h>
-#include <X11/Xatom.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
-
 #include <Imlib2.h>
 
 #include "arg.h"
 #include "util.h"
 #include "drw.h"
 
-//to handle directories
-#include <dirent.h>
-//TODO verify what headers are really needed
 
 char *argv0;
 
