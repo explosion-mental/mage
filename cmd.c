@@ -26,7 +26,8 @@ advance(const Arg *arg)
 void
 printfile(const Arg *arg)
 {
-	printf("This is the file '%s'\n", filenames[fileidx]);
+	printf("%s\n", filenames[fileidx]);
+	quit(0);
 }
 
 void

@@ -3,6 +3,7 @@ im_destroy()
 {
 	if (imlib_context_get_image())
 		imlib_free_image();
+	//	imlib_free_image_and_decache();
 }
 
 int
@@ -21,7 +22,6 @@ im_load(const char *filename)
 
 	return 0;
 }
-
 
 int
 img_load(Image *img, const char *filename)
@@ -144,11 +144,6 @@ img_check_pan(Image *img)
 		img->y = 0;
 	else if (img->y + h < xw.h)
 		img->y = xw.h - h;
-
-	if ((image.x != img->x || image.y != img->y)) {
-		img_render(&image);
-		drawbar(); //panning without bar?
-	}
 }
 
 void

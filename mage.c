@@ -13,7 +13,6 @@
 #include "util.h"
 #include "drw.h"
 
-
 char *argv0;
 
 /* macros */
@@ -49,13 +48,13 @@ typedef struct {
 } XWindow;
 
 typedef struct {
-	Imlib_Image *im;
+	//Imlib_Image *im;
  	//int re; /* rendered */
+	//int redraw;
 	int checkpan;
 	int zoomed;
-	int redraw;
-	int w, h; /* position */
-	float x, y; /* dimeniton */
+	int w, h;   /* dimension */
+	float x, y; /* position */
 } Image;
 
 typedef union {
@@ -131,7 +130,6 @@ static Atom atom[WMLast];
 static char right[128], left[128];
 static const char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
-
 static XWindow xw;
 static Image image;
 static Drw *drw;
@@ -157,8 +155,8 @@ static void (*handler[LASTEvent])(XEvent *) = {
 };
 
 //at the end everything should be merged
-#include "image.c"
-#include "cmd.c"
+#include "image.c"	//image (and imlib2) operations
+#include "cmd.c"	//config.h commands
 
 void
 cleanup(void)
@@ -182,7 +180,7 @@ drawbar(void)
 {
 	int y, tw = 0;
 
-	if (!showbar) //hack to not drawbar
+	if (!showbar) //not drawbar
 		return;
 
 	/* currently topbar is not supported */
@@ -224,12 +222,9 @@ run(void)
 }
 
 void
-xhints()
+xhints(void)
 {
-	XClassHint class;
-	class.res_name = wmname;
-	class.res_class = "mage";
-
+	XClassHint class = {.res_name = wmname, .res_class = "mage"};
 	XWMHints wm = {.flags = InputHint, .input = True};
 	XSizeHints *sizeh = NULL;
 
@@ -265,9 +260,9 @@ void
 expose(XEvent *e)
 {
 	if (0 == e->xexpose.count) {
-		//TODO handle redraws better
+		//TODO currently resize on big images is '''slow'''
 		//reload(0);
-		//image.re = 0;
+		//image.redraw = 0;
 		img_render(&image);
 		drawbar();
 	}
@@ -303,8 +298,8 @@ configurenotify(XEvent *e)
 	}
 }
 
-//ALT return filename or NULL
-//handle whether it's a directory or not
+//ATL: Alternative take, return filename or NULL handle whether it's a
+//directory or not
 int
 check_img(const char *filename)
 {
@@ -318,14 +313,17 @@ check_img(const char *filename)
 			filenames[filecnt] = filename;
 			filecnt++;
 			return 0;
-		} else //return 1 if the image cant be loaded
+		} else //return 1 if the image cant be loaded (it may be a directory)
 			return 1;
-	} else //returns 2 if the file doesn't exist
+	} else { //returns 2 if the file doesn't exist
+		if (!quiet)
+			fprintf(stderr, "mage: %s: No such file or directory\n", filename);
 		return 2;
+	}
 	//return 0;
 }
 
-//sucks thanks to warnings, need to be simplified further
+//needs to be simplified further
 void
 check_file(const char *file)
 {
@@ -338,27 +336,9 @@ check_file(const char *file)
 	struct dirent *dentry;
 	int ret;
 
-	//todo handle first if the file exist
-
 	/* check if it's an image */
-	ret = check_img(file);
-
-	if (ret == 0) {
-		//if it isn't an image we don't return, but rather pass
-		//to check if it's a directory (hack)
+	if (!check_img(file))
 		return;
-	//} else if (ret == 1) {
-		//if it isn't an image we don't return, but rather pass
-		//to check if it's a directory (hack)
-		//if (!quiet)
-		//	fprintf(stderr, "mage: %s: Can't be loaded\n", file);
-		//return;
-		//iload = 1;
-	} else if (ret == 2) {
-		if (!quiet)
-			fprintf(stderr, "mage: %s: No such file or directory\n", file);
-		return;
-	}
 
 	dircnt = 512;
 	diridx = first = 1;
@@ -367,12 +347,13 @@ check_file(const char *file)
 	dirnames[0] = file;
 
 	/* check if it's a directory */
-	//do we need to check this? if it isn't a file then what is this?
+	//do we need to check this? if it isn't a file then what else could it be?
 	if ((dir = opendir(file))) {
 		/* handle directory */
 		while (diridx > 0) {
 			file = dirnames[--diridx];
 			while ((dentry = readdir(dir))) {
+				/* ignore directories '.' and '..' */
 				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
 					continue;
 				len = strlen(file) + strlen(dentry->d_name) + 2;
@@ -387,11 +368,8 @@ check_file(const char *file)
 						if (!quiet)
 							fprintf(stderr, "mage: %s: Ignoring directory\n", filename);
 						free(filename);
-					} else if (ret == 2) {
-						if (!quiet)
-							fprintf(stderr, "mage: %s: No such file or directory\n", filename);
+					} else if (ret == 2)
 						free(filename);
-					}
 				}
 			}
 			closedir(dir);
@@ -402,11 +380,7 @@ check_file(const char *file)
 		}
 		free(dirnames);
 		return;
-	} else if (ENOENT == errno) { /* directory does not exist */
-		if (!quiet)
-			fprintf(stderr, "mage: %s: No such directory\n", file);
-		return;
-	} else /* opendir() failed for some other reason */
+	} else	/* opendir() failed */
 		return;
 }
 
@@ -475,18 +449,12 @@ setup(void)
 	//xw.attrs.border_pixel = 0;
 	xw.attrs.save_under = False;
 	xw.attrs.bit_gravity = CenterGravity;
-	xw.attrs.event_mask = KeyPressMask | ExposureMask | StructureNotifyMask |
-	                      ButtonMotionMask | ButtonPressMask;
+	xw.attrs.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask |
+	                       ButtonPressMask; //ButtonMotionMask
 
 	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
 				xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
 				0, &xw.attrs);
-				//CWBackPixel | CWColormap | CWBorderPixel, &xw.attrs);
-				//CWBitGravity | CWEventMask, &xw.attrs);
-			       //CWBackingStore | CWBitGravity | CWEventMask, &xw.attrs);
-
-	//XSelectInput(xw.dpy, xw.win, ButtonReleaseMask | ButtonPressMask | KeyPressMask |
-	  //           PointerMotionMask | StructureNotifyMask);
 
 	XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask |
 	                       ButtonPressMask);
@@ -506,19 +474,15 @@ setup(void)
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
-
-	/* color background */
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
-	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval);
-
+	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval); //context for Pixmap
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
-
 	lrpad = drw->fonts->h;
 	bh = drw->fonts->h + 2;
 
-	/* init bars */
+	/* init bar */
 	drawbar();
 
 	XStringListToTextProperty(&argv0, 1, &prop);
@@ -531,8 +495,6 @@ setup(void)
 	XSync(xw.dpy, False);
 
 	/* init image */
-	zoomstate = MAX(zoomstate, minzoom / 100.0);
-	zoomstate = MIN(zoomstate, maxzoom / 100.0);
 	imlib_context_set_display(xw.dpy);
 	imlib_context_set_visual(xw.vis);
 	imlib_context_set_colormap(xw.cmap);
@@ -543,7 +505,7 @@ setup(void)
 }
 
 void
-usage()
+usage(void)
 {
 	die("usage: %s [-fhpqrv] [-s scalemode] [-n class] file...", argv0);
 }
@@ -591,7 +553,7 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	if (!strcmp(argv[0], "-"))
+	if (!strcmp(argv[0], "-")) /* standard input */
 		while ((input = readstdin()))
 			check_file(input);
 	else /* handle only images or directories */
@@ -599,6 +561,7 @@ main(int argc, char *argv[])
 			check_file(argv[i]);
 
 	if (!filecnt)
+		//of course there are none, is this necessary?
 		die("mage: No more images to display");
 
 	setup();
@@ -608,5 +571,6 @@ main(int argc, char *argv[])
 	run();
 
 	cleanup();
+
 	return 0;
 }
