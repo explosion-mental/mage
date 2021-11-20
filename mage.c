@@ -473,7 +473,7 @@ setup(void)
 	/* init appearance */
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
-		scheme[i] = drw_scm_create(drw, colors[i], 3);
+		scheme[i] = drw_scm_create(drw, colors[i], 2);
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
 	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
 	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval); //context for Pixmap
