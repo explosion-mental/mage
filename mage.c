@@ -98,7 +98,7 @@ static int im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
-static void img_check_pan(Image *img);
+static void check_pan(Image *img);
 
 /* commands */
 static void togglebar(const Arg *arg);

@@ -72,7 +72,7 @@ panhorz(const Arg *arg)
 	else
 		image.x += xw.w / -arg->f;
 
-	img_check_pan(&image);
+	check_pan(&image);
 
 	if (x != image.x || y != image.y) {
 		img_render(&image);
@@ -90,7 +90,7 @@ panvert(const Arg *arg)
 	else
 		image.y -= xw.h / -arg->f;
 
-	img_check_pan(&image);
+	check_pan(&image);
 
 	if (x != image.x || y != image.y) {
 		img_render(&image);

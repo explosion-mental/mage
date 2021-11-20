@@ -80,7 +80,7 @@ img_render(Image *img)
 	}
 
 	if (img->checkpan) {
-		img_check_pan(img);
+		check_pan(img);
 		img->checkpan = 0;
 	}
 
@@ -124,7 +124,7 @@ img_render(Image *img)
 }
 
 void
-img_check_pan(Image *img)
+check_pan(Image *img)
 {
 	if (!img)
 		return;
