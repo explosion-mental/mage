@@ -121,14 +121,14 @@ static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
 
 /* handling files */
-static int check_img(const char *filename);
-static void check_file(const char *file);
+static int check_img(char *filename);
+static void check_file(char *file);
 static char *readstdin(void);
 
 /* variables */
 static Atom atom[WMLast];
 static char right[128], left[128];
-static const char **filenames;
+static char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
 static XWindow xw;
 static Image image;
@@ -301,7 +301,7 @@ configurenotify(XEvent *e)
 //ATL: Alternative take, return filename or NULL handle whether it's a
 //directory or not
 int
-check_img(const char *file)
+check_img(char *file)
 {
 	if (access(file, F_OK) != -1) {
 		//the file exist
@@ -325,13 +325,13 @@ check_img(const char *file)
 
 //needs to be simplified further
 void
-check_file(const char *file)
+check_file(char *file)
 {
 	char *filename;
-	const char **dirnames;
+	char **dirnames;
 	DIR *dir;
 	int dircnt, diridx;
-	unsigned char first;
+	unsigned int first;
 	size_t len;
 	struct dirent *dentry;
 	int ret;
@@ -374,7 +374,7 @@ check_file(const char *file)
 			}
 			closedir(dir);
 			if (!first)
-				free((void*) file);
+				free(file);
 			else
 				first = 0;
 		}
