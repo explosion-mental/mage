@@ -301,23 +301,23 @@ configurenotify(XEvent *e)
 //ATL: Alternative take, return filename or NULL handle whether it's a
 //directory or not
 int
-check_img(const char *filename)
+check_img(const char *file)
 {
-	if (access(filename, F_OK) != -1) {
+	if (access(file, F_OK) != -1) {
 		//the file exist
-		if (im_load(filename) == 0) {
+		if (im_load(file) == 0) {
 			//the file is an image
 			imlib_free_image();
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
 				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
-			filenames[filecnt] = filename;
+			filenames[filecnt] = file;
 			filecnt++;
 			return 0;
 		} else //return 1 if the image cant be loaded (it may be a directory)
 			return 1;
 	} else { //returns 2 if the file doesn't exist
 		if (!quiet)
-			fprintf(stderr, "mage: %s: No such file or directory\n", filename);
+			fprintf(stderr, "mage: %s: No such file or directory\n", file);
 		return 2;
 	}
 	//return 0;
