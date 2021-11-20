@@ -75,8 +75,8 @@ img_render(Image *img)
 			zoomstate = z;
 			img->x = xw.w / 2 - (xw.w / 2 - img->x) * zoomstate;
 			img->y = xw.h / 2 - (xw.h / 2 - img->y) * zoomstate;
-			img->checkpan = 1;
 		}
+		img->checkpan = 1;
 	}
 
 	if (img->checkpan) {
