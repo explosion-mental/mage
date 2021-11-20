@@ -45,6 +45,20 @@ typedef enum {
 	SCALE_HEIGHT,
 } scaling;
 
+
+typedef struct {
+	const char *symbol;
+	float (*mode)(void);
+} Scalemode;
+
+
+//typedef union {
+//	SCALE_DOWN,
+//	SCALE_FIT,
+//	SCALE_WIDTH,
+//	SCALE_HEIGHT,
+//} scaling;
+
 typedef struct {
 	Display *dpy;
 	Colormap cmap;
@@ -131,7 +145,7 @@ static void last(const Arg *arg);
 static void rotate(const Arg *arg);
 static void toggleantialias(const Arg *arg);
 static void reload(const Arg *arg);
-static void cyclescale(const Arg *arg);
+//static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
 
 /* handling files */
@@ -157,6 +171,10 @@ static char *wmname = "mage";
 static const char *scales[] = { "down", "fit", "width", "height" };
 static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
+static char symbol[16];
+static Scalemode *layout;
+static float down(void);
+static float fit(void);
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -168,6 +186,19 @@ static void (*handler[LASTEvent])(XEvent *) = {
 	[Expose] = expose,
 	[KeyPress] = kpress,
 };
+
+
+float
+down(void)
+{
+	return 1.0;
+}
+
+float
+fit(void)
+{
+	return MIN((float) xw.w / (float) image.w, (float) xw.h / (float) image.h);
+}
 
 //at the end everything should be merged
 #include "image.c"
@@ -228,7 +259,8 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : scales[scalemode], (int)(zoomstate * 100.0), fileidx + 1, filecnt);
+
+	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : symbol, (int)(zoomstate * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -607,12 +639,12 @@ main(int argc, char *argv[])
 		wmname = EARGF(usage());
 		break;
 	case 's':
-		mode = EARGF(usage());
-		for (i = 0; i < LENGTH(scales); i++)
-			if (!strcmp(mode, scales[i])) {
-				scalemode = i;
-				break;
-			}
+		//mode = EARGF(usage());
+		//for (i = 0; i < LENGTH(scales); i++)
+		//	if (!strcmp(mode, scales[i])) {
+		//		scalemode->mode = i;
+		//		break;
+		//	}
 		break;
 	case 'v':
 		die("mage-"VERSION);
@@ -636,6 +668,8 @@ main(int argc, char *argv[])
 
 	if (!filecnt)
 		die("mage: No more images to display");
+	strcpy(symbol, scalemode[0].symbol);
+	layout = scalemode;
 
 	setup();
 

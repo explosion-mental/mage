@@ -49,27 +49,15 @@ img_render(Image *img)
 {
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
-	float zw, zh, z;
 
 	if (!img || !imlib_context_get_image())
 		return;
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
-		zw = (float) xw.w / (float) img->w;
-		zh = (float) xw.h / (float) img->h;
 
-		switch (scalemode) {
-		case SCALE_WIDTH:
-			z = zw;
-			break;
-		case SCALE_HEIGHT:
-			z = zh;
-			break;
-		default:
-			z = MIN(zw, zh);
-			break;
-		}
-		z = MIN(z, scalemode == SCALE_DOWN ? 1.0 : maxzoom / 100.0);
+		float z = scalemode->mode();
+
+		z = MIN(z, scalemode->mode == down ? 1.0 : maxzoom / 100.0);
 
 		if (ABS(zoomstate - z) > 1.0 / MAX(img->w, img->h)) {
 			zoomstate = z;

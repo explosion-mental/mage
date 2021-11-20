@@ -6,7 +6,6 @@ static int quiet           = 0;          /* 1 means print warnings */
 static int recursive       = 0;          /* 1 means load subdirectories */
 static const float maxzoom = 800.0;      /* max value that zoom can reach */
 static const float minzoom = 12.5;       /* min value that zoom can reach */
-static scaling scalemode   = SCALE_DOWN; /* SCALE_{DOWN - FIT - WIDTH - HEIGHT} */
 static const char *fonts[] = { "monospace" };
 
 static const char *colors[][2] = {
@@ -15,6 +14,14 @@ static const char *colors[][2] = {
 	[SchemeSel]   = { "#bbbbbb", "#882100" },
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
+
+static Scalemode scalemode[] = {
+	/* symbol       arrange function */
+	{ "=",		down },    /* first entry is default */
+	{ "fit",	fit },
+	//{ "down",     NULL },    /* no layout function means scale down */
+};
+
 
 static Shortcut shortcuts[] = {
 	/* modifier     key              function            argument */
@@ -43,8 +50,8 @@ static Shortcut shortcuts[] = {
 	{ ShiftMask,    XK_g,            last,               {0} },
 	{ ShiftMask,    XK_period,       rotate,             {.i = +1 } },
 	{ ShiftMask,    XK_comma,        rotate,             {.i = -1 } },
-	{ 0,            XK_backslash,    cyclescale,         {.i = +1 } },
-	{ ShiftMask,    XK_backslash,    cyclescale,         {.i = -1 } },
+	//{ 0,            XK_backslash,    cyclescale,         {.i = +1 } },
+	//{ ShiftMask,    XK_backslash,    cyclescale,         {.i = -1 } },
 };
 
 static Mousekey mshortcuts[] = {
