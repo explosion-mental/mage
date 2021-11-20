@@ -18,7 +18,7 @@ im_load(const char *filename)
 		return -1;
 
 	imlib_context_set_image(im);
-	imlib_image_set_changes_on_disk();
+	//imlib_image_set_changes_on_disk();
 
 	return 0;
 }

@@ -260,10 +260,10 @@ void
 expose(XEvent *e)
 {
 	if (0 == e->xexpose.count) {
-		//TODO currently resize on big images is '''slow'''
-		//reload(0);
+		//TODO currently resize is a bit sluggish (noticeable on big images)
 		//image.redraw = 0;
 		img_render(&image);
+		//XSync(xw.dpy, True);
 		drawbar();
 	}
 }
@@ -561,7 +561,7 @@ main(int argc, char *argv[])
 			check_file(argv[i]);
 
 	if (!filecnt)
-		//of course there are none, is this necessary?
+		//exit(1);
 		die("mage: No more images to display");
 
 	setup();
