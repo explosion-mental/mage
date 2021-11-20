@@ -309,7 +309,7 @@ check_img(const char *filename)
 			//the file is an image
 			imlib_free_image();
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
-				die("cannot realloc %u bytes:", filecnt * sizeof (const char *));
+				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
 			filenames[filecnt] = filename;
 			filecnt++;
 			return 0;
