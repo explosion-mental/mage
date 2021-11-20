@@ -166,10 +166,12 @@ cleanup(void)
 	im_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
+	for (i = 0; i < filecnt; ++i)
+		free(filenames[i]);
 	free(filenames);
 	free(scheme);
 	drw_free(drw);
- 	XFreeGC(xw.dpy, xw.gc);
+	XFreeGC(xw.dpy, xw.gc);
 	XDestroyWindow(xw.dpy, xw.win);
 	XSync(xw.dpy, False);
 	XCloseDisplay(xw.dpy);
