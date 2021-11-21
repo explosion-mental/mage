@@ -16,20 +16,6 @@ ecalloc(size_t nmemb, size_t size)
 	return p;
 }
 
-char *
-estrdup(const char *s)
-{
-	char *d;
-	size_t n = strlen(s) + 1;
-
-	d = malloc(n);
-	if (d == NULL)
-		die("estrdup:");
-	memcpy(d, s, n);
-	return d;
-}
-
-
 void
 die(const char *fmt, ...) {
 	va_list ap;

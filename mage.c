@@ -389,13 +389,13 @@ readstdin(void)
 {
 	size_t n;
 	ssize_t len;
-	char *tmp = NULL, *line;
+	char *line = NULL;
 
-	while ((len = getline(&tmp, &n, stdin)) > 0) {
-		if (tmp[len-1] == '\n')
-			tmp[len-1] = '\0';
-		line = estrdup(tmp);
+	while ((len = getline(&line, &n, stdin)) > 0) {
+		if (line[len-1] == '\n')
+			line[len-1] = '\0';
 		check_file(line);
+		line = NULL;
 	}
 }
 
