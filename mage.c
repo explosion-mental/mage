@@ -384,7 +384,7 @@ check_file(char *file)
 		return;
 }
 
-static void
+void
 readstdin(void)
 {
 	size_t n;
