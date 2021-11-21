@@ -15,11 +15,10 @@ static const char *colors[][2] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
-static Scalemode scalemode[] = {
+static Scalemode scalemodes[] = {
 	/* symbol       arrange function */
-	{ "=",		down },    /* first entry is default */
-	{ "fit",	fit },
-	//{ "down",     NULL },    /* no layout function means scale down */
+	{ "down",	NULL },	/* no mode function means scale down */
+	{ "fit",	fit },	/* first entry is default */
 };
 
 
@@ -50,8 +49,8 @@ static Shortcut shortcuts[] = {
 	{ ShiftMask,    XK_g,            last,               {0} },
 	{ ShiftMask,    XK_period,       rotate,             {.i = +1 } },
 	{ ShiftMask,    XK_comma,        rotate,             {.i = -1 } },
-	//{ 0,            XK_backslash,    cyclescale,         {.i = +1 } },
-	//{ ShiftMask,    XK_backslash,    cyclescale,         {.i = -1 } },
+	{ 0,            XK_backslash,    cyclescale,         {.i = +1 } },
+	{ ShiftMask,    XK_backslash,    cyclescale,         {.i = -1 } },
 };
 
 static Mousekey mshortcuts[] = {

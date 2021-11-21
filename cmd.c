@@ -164,31 +164,31 @@ reload(const Arg *arg)
 	drawbar();
 }
 
-//void
-//cyclescale(const Arg *arg)
-//{
-//	if (arg->i > 0) {
-//		if (!image.zoomed) { /* use the same scalemode as before if the image is zoomed */
-//			if (scalemode < LENGTH(scales) - 1)
-//				scalemode = scalemode + arg->i;
-//			else
-//				scalemode = 0;
-//		}
-//		image.zoomed = 0;
-//		img_render(&image);
-//		drawbar();
-//	} else {
-//		if (!image.zoomed) {
-//			if (scalemode > 0)
-//				scalemode = scalemode + arg->i;
-//			else
-//				scalemode = LENGTH(scales) - 1;
-//		}
-//		image.zoomed = 0;
-//		img_render(&image);
-//		drawbar();
-//	}
-//}
+void
+cyclescale(const Arg *arg)
+{
+	if (arg->i > 0) {
+		if (!image.zoomed) { /* use the same scalemode as before if the image is zoomed */
+			if (modeidx < LENGTH(scalemodes) - 1)
+				modeidx = modeidx + arg->i;
+			else
+				modeidx = 0;
+		}
+		image.zoomed = 0;
+		img_render(&image);
+		drawbar();
+	} else {
+		if (!image.zoomed) {
+			if (modeidx > 0)
+				modeidx = modeidx + arg->i;
+			else
+				modeidx = LENGTH(scalemodes) - 1;
+		}
+		image.zoomed = 0;
+		img_render(&image);
+		drawbar();
+	}
+}
 
 void
 savestate(const Arg *arg)

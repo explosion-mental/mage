@@ -55,9 +55,9 @@ img_render(Image *img)
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
 
-		float z = scalemode->mode();
+		float z = scalemodes[modeidx].mode ? scalemodes[modeidx].mode() : 1.0;
 
-		z = MIN(z, scalemode->mode == down ? 1.0 : maxzoom / 100.0);
+		z = MIN(z, scalemodes[modeidx].mode == NULL ? 1.0 : maxzoom / 100.0);
 
 		if (ABS(zoomstate - z) > 1.0 / MAX(img->w, img->h)) {
 			zoomstate = z;
