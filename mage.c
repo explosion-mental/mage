@@ -123,7 +123,7 @@ static void savestate(const Arg *arg);
 /* handling files */
 static int check_img(char *filename);
 static void check_file(char *file);
-static int readstdin(char **lineptr, size_t *n);
+static void readstdin(void);
 
 /* variables */
 static Atom atom[WMLast];
@@ -384,13 +384,19 @@ check_file(char *file)
 		return;
 }
 
-static int
-readstdin(char **lineptr, size_t *n)
+static void
+readstdin(void)
 {
-	ssize_t len = getline(lineptr, n, stdin);
-	if (len > 0 && (*lineptr)[len-1] == '\n')
-		(*lineptr)[len-1] = '\0';
-	return len > 0;
+	size_t n;
+	ssize_t len;
+	char *tmp = NULL, *line;
+
+	while ((len = getline(&tmp, &n, stdin)) > 0) {
+		if (tmp[len-1] == '\n')
+			tmp[len-1] = '\0';
+		line = estrdup(tmp);
+		check_file(line);
+	}
 }
 
 void
@@ -526,12 +532,8 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	if (!strcmp(argv[0], "-")) { /* standard input */
-		size_t n;
-		char *line;
-		for (n = 0, line = NULL; readstdin(&line, &n); n = 0, line = NULL)
-			check_file(line);
-	}
+	if (!strcmp(argv[0], "-"))
+		readstdin();
 	else /* handle only images or directories */
 		for (i = 0; i < argc; i++)
 			check_file(argv[i]);
