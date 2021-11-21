@@ -123,7 +123,7 @@ static void savestate(const Arg *arg);
 /* handling files */
 static int check_img(char *filename);
 static void check_file(char *file);
-static char *readstdin(void);
+static void readstdin(void);
 
 /* variables */
 static Atom atom[WMLast];
@@ -384,40 +384,19 @@ check_file(char *file)
 		return;
 }
 
-char *
+static void
 readstdin(void)
 {
-	size_t len;
-	char *buf, *s, *end;
+	size_t n;
+	ssize_t len;
+	char *line = NULL;
 
-	len = 1024;
-	if (!(s = buf = malloc(len * sizeof (char))))
-		die("cannot malloc %u bytes:", len * sizeof (char));
-
-	do {
-		*s = '\0';
-		fgets(s, len - (s - buf), stdin);
-		if ((end = strchr(s, '\n')))
-			*end = '\0';
-		else if (strlen(s) + 1 == len - (s - buf)) {
-			if (!(buf = realloc(buf, 2 * len * sizeof (char))))
-				die("cannot realloc %u bytes:", 2 * len * sizeof (char));
-			s = buf + len - 1;
-			len *= 2;
-		} else
-			s += strlen(s);
-	} while (!end && !feof(stdin) && !ferror(stdin));
-
-	if (!ferror(stdin) && *buf) {
-		if (!(s = malloc((strlen(buf) + 1) * sizeof (char))))
-			die("cannot malloc %u bytes:", (strlen(buf) + 1) * sizeof (char));
-		strcpy(s, buf);
-	} else
-		s = NULL;
-
-	free(buf);
-
-	return s;
+	while ((len = getline(&line, &n, stdin)) > 0) {
+		if (line[len-1] == '\n')
+			line[len-1] = '\0';
+		check_file(line);
+		line = NULL;
+	}
 }
 
 void
@@ -514,7 +493,7 @@ int
 main(int argc, char *argv[])
 {
 	int i, fs = 0;
-	char *input, *mode;
+	char *mode;
 
 	ARGBEGIN {
 	case 'f':
@@ -553,9 +532,8 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	if (!strcmp(argv[0], "-")) /* standard input */
-		while ((input = readstdin()))
-			check_file(input);
+	if (!strcmp(argv[0], "-"))
+		readstdin();
 	else /* handle only images or directories */
 		for (i = 0; i < argc; i++)
 			check_file(argv[i]);
