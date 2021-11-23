@@ -16,12 +16,17 @@ static const char *colors[][2] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
+static char *test[] = { "./spawnmage", imagename, "1" };
+static char *test1[] = { "./spawnmage", imagename, "2" };
+
 static Shortcut shortcuts[] = {
 	/* modifier     key              function            argument */
 	{ 0,            XK_Escape,       quit,               {0} },
 	{ 0,            XK_q,            quit,               {0} },
 	{ 0,            XK_b,            togglebar,          {0} },
 	{ 0,            XK_space,        advance,            {.i = +1} },
+	{ 0,            XK_t,        spawn,            {.v = test} },
+	{ 0,            XK_y,        spawn,            {.v = test1} },
 	{ 0,            XK_BackSpace,    advance,            {.i = -1} },
 	{ 0,            XK_bracketright, advance,            {.i = +5} },
 	{ 0,            XK_bracketleft,  advance,            {.i = -5} },

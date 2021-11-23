@@ -142,7 +142,22 @@ static char *wmname = "mage";
 static const char *scales[] = { "down", "fit", "width", "height" };
 static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
+static char imagename[128];
 
+static void
+spawn(const Arg *arg)
+{
+	strcpy(imagename, filenames[fileidx]);
+	if (fork() == 0) {
+		if (xw.dpy)
+			close(ConnectionNumber(xw.dpy));
+		setsid();
+		execvp(((char **)arg->v)[0], (char **)arg->v);
+		fprintf(stderr, "dwm: execvp %s", ((char **)arg->v)[0]);
+		perror(" failed");
+		exit(EXIT_SUCCESS);
+	}
+}
 /* config.h for applying patches and the configuration. */
 #include "config.h"
 
