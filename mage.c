@@ -166,7 +166,6 @@ cleanup(void)
 	im_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
-	free(filenames);
 	free(scheme);
 	drw_free(drw);
  	XFreeGC(xw.dpy, xw.gc);
@@ -298,29 +297,27 @@ configurenotify(XEvent *e)
 	}
 }
 
-//ATL: Alternative take, return filename or NULL handle whether it's a
-//directory or not
+/* return 1: if the image cant be loaded (it may be a directory)
+ * return 2: if the file doesn't exist. */
 int
 check_img(char *file)
 {
 	if (access(file, F_OK) != -1) {
-		//the file exist
+		/* the file exist */
 		if (im_load(file) == 0) {
-			//the file is an image
+			/* the file is an image */
 			imlib_free_image();
-			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
-				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
+			//if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
+			//	die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
 			filenames[filecnt] = file;
-			filecnt++;
 			return 0;
-		} else //return 1 if the image cant be loaded (it may be a directory)
+		} else /* the image cant be loaded (it may be a directory) */
 			return 1;
-	} else { //returns 2 if the file doesn't exist
+	} else { /* the file does not exist */
 		if (!quiet)
 			fprintf(stderr, "mage: %s: No such file or directory\n", file);
 		return 2;
 	}
-	//return 0;
 }
 
 //needs to be simplified further
@@ -342,29 +339,34 @@ check_file(char *file)
 
 	dircnt = 512;
 	diridx = first = 1;
-	if (!(dirnames = malloc(dircnt * sizeof (const char *))))
-		die("cannot malloc %u bytes:", dircnt * sizeof (const char *));
+	if (!(dirnames = malloc(dircnt)))
+		die("cannot malloc %u bytes:", dircnt);
 	dirnames[0] = file;
 
-	/* check if it's a directory */
-	//do we need to check this? if it isn't a file then what else could it be?
+	/* if we are here, then the file is definetly a directory */
 	if ((dir = opendir(file))) {
 		/* handle directory */
 		while (diridx > 0) {
 			file = dirnames[--diridx];
+			filecnt--; //remove the directory argument if its a directory
 			while ((dentry = readdir(dir))) {
 				/* ignore directories '.' and '..' */
 				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
 					continue;
 				len = strlen(file) + strlen(dentry->d_name) + 2;
-				if (!(filename = malloc(len * sizeof(char))))
-					die("cannot malloc %u bytes:", len * sizeof (char));
-				snprintf(filename, len, "%s/%s", file, dentry->d_name);
-				if (recursive)
+				if (!(filename = malloc(len)))
+					die("cannot malloc %u bytes:", len);
+				if (!strcmp(file, "."))
+					strcpy(filename, dentry->d_name);
+				else
+					snprintf(filename, len, "%s/%s", file, dentry->d_name);
+				if (recursive) /* load subdirectories */
 					check_file(filename);
 				else {
 					ret = check_img(filename);
-					if (ret == 1) {
+					if (ret == 0)
+						filecnt++; //add +1 if the img succefully loads
+					else if (ret == 1) {
 						if (!quiet)
 							fprintf(stderr, "mage: %s: Ignoring directory\n", filename);
 						free(filename);
@@ -532,6 +534,8 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
+	filecnt = argc;
+	filenames = argv;
 	if (!strcmp(argv[0], "-"))
 		readstdin();
 	else /* handle only images or directories */
