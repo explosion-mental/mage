@@ -6,40 +6,32 @@ im_destroy()
 	//	imlib_free_image_and_decache();
 }
 
-Imlib_Image
-im_load(const char *filename)
-{
-	Imlib_Image *im = imlib_load_image(filename);
-
-	if (im != NULL) {
-		imlib_context_set_image(im);
-		if (imlib_image_get_data_for_reading_only() == NULL) {
-			imlib_free_image();
-			im = NULL;
-		}
-	}
-
-	return im;
-}
-
 int
 img_load(Image *img, const char *filename)
 {
 	if (!img || !filename)
 		return -1;
 
-	//if (im_load(filename) != 0)
-	//	return -1;
+	img->im = imlib_load_image(filename);
+
+	if (img->im != NULL) { /* handle the actual image */
+		imlib_context_set_image(img->im);
+		if (imlib_image_get_data_for_reading_only() == NULL) {
+			imlib_free_image();
+			img->im = NULL;
+		}
+	}
 
 	/* set defaults when opening image */
  	//img->redraw = 0;
-	img->im = im_load(filename);
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 	img->checkpan = 0;
 	img->zoomed = 0;
 
+	/* context */
 	imlib_context_set_anti_alias(antialiasing);
+	imlib_context_set_image(img->im);
 
 	return 0;
 }
@@ -112,8 +104,10 @@ img_render(Image *img)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 
 	/* render image */
-	imlib_context_set_image(img->im);
  	imlib_context_set_drawable(xw.pm);
+	/* context */
+	//imlib_context_set_anti_alias(antialiasing);
+	//imlib_context_set_image(img->im);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
 	/* window background */

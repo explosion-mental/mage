@@ -94,7 +94,6 @@ static void configurenotify(XEvent *);
 
 /* image */
 static void im_destroy(void);
-static Imlib_Image im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
@@ -305,7 +304,7 @@ check_img(char *file)
 {
 	if (access(file, F_OK) != -1) {
 		//the file exist
-		if (im_load(file)) {
+		if (imlib_load_image(file)) {
 			//the file is an image
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
 				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
