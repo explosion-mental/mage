@@ -6,22 +6,21 @@ im_destroy()
 	//	imlib_free_image_and_decache();
 }
 
-Imlib_Image
+int
 im_load(const char *filename)
 {
-	Imlib_Image *im = NULL;
+	Imlib_Image *im;
 
-	im = imlib_load_image(filename);
+	if (!filename)
+		return -1;
 
-	if (im != NULL) {
-		imlib_context_set_image(im);
-		if (imlib_image_get_data_for_reading_only() == NULL) {
-			imlib_free_image();
-			im = NULL;
-		}
-	}
+	if (!(im = imlib_load_image(filename)))
+		return -1;
 
-	return im;
+	imlib_context_set_image(im);
+	//imlib_image_set_changes_on_disk();
+
+	return 0;
 }
 
 int
@@ -30,13 +29,16 @@ img_load(Image *img, const char *filename)
 	if (!img || !filename)
 		return -1;
 
+	if (im_load(filename) != 0)
+		return -1;
+
 	/* set defaults when opening image */
  	//img->redraw = 0;
-	img->im = imlib_load_image(filename);
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 	img->checkpan = 0;
 	img->zoomed = 0;
+
 	imlib_context_set_anti_alias(antialiasing);
 
 	return 0;
@@ -113,8 +115,6 @@ img_render(Image *img)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 
 	/* render image */
-	imlib_context_set_image(img->im);
-	imlib_context_set_anti_alias(antialiasing);
  	imlib_context_set_drawable(xw.pm);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
@@ -163,71 +163,3 @@ img_zoom(Image *img, float z)
 		img->zoomed = 1;
 	}
 }
-
-//int
-//img_load_thumb(Thumb *tn, char *filename)
-//{
-//	int w, h;
-//	float z, zw, zh;
-//
-//	if (!tn)
-//		return 0;
-//
-//	//if (!_imlib_load_image(filename))
-//	//	return 0;
-//
-//	w = imlib_image_get_width();
-//	h = imlib_image_get_height();
-//	zw = (float) THUMB_SIZE / (float) w;
-//	zh = (float) THUMB_SIZE / (float) h;
-//	z = MIN(zw, zh);
-//	tn->w = z * w;
-//	tn->h = z * h;
-//
-//	imlib_context_set_drawable(tn->pm);
-//	imlib_render_image_part_on_drawable_at_size(0, 0, w, h,
-//	                                            0, 0, tn->w, tn->h);
-//	imlib_free_image();
-//
-//	return 1;
-//}
-//
-//void
-//render_thumbs()
-//{
-//	int i, cnt, x, y;
-//
-//	tcols = xw.w / (THUMB_SIZE + 10);
-//	trows = xw.h / (THUMB_SIZE + 10);
-//
-//	x = xw.w - tcols * (THUMB_SIZE + 10) + 5;
-//	y = xw.h - trows * (THUMB_SIZE + 10) + 5;
-//	cnt = MIN(tcols * trows, filecnt);
-//
-//	/* clear and set pixmap */
-//	if (xw.pm)
-//		XFreePixmap(xw.dpy, xw.pm);
-//	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
-//	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
-//
-//	/* render image */
-//	i = 0;
-//	while (i < cnt) {
-//		thumb[i].x = x + (THUMB_SIZE - thumb[i].w) / 2;
-//		thumb[i].y = y + (THUMB_SIZE - thumb[i].h) / 2;
-//		//XCreatePixmap(xw.dpy, xw.win, THUMB_SIZE, THUMB_SIZE, xw.depth);
-//		XCopyArea(xw.dpy, thumb[i].pm, xw.pm, xw.gc, 0, 0, thumb[i].w, thumb[i].h, thumb[i].x, thumb[i].y);
-//		//win_draw_pixmap(&win, thumbs[i].pm, thumbs[i].x, thumbs[i].y, thumbs[i].w, thumbs[i].h);
-//		if (++i % tcols == 0) {
-//			x = xw.w - tcols * (THUMB_SIZE + 10) + 5;
-//			y += THUMB_SIZE + 10;
-//		} else {
-//			x += THUMB_SIZE + 10;
-//		}
-//	}
-//
-//	/* window background */
-//	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
-//	XClearWindow(xw.dpy, xw.win);
-//}
-

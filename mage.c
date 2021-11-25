@@ -31,12 +31,6 @@ typedef enum {
 	SCALE_HEIGHT,
 } scaling;
 
-typedef enum {
-	NORMAL,
-	THUMBNAIL,
-} appmode;
-
-
 typedef struct {
 	Display *dpy;
 	Colormap cmap;
@@ -54,7 +48,7 @@ typedef struct {
 } XWindow;
 
 typedef struct {
-	Imlib_Image *im;
+	//Imlib_Image *im;
  	//int re; /* rendered */
 	//int redraw;
 	int checkpan;
@@ -100,7 +94,7 @@ static void configurenotify(XEvent *);
 
 /* image */
 static void im_destroy(void);
-static Imlib_Image im_load(const char *filename);
+static int im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
@@ -148,11 +142,6 @@ static char *wmname = "mage";
 static const char *scales[] = { "down", "fit", "width", "height" };
 static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
-//static int img_load_thumb(Thumb *tn, char *filename);
-static appmode mode;
- int tvis, tcols, trows;
-
-#define THUMB_SIZE  50
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -316,8 +305,9 @@ check_img(char *file)
 {
 	if (access(file, F_OK) != -1) {
 		//the file exist
-		if (im_load(file) != NULL) {
+		if (im_load(file) == 0) {
 			//the file is an image
+			imlib_free_image();
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
 				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
 			filenames[filecnt] = file;
@@ -489,19 +479,8 @@ setup(void)
 	imlib_context_set_colormap(xw.cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
-
-	//thumb = malloc(filecnt * sizeof(Thumb));
- 	//for (i = 0; i < filecnt; ++i) {
- 	//	thumb[i].pm = 	XCreatePixmap(xw.dpy, xw.win, THUMB_SIZE, THUMB_SIZE, xw.depth);
-	//	img_load_thumb(&thumb[i], filenames[i]);
-	//}
-	//if (mode == THUMBNAIL) {
-	//	mode = THUMBNAIL;
-	//} else {
-	//	mode = NORMAL;
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
-	//}
 }
 
 void
