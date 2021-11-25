@@ -315,6 +315,8 @@ check_img(char *file)
 	if (access(file, F_OK) != -1) {
 		//the file exist
 		if (imlib_load_image(file)) {
+		//if (imlib_load_image_without_cache(file)) {
+		//if (imlib_load_image_immediately_without_cache(file)) {
 			//the file is an image
 			//TODO don't realloc for every file
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))

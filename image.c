@@ -32,6 +32,7 @@ img_load(Image *img, const char *filename)
 	/* context */
 	imlib_context_set_anti_alias(antialiasing);
 	imlib_context_set_image(img->im);
+	imlib_context_set_dither(1);
 
 	return 0;
 }
@@ -39,8 +40,8 @@ img_load(Image *img, const char *filename)
 void
 img_render(Image *img)
 {
-	int sx, sy, sw, sh;
-	int dx, dy, dw, dh;
+	int sx, sy, sw, sh; //source
+	int dx, dy, dw, dh; //destination
 	float zw, zh, z;
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
