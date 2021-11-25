@@ -123,7 +123,6 @@ last(const Arg *arg)
 void
 rotate(const Arg *arg)
 {
-	Image *img = &image;
 	int ox, oy, tmp, d;
 
 	if (arg->i > 0)
@@ -131,20 +130,20 @@ rotate(const Arg *arg)
 	else
 		d = 3;
 
-	ox = d == 1 ? img->x : xw.w - img->x - img->w * zoomstate;
-	oy = d == 3 ? img->y : xw.h - img->y - img->h * zoomstate;
+	ox = d == 1 ? image.x : xw.w - image.x - image.w * zoomstate;
+	oy = d == 3 ? image.y : xw.h - image.y - image.h * zoomstate;
 
 	imlib_image_orientate(d);
 
-	img->x = oy + (xw.w - xw.h) / 2;
-	img->y = ox + (xw.h - xw.w) / 2;
+	image.x = oy + (xw.w - xw.h) / 2;
+	image.y = ox + (xw.h - xw.w) / 2;
 
-	tmp = img->w;
-	img->w = img->h;
-	img->h = tmp;
+	tmp = image.w;
+	image.w = image.h;
+	image.h = tmp;
 
-	img->checkpan = 1;
-	img_render(img);
+	image.checkpan = 1;
+	img_render(&image);
 	drawbar();
 }
 
