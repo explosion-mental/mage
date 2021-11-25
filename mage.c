@@ -306,6 +306,7 @@ check_img(char *file)
 		//the file exist
 		if (imlib_load_image(file)) {
 			//the file is an image
+			//TODO don't realloc for every file
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
 				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
 			filenames[filecnt] = file;
