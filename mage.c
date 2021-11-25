@@ -48,7 +48,7 @@ typedef struct {
 } XWindow;
 
 typedef struct {
-	//Imlib_Image *im;
+	Imlib_Image *im;
  	//int re; /* rendered */
 	//int redraw;
 	int checkpan;
@@ -94,7 +94,7 @@ static void configurenotify(XEvent *);
 
 /* image */
 static void im_destroy(void);
-static int im_load(const char *filename);
+static Imlib_Image im_load(const char *filename);
 static int img_load(Image *img, const char *filename);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
@@ -305,9 +305,8 @@ check_img(char *file)
 {
 	if (access(file, F_OK) != -1) {
 		//the file exist
-		if (im_load(file) == 0) {
+		if (im_load(file)) {
 			//the file is an image
-			imlib_free_image();
 			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
 				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
 			filenames[filecnt] = file;

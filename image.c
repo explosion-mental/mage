@@ -6,21 +6,20 @@ im_destroy()
 	//	imlib_free_image_and_decache();
 }
 
-int
+Imlib_Image
 im_load(const char *filename)
 {
-	Imlib_Image *im;
+	Imlib_Image *im = imlib_load_image(filename);
 
-	if (!filename)
-		return -1;
+	if (im != NULL) {
+		imlib_context_set_image(im);
+		if (imlib_image_get_data_for_reading_only() == NULL) {
+			imlib_free_image();
+			im = NULL;
+		}
+	}
 
-	if (!(im = imlib_load_image(filename)))
-		return -1;
-
-	imlib_context_set_image(im);
-	//imlib_image_set_changes_on_disk();
-
-	return 0;
+	return im;
 }
 
 int
@@ -29,11 +28,12 @@ img_load(Image *img, const char *filename)
 	if (!img || !filename)
 		return -1;
 
-	if (im_load(filename) != 0)
-		return -1;
+	//if (im_load(filename) != 0)
+	//	return -1;
 
 	/* set defaults when opening image */
  	//img->redraw = 0;
+	img->im = im_load(filename);
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 	img->checkpan = 0;
@@ -50,9 +50,6 @@ img_render(Image *img)
 	int sx, sy, sw, sh;
 	int dx, dy, dw, dh;
 	float zw, zh, z;
-
-	if (!img || !imlib_context_get_image())
-		return;
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
 		zw = (float) xw.w / (float) img->w;
@@ -115,6 +112,7 @@ img_render(Image *img)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 
 	/* render image */
+	imlib_context_set_image(img->im);
  	imlib_context_set_drawable(xw.pm);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
