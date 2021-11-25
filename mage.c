@@ -57,6 +57,11 @@ typedef struct {
 	float x, y; /* position */
 } Image;
 
+typedef struct {
+	const char *symbol;
+	void (*arrange)(void);
+} Layout;
+
 typedef union {
 	int i;
 	unsigned int ui;
@@ -109,6 +114,7 @@ static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
 static void set_zoom(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
+static void toggleblend(const Arg *arg);
 static void panhorz(const Arg *arg);
 static void panvert(const Arg *arg);
 static void first(const Arg *arg);
@@ -123,6 +129,9 @@ static void savestate(const Arg *arg);
 static int check_img(char *filename);
 static void check_file(char *file);
 static void readstdin(void);
+
+/* layouts */
+static void monocle(void);
 
 /* variables */
 static Atom atom[WMLast];
@@ -156,6 +165,7 @@ static void (*handler[LASTEvent])(XEvent *) = {
 //at the end everything should be merged
 #include "image.c"	//image (and imlib2) operations
 #include "cmd.c"	//config.h commands
+#include "layouts.c"	//layouts
 
 void
 cleanup(void)
