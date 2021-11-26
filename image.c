@@ -32,7 +32,7 @@ img_load(Image *img, const char *filename)
 	/* context */
 	imlib_context_set_anti_alias(antialiasing);
 	imlib_context_set_image(img->im);
-	imlib_context_set_dither(1);
+	imlib_image_tile();
 
 	return 0;
 }
