@@ -130,8 +130,6 @@ static void changemode(const Arg *arg);
 static int check_img(char *filename);
 static void check_file(char *file);
 static void readstdin(void);
-static void tns_render(Image *img);
-static void tns_load(Image *img, char *filename);
 
 /* layouts */
 static void monocle(void);
@@ -165,6 +163,9 @@ static void (*handler[LASTEvent])(XEvent *) = {
 	[Expose] = expose,
 	[KeyPress] = kpress,
 };
+
+//thumbs
+static void tns_render(Image *img);
 
 //at the end everything should be merged
 #include "image.c"	//image (and imlib2) operations
@@ -494,17 +495,8 @@ setup(void)
 	imlib_context_set_colormap(xw.cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
-	if (!mode) {
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
-	} else {
-	tnsfirst = sel = 0;
-	cnt = tnsfirst = sel = 0;
-	if (!(thumbs = (Image *) malloc((filecnt + 1) * sizeof(Image))))
-		die("cannot realloc %u bytes:", (filecnt + 1) * sizeof(Image));
-	tns_load(thumbs, filenames[fileidx]);
-	tns_render(thumbs);
-	}
 }
 
 void
