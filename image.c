@@ -14,6 +14,8 @@ img_load(Image *img, const char *filename)
 
 	img->im = imlib_load_image(filename);
 
+	//FIXME is this doing more checks? this functions is only to load the
+	//image, the actual 'checking' is done on `check_img`
 	if (img->im != NULL) { /* handle the actual image */
 		imlib_context_set_image(img->im);
 		if (imlib_image_get_data_for_reading_only() == NULL) {
@@ -174,21 +176,12 @@ img_zoom(Image *img, float z)
  * TODO for loop into img_load to load the images
  */
 
-
 #define THUMB_SIZE  50
 
 void
 tns_render(Image *t)
 {
-	int i;
-
-	//alloc mem to thumb pointer
-	if (!(t = (Image *) malloc(filecnt * sizeof(Image *) * 4)))
-		die("cannot malloc %u bytes:", filecnt * sizeof(Image *));
-
-	//check load all images and store them in order
-	for (i = 0; i < filecnt; i++)
-		img_load(&t[i], filenames[i]);
+	int i, space = THUMB_SIZE;
 
 	/* clear and set pixmap */
 	if (xw.pm)
@@ -197,12 +190,24 @@ tns_render(Image *t)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 	imlib_context_set_drawable(xw.pm);
 
-	imlib_context_set_anti_alias(1); //faster but less quality
+	/* load images */
+	for (i = 0; i < filecnt; i++) {
+		img_load(&t[i], filenames[i]);
+		imlib_context_set_anti_alias(1); //faster but less quality
 
-	//TODO set the images
-	imlib_context_set_image(image.im);
-	//imlib_render_image_part_on_drawable_at_size(THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
-	image.im = imlib_create_cropped_scaled_image(0, 0, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
+		//TODO 'separate' images
+		//t[i].x = (THUMB_SIZE - t[i].w) / 2;
+		//t[i].y = (THUMB_SIZE - t[i].h) / 2;
+		//space += space;
+		t[i].x = t[i].w / 2;
+		t[i].y = t[i].h / 2;
+
+		/* render the image */
+		//imlib_context_set_image(t[i].im);
+		//imlib_render_image_part_on_drawable_at_size(0, 0, t[i].w, t[i].h, t[i].x, t[i].y, THUMB_SIZE, THUMB_SIZE);
+		//image.im = imlib_create_cropped_scaled_image(0, 0, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
+		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
+	}
 
 	/* window background */
 	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);

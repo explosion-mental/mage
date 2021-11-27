@@ -224,4 +224,6 @@ void
 changemode(const Arg *arg)
 {
 	mode = !mode;
+	img_render(&image);
+	drawbar();
 }
