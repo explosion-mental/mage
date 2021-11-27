@@ -131,6 +131,7 @@ static int check_img(char *filename);
 static void check_file(char *file);
 static void readstdin(void);
 static void tns_render(Image *img);
+static void tns_load(Image *img, char *filename);
 
 /* layouts */
 static void monocle(void);
@@ -498,6 +499,10 @@ setup(void)
 	img_render(&image);
 	} else {
 	tnsfirst = sel = 0;
+	cnt = tnsfirst = sel = 0;
+	if (!(thumbs = (Image *) malloc((filecnt + 1) * sizeof(Image))))
+		die("cannot realloc %u bytes:", (filecnt + 1) * sizeof(Image));
+	tns_load(thumbs, filenames[fileidx]);
 	tns_render(thumbs);
 	}
 }
@@ -512,7 +517,7 @@ int
 main(int argc, char *argv[])
 {
 	int i, fs = 0;
-	char *mode;
+	char *smode;
 
 	ARGBEGIN {
 	case 'f':
@@ -533,10 +538,13 @@ main(int argc, char *argv[])
 	case 'n':
 		wmname = EARGF(usage());
 		break;
+	case 't':
+		mode = 1;
+		break;
 	case 's':
-		mode = EARGF(usage());
+		smode = EARGF(usage());
 		for (i = 0; i < LENGTH(scales); i++)
-			if (!strcmp(mode, scales[i])) {
+			if (!strcmp(smode, scales[i])) {
 				scalemode = i;
 				break;
 			}

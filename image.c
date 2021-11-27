@@ -40,6 +40,7 @@ void
 img_render(Image *img)
 {
 	if (mode) {
+		tns_load(thumbs, filenames[fileidx]);
 		tns_render(thumbs);
 		return;
 	}
@@ -178,49 +179,48 @@ static int cnt, cols, rows, tnsfirst, sel;
 const int thumb_dim = THUMB_SIZE + 10;
 
 void
-tns_load(Image *tns, char **filenames)
+tns_load(Image *tns, char *filename)
 {
 	int i, w, h;
 	float z, zw, zh;
+	Image *t;
 
+	cnt = tnsfirst = sel = 0;
 	tns = (Image *) malloc(filecnt * sizeof(Image));
-	cnt = filecnt;
 
-	for (i = 0; i < filecnt; i++) {
-		if (!(tns->im = imlib_load_image(filenames[i])))
-			continue;
+	imlib_load_image(filename);
+	imlib_context_set_image(tns->im);
+	w = imlib_image_get_width();
+	h = imlib_image_get_height();
+	zw = (float) THUMB_SIZE / (float) w;
+	zh = (float) THUMB_SIZE / (float) h;
+	z = MIN(zw, zh);
+	if (!tns->im && z > 1.0)
+		z = 1.0;
 
-		imlib_context_set_image(thumbs->im);
+	t = &thumbs[cnt++];
+	t->w = z * w;
+	t->h = z * h;
 
-		w = imlib_image_get_width();
-		h = imlib_image_get_height();
-		zw = (float) THUMB_SIZE / (float) w;
-		zh = (float) THUMB_SIZE / (float) h;
-		z = MIN(zw, zh);
+	/* clear and set pixmap */
+	if (xw.pm)
+		XFreePixmap(xw.dpy, xw.pm);
+	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
+	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 
-		thumbs->w = z * w;
-		thumbs->h = z * h;
+	/* render image */
+	imlib_context_set_drawable(xw.pm);
 
-		/* clear and set pixmap */
-		if (xw.pm)
-			XFreePixmap(xw.dpy, xw.pm);
-		xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
-		XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
-
-		/* render image */
- 		imlib_context_set_drawable(xw.pm);
-
-		/* context */
-		//imlib_context_set_anti_alias(antialiasing);
-		//imlib_context_set_image(img->im);
-		//imlib_context_set_drawable(xw.pm);
-		imlib_render_image_part_on_drawable_at_size(0, 0, w, h,
-		                                            0, 0, tns->w, tns->h);
-		imlib_free_image();
-		/* window background */
-		XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
-		XClearWindow(xw.dpy, xw.win);
-	}
+	/* context */
+	//imlib_context_set_anti_alias(antialiasing);
+	//imlib_context_set_image(img->im);
+	imlib_context_set_drawable(xw.pm);
+	imlib_render_image_part_on_drawable_at_size(0, 0, w, h,
+	                                            0, 0, t->w, t->h);
+	imlib_free_image();
+	/* window background */
+	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
+	XClearWindow(xw.dpy, xw.win);
 }
 
 void
