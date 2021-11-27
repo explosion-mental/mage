@@ -171,6 +171,7 @@ img_zoom(Image *img, float z)
 
 /* thumbnail mode:
  * TODO load images simultaneously
+ * TODO for loop into img_load to load the images
  */
 
 
@@ -179,6 +180,16 @@ img_zoom(Image *img, float z)
 void
 tns_render(Image *t)
 {
+	int i;
+
+	//alloc mem to thumb pointer
+	if (!(t = (Image *) malloc(filecnt * sizeof(Image *) * 4)))
+		die("cannot malloc %u bytes:", filecnt * sizeof(Image *));
+
+	//check load all images and store them in order
+	for (i = 0; i < filecnt; i++)
+		img_load(&t[i], filenames[i]);
+
 	/* clear and set pixmap */
 	if (xw.pm)
 		XFreePixmap(xw.dpy, xw.pm);
@@ -186,7 +197,12 @@ tns_render(Image *t)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 	imlib_context_set_drawable(xw.pm);
 
-	imlib_render_image_part_on_drawable_at_size(THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
+	imlib_context_set_anti_alias(1); //faster but less quality
+
+	//TODO set the images
+	imlib_context_set_image(image.im);
+	//imlib_render_image_part_on_drawable_at_size(THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
+	image.im = imlib_create_cropped_scaled_image(0, 0, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
 
 	/* window background */
 	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
