@@ -33,6 +33,7 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_BackSpace,    advance,            {.i = -1} },
 	{ 0,            XK_bracketright, advance,            {.i = +5} },
 	{ 0,            XK_bracketleft,  advance,            {.i = -5} },
+	{ 0,            XK_t,            changemode,         {0} },
 	{ 0,            XK_p,            printfile,          {0} },
 	{ 0,            XK_r,            reload,             {0} },
 	{ 0,            XK_minus,        zoom,               {.f = -12.5} },

@@ -219,3 +219,9 @@ toggleblend(const Arg *arg)
 	img_render(&image);
 	drawbar();
 }
+
+void
+changemode(const Arg *arg)
+{
+	mode = !mode;
+}

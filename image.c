@@ -32,7 +32,6 @@ img_load(Image *img, const char *filename)
 	/* context */
 	imlib_context_set_anti_alias(antialiasing);
 	imlib_context_set_image(img->im);
-	imlib_image_tile();
 
 	return 0;
 }
@@ -40,6 +39,11 @@ img_load(Image *img, const char *filename)
 void
 img_render(Image *img)
 {
+	if (mode) {
+		tns_render(thumbs);
+		return;
+	}
+
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
 	float zw, zh, z;
@@ -156,3 +160,122 @@ img_zoom(Image *img, float z)
 		img->zoomed = 1;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+static int cnt, cols, rows, tnsfirst, sel;
+#define THUMB_SIZE  50
+
+
+const int thumb_dim = THUMB_SIZE + 10;
+
+void
+tns_load(Image *tns, char **filenames)
+{
+	int i, w, h;
+	float z, zw, zh;
+
+	tns = (Image *) malloc(filecnt * sizeof(Image));
+	cnt = filecnt;
+
+	for (i = 0; i < filecnt; i++) {
+		if (!(tns->im = imlib_load_image(filenames[i])))
+			continue;
+
+		imlib_context_set_image(thumbs->im);
+
+		w = imlib_image_get_width();
+		h = imlib_image_get_height();
+		zw = (float) THUMB_SIZE / (float) w;
+		zh = (float) THUMB_SIZE / (float) h;
+		z = MIN(zw, zh);
+
+		thumbs->w = z * w;
+		thumbs->h = z * h;
+
+		/* clear and set pixmap */
+		if (xw.pm)
+			XFreePixmap(xw.dpy, xw.pm);
+		xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
+		XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
+
+		/* render image */
+ 		imlib_context_set_drawable(xw.pm);
+
+		/* context */
+		//imlib_context_set_anti_alias(antialiasing);
+		//imlib_context_set_image(img->im);
+		//imlib_context_set_drawable(xw.pm);
+		imlib_render_image_part_on_drawable_at_size(0, 0, w, h,
+		                                            0, 0, tns->w, tns->h);
+		imlib_free_image();
+		/* window background */
+		XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
+		XClearWindow(xw.dpy, xw.win);
+	}
+}
+
+void
+tns_free(Image *tns)
+{
+	int i;
+
+	if (!tns)
+		return;
+
+	//for (i = 0; i < tnscnt; ++i)
+		//win_free_pixmap(win, tns->thumbs[i].pm);
+
+	free(thumbs);
+	thumbs = NULL;
+}
+
+void
+tns_render(Image *tns)
+{
+	int i, count, x, y;
+
+	cols = xw.w / thumb_dim;
+	rows = xw.h / thumb_dim;
+
+	count = cols * rows;
+	if (tnsfirst && tnsfirst + count > cnt)
+		tnsfirst = MAX(0, cnt - count);
+	count = MIN(tnsfirst + count, cnt);
+
+	/* clear and set pixmap */
+	if (xw.pm)
+		XFreePixmap(xw.dpy, xw.pm);
+	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
+	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
+
+	x = y = 5;
+	i = tnsfirst;
+
+	while (i < count) {
+		tns[i].x = x + (THUMB_SIZE - tns[i].w) / 2;
+		tns[i].y = y + (THUMB_SIZE - tns[i].h) / 2;
+		imlib_context_set_image(tns->im);
+		imlib_render_image_part_on_drawable_at_size(0, 0, tns->w, tns->h,
+		                                            tns->x, tns->y, tns->w, tns->h);
+		if (++i % cols == 0) {
+			x = 5;
+			y += thumb_dim;
+		} else {
+			x += thumb_dim;
+		}
+	}
+
+	/* window background */
+	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
+	XClearWindow(xw.dpy, xw.win);
+}
+

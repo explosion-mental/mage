@@ -124,11 +124,13 @@ static void toggleantialias(const Arg *arg);
 static void reload(const Arg *arg);
 static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
+static void changemode(const Arg *arg);
 
 /* handling files */
 static int check_img(char *filename);
 static void check_file(char *file);
 static void readstdin(void);
+static void tns_render(Image *img);
 
 /* layouts */
 static void monocle(void);
@@ -139,7 +141,7 @@ static char right[128], left[128];
 static char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
 static XWindow xw;
-static Image image;
+static Image image, *thumbs;
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
@@ -150,6 +152,7 @@ static char *wmname = "mage";
 static const char *scales[] = { "down", "fit", "width", "height" };
 static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
+static int mode = 0; //0 means normal, 1 means thumbnail
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -490,8 +493,13 @@ setup(void)
 	imlib_context_set_colormap(xw.cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
+	if (!mode) {
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
+	} else {
+	tnsfirst = sel = 0;
+	tns_render(thumbs);
+	}
 }
 
 void
