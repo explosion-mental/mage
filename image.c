@@ -12,28 +12,20 @@ img_load(Image *img, const char *filename)
 	if (!img || !filename)
 		return -1;
 
+	/* handle image */
 	img->im = imlib_load_image(filename);
-
-	//FIXME is this doing more checks? this functions is only to load the
-	//image, the actual 'checking' is done on `check_img`
-	if (img->im != NULL) { /* handle the actual image */
-		imlib_context_set_image(img->im);
-		if (imlib_image_get_data_for_reading_only() == NULL) {
-			imlib_free_image();
-			img->im = NULL;
-		}
-	}
-
-	/* set defaults when opening image */
- 	//img->redraw = 0;
+	imlib_context_set_image(img->im);
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
+
+	/* set defaults */
+ 	//img->redraw = 0;
 	img->checkpan = 0;
 	img->zoomed = 0;
 
-	/* context */
+	/* config context */
 	imlib_context_set_anti_alias(antialiasing);
-	imlib_context_set_image(img->im);
+	imlib_context_set_blend(blend);
 
 	return 0;
 }
@@ -42,7 +34,6 @@ void
 img_render(Image *img)
 {
 	if (mode) {
-		//tns_load(thumbs, filenames[fileidx]);
 		tns_render(thumbs);
 		return;
 	}
