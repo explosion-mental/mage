@@ -17,7 +17,7 @@ static const char *colors[][2] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
-static const Layout layouts[] = {
+static const Layout layouts[] = { //see layouts.c
 	/* symbol     arrange function */
 	//{ "><>",      NULL },    /* no layout function means one image per window */
 	//{ "[]=",      tile },    /* first entry is default */

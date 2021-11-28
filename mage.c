@@ -312,39 +312,34 @@ configurenotify(XEvent *e)
 	}
 }
 
-//ATL: Alternative take, return filename or NULL handle whether it's a
-//directory or not
 int
 check_img(char *file)
 {
-	if (access(file, F_OK) != -1) {
-		//the file exist
-		if (imlib_load_image(file)) {
-		//if (imlib_load_image_without_cache(file)) {
-		//if (imlib_load_image_immediately_without_cache(file)) {
-			//the file is an image
-			//TODO don't realloc for every file
-			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (const char *))))
-				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (const char *));
-			filenames[filecnt] = file;
-			filecnt++;
+	if (access(file, F_OK) != -1) { /* the file exist */
+		if (imlib_load_image(file)) { /* the file is an image */
+			//FIXME Don't realloc for every file, instead malloc an
+			//X buffersize and realloc the double of the buffer
+			//when it's full
+			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
+				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
+			filenames[filecnt] = file; //store the filename
+			filecnt++; //+1 for every new entry
 			return 0;
-		} else //return 1 if the image cant be loaded (it may be a directory)
+		} else /* the image cant be loaded (may be a directory) */
 			return 1;
-	} else { //returns 2 if the file doesn't exist
+	} else { /* the file doesn't exist */
 		if (!quiet)
 			fprintf(stderr, "mage: %s: No such file or directory\n", file);
 		return 2;
 	}
-	//return 0;
+	return 2;
 }
 
 //needs to be simplified further
 void
 check_file(char *file)
 {
-	char *filename;
-	char **dirnames;
+	char *filename, **dirnames;
 	DIR *dir;
 	int dircnt, diridx;
 	unsigned int first;
@@ -358,14 +353,12 @@ check_file(char *file)
 
 	dircnt = 512;
 	diridx = first = 1;
-	if (!(dirnames = malloc(dircnt * sizeof (const char *))))
-		die("cannot malloc %u bytes:", dircnt * sizeof (const char *));
+	if (!(dirnames = malloc(dircnt * sizeof (char *))))
+		die("cannot malloc %u bytes:", dircnt * sizeof (char *));
 	dirnames[0] = file;
 
-	/* check if it's a directory */
-	//do we need to check this? if it isn't a file then what else could it be?
+	/* handle directory */
 	if ((dir = opendir(file))) {
-		/* handle directory */
 		while (diridx > 0) {
 			file = dirnames[--diridx];
 			while ((dentry = readdir(dir))) {
@@ -374,7 +367,7 @@ check_file(char *file)
 					continue;
 				len = strlen(file) + strlen(dentry->d_name) + 2;
 				if (!(filename = malloc(len * sizeof(char))))
-					die("cannot malloc %u bytes:", len * sizeof (char));
+					die("cannot malloc %u bytes:", len * sizeof(char));
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
 				if (recursive)
 					check_file(filename);
@@ -495,7 +488,8 @@ setup(void)
 	imlib_context_set_colormap(xw.cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
-	if (!(thumbs = (Image *) malloc(filecnt * sizeof(Image))))
+
+	if (!(thumbs = malloc(filecnt * sizeof(Image))))
 		die("cannot malloc %u bytes:", filecnt * sizeof(Image));
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
@@ -555,7 +549,7 @@ main(int argc, char *argv[])
 
 	if (!strcmp(argv[0], "-"))
 		readstdin();
-	else /* handle only images or directories */
+	else /* handle images or directories */
 		for (i = 0; i < argc; i++)
 			check_file(argv[i]);
 
