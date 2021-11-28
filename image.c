@@ -1,9 +1,26 @@
 void
 im_destroy()
 {
-	if (imlib_context_get_image())
+//TODO after the 'cache'ing images this function should accept `Image *` as an
+//argument in order to reuse this
+	int i;
+
+	if (image.im) {
 		imlib_free_image();
 	//	imlib_free_image_and_decache();
+		image.im = NULL;
+	}
+
+	if (thumbs) {
+		for (i = 0; i < filecnt; i++) {
+			if (thumbs[i].im) {
+				imlib_context_set_image(thumbs[i].im);
+				imlib_free_image();
+			}
+		}
+		free(thumbs);
+		thumbs = NULL;
+	}
 }
 
 int

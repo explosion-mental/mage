@@ -497,7 +497,6 @@ setup(void)
 	//imlib_context_set_drawable(xw.win);
 	if (!(thumbs = (Image *) malloc(filecnt * sizeof(Image))))
 		die("cannot malloc %u bytes:", filecnt * sizeof(Image));
-	memset(thumbs, 0, filecnt * sizeof(Image *));
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
 }
