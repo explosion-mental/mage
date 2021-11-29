@@ -40,10 +40,6 @@ img_load(Image *img, const char *filename)
 	img->checkpan = 0;
 	img->zoomed = 0;
 
-	/* config context */
-	imlib_context_set_anti_alias(antialiasing);
-	imlib_context_set_blend(blend);
-
 	return 0;
 }
 
@@ -121,9 +117,13 @@ img_render(Image *img)
 
 	/* render image */
  	imlib_context_set_drawable(xw.pm);
+
+	/* config context */
+	imlib_context_set_anti_alias(antialiasing);
+	imlib_context_set_blend(blend);
+
 	/* context */
-	//imlib_context_set_anti_alias(antialiasing);
-	//imlib_context_set_image(img->im);
+	imlib_context_set_image(img->im);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
 	/* window background */
