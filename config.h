@@ -16,8 +16,9 @@ static const char *colors[][2] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
-static char *test[] = { "./spawnmage", imagename, "1" };
-static char *test1[] = { "./spawnmage", imagename, "2" };
+static char *info[] = { "mage-handler", imagename, "1" };
+static char *dmenudelete[] = { "mage-handler", imagename, "2" };
+static char *gimp[] = { "mage-handler", imagename, "gimp" };
 
 static Shortcut shortcuts[] = {
 	/* modifier     key              function            argument */
@@ -25,8 +26,9 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_q,            quit,               {0} },
 	{ 0,            XK_b,            togglebar,          {0} },
 	{ 0,            XK_space,        advance,            {.i = +1} },
-	{ 0,            XK_t,        spawn,            {.v = test} },
-	{ 0,            XK_y,        spawn,            {.v = test1} },
+	{ 0,            XK_i,            spawn,            {.v = info} },
+	{ 0,            XK_d,            spawn,            {.v = dmenudelete} },
+	{ ControlMask,  XK_g,            spawn,            {.v = gimp} },
 	{ 0,            XK_BackSpace,    advance,            {.i = -1} },
 	{ 0,            XK_bracketright, advance,            {.i = +5} },
 	{ 0,            XK_bracketleft,  advance,            {.i = -5} },

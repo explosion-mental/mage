@@ -119,6 +119,7 @@ static void toggleantialias(const Arg *arg);
 static void reload(const Arg *arg);
 static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
+static void spawn(const Arg *arg);
 
 /* handling files */
 static int check_img(char *filename);
@@ -144,20 +145,6 @@ static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 static char imagename[128];
 
-static void
-spawn(const Arg *arg)
-{
-	strcpy(imagename, filenames[fileidx]);
-	if (fork() == 0) {
-		if (xw.dpy)
-			close(ConnectionNumber(xw.dpy));
-		setsid();
-		execvp(((char **)arg->v)[0], (char **)arg->v);
-		fprintf(stderr, "dwm: execvp %s", ((char **)arg->v)[0]);
-		perror(" failed");
-		exit(EXIT_SUCCESS);
-	}
-}
 /* config.h for applying patches and the configuration. */
 #include "config.h"
 

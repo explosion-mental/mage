@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# The script should be on your path (installed by makefile)
 # $1 : is the filename
 # $2 : is an identifier in which you can case over selecting only the command
 # that you want
@@ -7,4 +8,6 @@
 case "$2" in
 	1) notify-send "File informationℹ️ " "$(mediainfo "$1")"	;;
 	2) [ "$(printf "Yes\\nNo" | dmenu -i -p "Really delete $1?")" = "Yes" ] && rm "$1" && notify-send "$(noextname "$1") deleted.❌" ;;
+	"gimp") setsid -f gimp "$1" & notify-send "Opening on gimp..." ;;
+	*) echo "Identifier $2 not found" ;;
 esac

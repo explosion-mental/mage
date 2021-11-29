@@ -43,6 +43,10 @@ install: all
 	sed "s/VERSION/${VERSION}/g" < mage.1 > ${DESTDIR}${MANPREFIX}/man1/mage.1
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/mage.1
 
+#cp -f mage-handler ${DESTDIR}${PREFIX}/bin
+#chmod 755 ${DESTDIR}${PREFIX}/bin/mage-handler
+#rm -f ${DESTDIR}${PREFIX}/bin/mage-handler
+
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/mage \
 		${DESTDIR}${MANPREFIX}/man1/mage.1
