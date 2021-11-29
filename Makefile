@@ -38,17 +38,17 @@ dist: clean
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f mage ${DESTDIR}${PREFIX}/bin
+	cp -f mage-handler ${DESTDIR}${PREFIX}/bin
 	chmod 755 ${DESTDIR}${PREFIX}/bin/mage
+	chmod 755 ${DESTDIR}${PREFIX}/bin/mage-handler
 	mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	sed "s/VERSION/${VERSION}/g" < mage.1 > ${DESTDIR}${MANPREFIX}/man1/mage.1
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/mage.1
 
-#cp -f mage-handler ${DESTDIR}${PREFIX}/bin
-#chmod 755 ${DESTDIR}${PREFIX}/bin/mage-handler
-#rm -f ${DESTDIR}${PREFIX}/bin/mage-handler
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/mage \
-		${DESTDIR}${MANPREFIX}/man1/mage.1
+		${DESTDIR}${MANPREFIX}/man1/mage.1 \
+		${DESTDIR}${PREFIX}/bin/mage-handler
 
 .PHONY: all options clean dist install uninstall
