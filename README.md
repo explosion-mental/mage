@@ -1,9 +1,36 @@
-# mage
-iMAGE viewer
+mage - iMAGE viewer
+===================
+
+mage is an image viewer focus on simplicity. It can be easily be extensible and
+achieve some of other image viewers features such as `sxiv` (e.g. the key
+handler).
 
 
-Another `ImLib2` image viewer. Based on `sxiv`. Meant to be a program that
-sucks less.
+Dependencies
+------------
+
+- libX11
+- libImlib2
+- other libsl dependencies such as `fontconfig`
+
+
+Installation
+------------
+Edit config.mk to match your local setup (mage is installed into
+the /usr/local namespace by default).
+
+Afterwards enter the following command to build and install mage
+(if necessary as root):
+
+    make clean install
+
+
+Running mage
+------------
+run
+	mage [FILE or directory]
+
+See the manpage for further options.
 
 
 # TODO
