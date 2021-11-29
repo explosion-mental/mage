@@ -179,9 +179,9 @@ img_zoom(Image *img, float z)
 
 
 
-/* thumbnail mode:
- * TODO load images simultaneously
- * TODO for loop into img_load to load the images
+/* thumbnail mode todoes:
+ * - calculate spcae between images
+ * - should we use `imlib_render_image_on_drawable_at_size` or `imlib_create_cropped_scaled_image`?(which one is 'faster')
  */
 
 #define THUMB_SIZE  50
@@ -203,18 +203,24 @@ tns_render(Image *t)
 		img_load(&t[i], filenames[i]);
 		imlib_context_set_anti_alias(1); //faster but less quality
 
-		//TODO 'separate' images
+		//TODO calculate spcae between images
 		//t[i].x = (THUMB_SIZE - t[i].w) / 2;
 		//t[i].y = (THUMB_SIZE - t[i].h) / 2;
 		//space += space;
-		t[i].x = t[i].w / 2;
-		t[i].y = t[i].h / 2;
+		//t[i].x = t[i].w / 2;
+		//t[i].y = t[i].h / 2;
+		int x = (t[i].w < t[i].h) ? 0 : (t[i].w - t[i].h) / 2;
+		int y = (t[i].w > t[i].h) ? 0 : (t[i].h - t[i].w) / 2;
+		int s = (t[i].w < t[i].h) ? t[i].w : t[i].h;
 
 		/* render the image */
+		//TODO should we use `imlib_render_image_on_drawable_at_size` or `imlib_create_cropped_scaled_image`?(which one is 'faster')
 		//imlib_context_set_image(t[i].im);
 		//imlib_render_image_part_on_drawable_at_size(0, 0, t[i].w, t[i].h, t[i].x, t[i].y, THUMB_SIZE, THUMB_SIZE);
 		//image.im = imlib_create_cropped_scaled_image(0, 0, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
-		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
+		//t[i].im = imlib_create_cropped_scaled_image(x, y, s, s, THUMB_SIZE, THUMB_SIZE);
+		imlib_render_image_on_drawable_at_size(t[i].x + THUMB_SIZE, t[i].y + THUMB_SIZE, t[i].w, t[i].h);
+		//imlib_context_set_image(t[i].im);
 	}
 
 	/* window background */
