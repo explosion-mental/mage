@@ -9,11 +9,10 @@
 #include <X11/Xft/Xft.h>
 #include <Imlib2.h>
 
+char *argv0;
 #include "arg.h"
 #include "util.h"
 #include "drw.h"
-
-char *argv0;
 
 /* macros */
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
