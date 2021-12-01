@@ -29,6 +29,7 @@ Afterwards enter the following command to build and install mage
 Running mage
 ------------
 run
+
 	mage [FILE or directory]
 
 See the manpage for further options.
