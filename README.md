@@ -1,4 +1,4 @@
-mage - iMAGE viewer
+mage - image viewer
 ===================
 
 mage is an image viewer focus on simplicity. It can be easily be extensible and
