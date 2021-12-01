@@ -352,8 +352,7 @@ check_file(char *file)
 
 	dircnt = 512;
 	diridx = first = 1;
-	if (!(dirnames = malloc(dircnt * sizeof (char *))))
-		die("cannot malloc %u bytes:", dircnt * sizeof (char *));
+	dirnames = ecalloc(dircnt, sizeof(char *));
 	dirnames[0] = file;
 
 	/* handle directory */
@@ -365,8 +364,7 @@ check_file(char *file)
 				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
 					continue;
 				len = strlen(file) + strlen(dentry->d_name) + 2;
-				if (!(filename = malloc(len * sizeof(char))))
-					die("cannot malloc %u bytes:", len * sizeof(char));
+				filename = ecalloc(len, sizeof(char));
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
 				if (recursive)
 					check_file(filename);
@@ -488,8 +486,7 @@ setup(void)
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 
-	if (!(thumbs = malloc(filecnt * sizeof(Image))))
-		die("cannot malloc %u bytes:", filecnt * sizeof(Image));
+	thumbs = ecalloc(filecnt, sizeof(Image));
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
 }
