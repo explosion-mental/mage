@@ -316,11 +316,6 @@ check_img(char *file)
 {
 	if (access(file, F_OK) != -1) { /* the file exist */
 		if (imlib_load_image(file)) { /* the file is an image */
-			//FIXME Don't realloc for every file, instead malloc an
-			//X buffersize and realloc the double of the buffer
-			//when it's full
-			if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
-				die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
 			filenames[filecnt] = file; //store the filename
 			filecnt++; //+1 for every new entry
 			return 0;
@@ -369,6 +364,9 @@ check_file(char *file)
 				if (recursive)
 					check_file(filename);
 				else {
+					//FIXME Don't realloc for every file
+					if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
+						die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
 					ret = check_img(filename);
 					if (ret == 1) {
 						if (!quiet)
@@ -542,6 +540,8 @@ main(int argc, char *argv[])
 
 	if (!argv[0])
 		usage();
+
+	filenames = ecalloc(argc, sizeof(char));
 
 	if (!strcmp(argv[0], "-"))
 		readstdin();
