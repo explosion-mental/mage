@@ -1,9 +1,8 @@
 mage - image viewer
 ===================
 
-mage is an image viewer focus on simplicity. It can be easily be extensible and
-achieve some of other image viewers features such as `sxiv` (e.g. the key
-handler).
+mage is a simple image viewer. It should be very straightforward how it
+works (thanks to Imlib2) and comes with useful configurable features.
 
 
 Dependencies
@@ -30,7 +29,7 @@ Running mage
 ------------
 run
 
-	mage [FILE or directory]
+	mage [file or directory]
 
 See the manpage for further options.
 
