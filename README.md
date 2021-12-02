@@ -11,7 +11,7 @@ Dependencies
 
 - libX11
 - libImlib2
-- other libsl dependencies such as `fontconfig`
+- fontconfig (status bar)
 
 
 Installation
