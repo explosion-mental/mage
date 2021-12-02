@@ -341,6 +341,10 @@ check_file(char *file)
 	struct dirent *dentry;
 	int ret;
 
+	if (recursive)
+		if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
+			die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
+
 	/* check if it's an image */
 	if (!check_img(file))
 		return;
