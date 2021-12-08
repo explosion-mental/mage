@@ -189,7 +189,7 @@ img_zoom(Image *img, float z)
 void
 tns_render(Image *t)
 {
-	int i, margin;
+	int i, margin, width, store;
 
 	margin = 10;
 
@@ -227,12 +227,17 @@ tns_render(Image *t)
 
 		//TODO calculate spcae between images
 
-		t[i].x = i * THUMB_SIZE;	//take the count
 		//t[i].y = i * THUMB_SIZE;
 		t[i].w = MIN(THUMB_SIZE, t[i].w / 2); //thumbsize or half the image, needs more operations
 		t[i].h = MIN(THUMB_SIZE, t[i].h / 2);
-		imlib_render_image_on_drawable_at_size(t[i].x + margin, t[i].y + margin, t[i].w, t[i].h);
+		t[i].x = i * t[i].w + margin * i + margin;	//take the count
+		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y + margin, t[i].w, t[i].h);
 		//imlib_context_set_image(t[i].im);
+		//width += t[i].w;
+		//if (width > xw.w) {
+		//	t[i].y = t[i].h + margin;
+		//	store = i;
+		//}
 	}
 
 	/* window background */
