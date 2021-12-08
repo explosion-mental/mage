@@ -545,7 +545,7 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	filenames = ecalloc(argc, sizeof(char));
+	filenames = ecalloc(argc, sizeof(char *));
 
 	if (!strcmp(argv[0], "-"))
 		readstdin();
