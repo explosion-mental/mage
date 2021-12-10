@@ -189,7 +189,8 @@ img_zoom(Image *img, float z)
 void
 tns_render(Image *t)
 {
-	int i, margin, width, store;
+	int i, margin, width = 0, store;
+	unsigned int rows, cols, top, bottom;
 
 	margin = 10;
 
@@ -200,7 +201,27 @@ tns_render(Image *t)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 	imlib_context_set_drawable(xw.pm);
 
+
+	/* calculate cols and rows */
+//	for (cols = 0; cols <= filecnt/2; cols++)
+//		if (cols*cols >= filecnt)
+//			break;
+//
+//	if (filecnt == 5) /* set layout against the general calculation: not 1:2:2, but 2:3 */
+//		cols = 2;
+	int tmp;
+	//for (i = 0; i < filecnt; i++) {
+	//	tmp += THUMB_SIZE;
+	//	if (tmp >= xw.w)
+	//		cols = i - 1;
+	//}
+
+	cols = xw.w / THUMB_SIZE;
+	rows = xw.h / THUMB_SIZE;
+	printf("COLS: %d\n", cols);
+
 	/* load images */
+	//i is the index
 	for (i = 0; i < filecnt; i++) {
 		img_load(&t[i], filenames[i]);
 		imlib_context_set_anti_alias(1); //faster but less quality
@@ -224,16 +245,38 @@ tns_render(Image *t)
 		//t[i].im = imlib_create_cropped_scaled_image(t[i].x, t[i].y, t[i].w, t[i].h, THUMB_SIZE, THUMB_SIZE);
 		//imlib_render_image_on_drawable_at_size(t[i].x + margin + THUMB_SIZE, t[i].y + margin, t[i].w, t[i].h);
 
-
-		//TODO calculate spcae between images
+		float x, y;
 
 		//t[i].y = i * THUMB_SIZE;
+
+		/* width and height no bigger than size */
 		t[i].w = MIN(THUMB_SIZE, t[i].w / 2); //thumbsize or half the image, needs more operations
 		t[i].h = MIN(THUMB_SIZE, t[i].h / 2);
-		t[i].x = i * t[i].w + margin * i + margin;	//take the count
-		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y + margin, t[i].w, t[i].h);
+
+		int j;
+		/* calculate position */
+		//for (j = 1; j < cols + 1; j++) {//this has to increment every time the i loops runs..
+		//	x = (xw.w - THUMB_SIZE - margin) / j;
+		//	break;
+		//}
+
+		if (i % cols == 0) {
+			x = margin;
+			y += THUMB_SIZE + margin;
+		} else {
+			x += THUMB_SIZE + margin;
+		}
+
+		t[i].x = x;
+		t[i].y = y;
+		//t[i].x = i * t[i].w + cols * i + margin;	//take the count
+
+
+		//t[i].y = y;
+		//t[i].x = i * t[i].w + i/ xw.w + margin;
+
+		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
 		//imlib_context_set_image(t[i].im);
-		//width += t[i].w;
 		//if (width > xw.w) {
 		//	t[i].y = t[i].h + margin;
 		//	store = i;
