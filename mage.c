@@ -342,8 +342,8 @@ check_file(char *file)
 	int ret;
 
 	if (recursive)
-		if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
-			die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
+		if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (*filenames))))
+			die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (*filenames));
 
 	/* check if it's an image */
 	if (!check_img(file))
@@ -351,7 +351,7 @@ check_file(char *file)
 
 	dircnt = 512;
 	diridx = first = 1;
-	dirnames = ecalloc(dircnt, sizeof(char *));
+	dirnames = ecalloc(dircnt, sizeof(*dirnames));
 	dirnames[0] = file;
 
 	/* handle directory */
@@ -363,7 +363,7 @@ check_file(char *file)
 				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
 					continue;
 				len = strlen(file) + strlen(dentry->d_name) + 2;
-				filename = ecalloc(len, sizeof(char));
+				filename = ecalloc(len, sizeof(*filename));
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
 				if (recursive)
 					check_file(filename);
@@ -458,7 +458,7 @@ setup(void)
 		die("mage: Unable to create drawing context");
 
 	/* init appearance */
-	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
+	scheme = ecalloc(LENGTH(colors), sizeof(*scheme));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 2);
 	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
@@ -488,7 +488,7 @@ setup(void)
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 
-	thumbs = ecalloc(filecnt, sizeof(Image));
+	thumbs = ecalloc(filecnt, sizeof(*thumbs));
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
 }
@@ -545,7 +545,7 @@ main(int argc, char *argv[])
 	if (!argv[0])
 		usage();
 
-	filenames = ecalloc(argc, sizeof(char *));
+	filenames = ecalloc(argc, sizeof(*filename));
 
 	if (!strcmp(argv[0], "-"))
 		readstdin();
