@@ -359,10 +359,11 @@ check_file(char *file)
 		while (diridx > 0) {
 			file = dirnames[--diridx];
 			while ((dentry = readdir(dir))) {
-				/* ignore directories '.' and '..' */
+				/* ignore self and parent directories */
 				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
 					continue;
-				len = strlen(file) + strlen(dentry->d_name) + 2;
+				/* '\0' null terminated bits also need space */
+				len = strlen(file) + 1 + strlen(dentry->d_name) + 1;
 				filename = ecalloc(len, sizeof(char));
 				snprintf(filename, len, "%s/%s", file, dentry->d_name);
 				if (recursive)

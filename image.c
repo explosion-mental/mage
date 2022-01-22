@@ -184,13 +184,14 @@ img_zoom(Image *img, float z)
  * - should we use `imlib_render_image_on_drawable_at_size` or `imlib_create_cropped_scaled_image`?(which one is 'faster')
  */
 
-#define THUMB_SIZE  50
+#define THUMB_SIZE  50 * zoomstate
 
 void
 tns_render(Image *t)
 {
 	int i, margin, width = 0, store;
 	unsigned int rows, cols, top, bottom;
+	int n;
 
 	margin = 10;
 
@@ -201,24 +202,15 @@ tns_render(Image *t)
 	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
 	imlib_context_set_drawable(xw.pm);
 
+	int tmpw, tmph;
 
-	/* calculate cols and rows */
-//	for (cols = 0; cols <= filecnt/2; cols++)
-//		if (cols*cols >= filecnt)
-//			break;
-//
-//	if (filecnt == 5) /* set layout against the general calculation: not 1:2:2, but 2:3 */
-//		cols = 2;
-	int tmp;
-	//for (i = 0; i < filecnt; i++) {
-	//	tmp += THUMB_SIZE;
-	//	if (tmp >= xw.w)
-	//		cols = i - 1;
-	//}
+	cols = MAX(1, xw.w / THUMB_SIZE);
+	rows = MAX(1, xw.h / THUMB_SIZE);
 
-	cols = xw.w / THUMB_SIZE;
-	rows = xw.h / THUMB_SIZE;
 	printf("COLS: %d\n", cols);
+	printf("ROWS: %d\n", rows);
+
+	n = cols * rows;
 
 	/* load images */
 	//i is the index
