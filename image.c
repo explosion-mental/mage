@@ -184,7 +184,7 @@ img_zoom(Image *img, float z)
  * - should we use `imlib_render_image_on_drawable_at_size` or `imlib_create_cropped_scaled_image`?(which one is 'faster')
  */
 
-#define THUMB_SIZE  50 * zoomstate
+#define THUMB_SIZE  (50 * zoomstate)
 
 void
 tns_render(Image *t)
