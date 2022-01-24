@@ -190,7 +190,8 @@ void
 tns_render(Image *t)
 {
 	int i, margin, width = 0, store;
-	unsigned int rows, cols, top, bottom;
+	unsigned int rows, cols;
+	unsigned int top, bottom;
 	int n;
 
 	margin = 10;
@@ -204,8 +205,8 @@ tns_render(Image *t)
 
 	int tmpw, tmph;
 
-	cols = MAX(1, xw.w / THUMB_SIZE);
-	rows = MAX(1, xw.h / THUMB_SIZE);
+	cols = MAX(THUMB_SIZE, xw.w / THUMB_SIZE);
+	rows = MAX(THUMB_SIZE, xw.h / THUMB_SIZE);
 
 	printf("COLS: %d\n", cols);
 	printf("ROWS: %d\n", rows);
