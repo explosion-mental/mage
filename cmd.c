@@ -29,7 +29,7 @@ int
 printfile(const Arg *arg)
 {
 	printf("%s\n", filenames[fileidx]);
-	quit(0);
+	quit(NULL);
 	return 0;
 }
 
@@ -205,4 +205,11 @@ flipvert(const Arg *arg)
 {
 	imlib_image_flip_vertical();
 	return 1;
+}
+
+int
+quit(const Arg *arg)
+{
+	running = 0;
+	return 0;
 }

@@ -205,13 +205,6 @@ drawbar(void)
 	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
 
-int
-quit(const Arg *arg)
-{
-	running = 0;
-	return 0;
-}
-
 void
 run(void)
 {
