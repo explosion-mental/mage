@@ -17,13 +17,6 @@ static const char *colors[][2] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
-static const Layout layouts[] = { //see layouts.c
-	/* symbol     arrange function */
-	//{ "><>",      NULL },    /* no layout function means one image per window */
-	//{ "[]=",      tile },    /* first entry is default */
-	{ "[M]",      monocle },
-};
-
 static Shortcut shortcuts[] = {
 	/* modifier     key              function            argument */
 	{ 0,            XK_Escape,       quit,               {0} },
@@ -33,7 +26,6 @@ static Shortcut shortcuts[] = {
 	{ 0,            XK_BackSpace,    advance,            {.i = -1} },
 	{ 0,            XK_bracketright, advance,            {.i = +5} },
 	{ 0,            XK_bracketleft,  advance,            {.i = -5} },
-	{ 0,            XK_t,            changemode,         {0} },
 	{ 0,            XK_p,            printfile,          {0} },
 	{ 0,            XK_r,            reload,             {0} },
 	{ 0,            XK_minus,        zoom,               {.f = -12.5} },

@@ -123,15 +123,11 @@ static void toggleantialias(const Arg *arg);
 static void reload(const Arg *arg);
 static void cyclescale(const Arg *arg);
 static void savestate(const Arg *arg);
-static void changemode(const Arg *arg);
 
 /* handling files */
 static int check_img(char *filename);
 static void check_file(char *file);
 static void readstdin(void);
-
-/* layouts */
-static void monocle(void);
 
 /* variables */
 static Atom atom[WMLast];
@@ -139,7 +135,7 @@ static char right[128], left[128];
 static char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
 static XWindow xw;
-static Image image, *thumbs;
+static Image image;
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
@@ -150,7 +146,6 @@ static char *wmname = "mage";
 static const char *scales[] = { "down", "fit", "width", "height" };
 static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
-static int mode = 0; //0 means normal, 1 means thumbnail
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -163,13 +158,10 @@ static void (*handler[LASTEvent])(XEvent *) = {
 	[KeyPress] = kpress,
 };
 
-//thumbs
-static void tns_render(Image *img);
 
 //at the end everything should be merged
 #include "image.c"	//image (and imlib2) operations
 #include "cmd.c"	//config.h commands
-#include "layouts.c"	//layouts
 
 void
 cleanup(void)
@@ -489,7 +481,6 @@ setup(void)
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 
-	thumbs = ecalloc(filecnt, sizeof(Image));
 	img_load(&image, filenames[fileidx]);
 	img_render(&image);
 }
@@ -524,9 +515,6 @@ main(int argc, char *argv[])
 		break;
 	case 'n':
 		wmname = EARGF(usage());
-		break;
-	case 't':
-		mode = 1;
 		break;
 	case 's':
 		smode = EARGF(usage());

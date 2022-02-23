@@ -1,25 +1,12 @@
 void
 im_destroy()
 {
-//TODO after the 'cache'ing images this function should accept `Image *` as an
+//after the 'cache'ing images this function should accept `Image *` as an
 //argument in order to reuse this
-	int i;
-
 	if (image.im) {
 		imlib_free_image();
 	//	imlib_free_image_and_decache();
 		image.im = NULL;
-	}
-
-	if (thumbs) {
-		for (i = 0; i < filecnt; i++) {
-			if (thumbs[i].im) {
-				imlib_context_set_image(thumbs[i].im);
-				imlib_free_image();
-			}
-		}
-		free(thumbs);
-		thumbs = NULL;
 	}
 }
 
@@ -46,11 +33,6 @@ img_load(Image *img, const char *filename)
 void
 img_render(Image *img)
 {
-	if (mode) {
-		tns_render(thumbs);
-		return;
-	}
-
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
 	float zw, zh, z;
@@ -170,113 +152,4 @@ img_zoom(Image *img, float z)
 		img->checkpan = 1;
 		img->zoomed = 1;
 	}
-}
-
-
-
-
-
-
-
-
-/* thumbnail mode todoes:
- * - calculate spcae between images
- * - should we use `imlib_render_image_on_drawable_at_size` or `imlib_create_cropped_scaled_image`?(which one is 'faster')
- */
-
-#define THUMB_SIZE  (50 * zoomstate)
-
-void
-tns_render(Image *t)
-{
-	int i, margin, width = 0, store;
-	unsigned int rows, cols;
-	unsigned int top, bottom;
-	int n;
-
-	margin = 10;
-
-	/* clear and set pixmap */
-	if (xw.pm)
-		XFreePixmap(xw.dpy, xw.pm);
-	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
-	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
-	imlib_context_set_drawable(xw.pm);
-
-	int tmpw, tmph;
-
-	cols = MAX(THUMB_SIZE, xw.w / THUMB_SIZE);
-	rows = MAX(THUMB_SIZE, xw.h / THUMB_SIZE);
-
-	printf("COLS: %d\n", cols);
-	printf("ROWS: %d\n", rows);
-
-	n = cols * rows;
-
-	/* load images */
-	//i is the index
-	for (i = 0; i < filecnt; i++) {
-		img_load(&t[i], filenames[i]);
-		imlib_context_set_anti_alias(1); //faster but less quality
-
-		//operations ideas..
-		//t[i].x = (THUMB_SIZE - t[i].w) / 2;
-		//t[i].y = (THUMB_SIZE - t[i].h) / 2;
-		//space += space;
-		//t[i].x = t[i].w / 2;
-		//t[i].y = t[i].h / 2;
-
-		//int x = (t[i].w < t[i].h) ? 0 : (t[i].w - t[i].h) / 2;
-		//int y = (t[i].w > t[i].h) ? 0 : (t[i].h - t[i].w) / 2;
-		//int s = (t[i].w < t[i].h) ? t[i].w : t[i].h;
-
-		/* render the image */
-		//TODO should we use `imlib_render_image_on_drawable_at_size` or `imlib_create_cropped_scaled_image`?(which one is 'faster')
-		//imlib_context_set_image(t[i].im);
-		//imlib_render_image_part_on_drawable_at_size(0, 0, t[i].w, t[i].h, t[i].x, t[i].y, THUMB_SIZE, THUMB_SIZE);
-		//image.im = imlib_create_cropped_scaled_image(0, 0, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE, THUMB_SIZE);
-		//t[i].im = imlib_create_cropped_scaled_image(t[i].x, t[i].y, t[i].w, t[i].h, THUMB_SIZE, THUMB_SIZE);
-		//imlib_render_image_on_drawable_at_size(t[i].x + margin + THUMB_SIZE, t[i].y + margin, t[i].w, t[i].h);
-
-		float x, y;
-
-		//t[i].y = i * THUMB_SIZE;
-
-		/* width and height no bigger than size */
-		t[i].w = MIN(THUMB_SIZE, t[i].w / 2); //thumbsize or half the image, needs more operations
-		t[i].h = MIN(THUMB_SIZE, t[i].h / 2);
-
-		int j;
-		/* calculate position */
-		//for (j = 1; j < cols + 1; j++) {//this has to increment every time the i loops runs..
-		//	x = (xw.w - THUMB_SIZE - margin) / j;
-		//	break;
-		//}
-
-		if (i % cols == 0) {
-			x = margin;
-			y += THUMB_SIZE + margin;
-		} else {
-			x += THUMB_SIZE + margin;
-		}
-
-		t[i].x = x;
-		t[i].y = y;
-		//t[i].x = i * t[i].w + cols * i + margin;	//take the count
-
-
-		//t[i].y = y;
-		//t[i].x = i * t[i].w + i/ xw.w + margin;
-
-		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
-		//imlib_context_set_image(t[i].im);
-		//if (width > xw.w) {
-		//	t[i].y = t[i].h + margin;
-		//	store = i;
-		//}
-	}
-
-	/* window background */
-	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
-	XClearWindow(xw.dpy, xw.win);
 }
