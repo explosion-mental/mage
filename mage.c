@@ -38,7 +38,6 @@ typedef struct {
 	XSetWindowAttributes attrs;
 	int depth; /* bit depth */
 	int scr;
-	int scrw, scrh;
 	//int x, y;
 	int w, h;
 	Pixmap pm;
@@ -406,17 +405,13 @@ setup(void)
 
 	/* init screen */
 	xw.scr   = DefaultScreen(xw.dpy);
-	xw.scrw  = DisplayWidth(xw.dpy, xw.scr);
-	xw.scrh  = DisplayHeight(xw.dpy, xw.scr);
 	xw.vis   = DefaultVisual(xw.dpy, xw.scr);
 	xw.cmap  = DefaultColormap(xw.dpy, xw.scr);
 	xw.depth = DefaultDepth(xw.dpy, xw.scr);
 	xw.pm = 0;
 
-	if (!xw.w)
-		xw.w = xw.scrw;
-	if (!xw.h)
-		xw.h = xw.scrh;
+	xw.w = winwidth;
+	xw.h = winheight;
 
  	xw.attrs.colormap = xw.cmap;
 	//xw.attrs.background_pixel = 0;

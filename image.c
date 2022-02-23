@@ -94,8 +94,8 @@ img_render(Image *img)
 	/* clear and set pixmap */
 	if (xw.pm)
 		XFreePixmap(xw.dpy, xw.pm);
-	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.scrw, xw.scrh, xw.depth);
-	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.scrw, xw.scrh);
+	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.w, xw.h, xw.depth);
+	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.w, xw.h);
 
 	/* render image */
  	imlib_context_set_drawable(xw.pm);
