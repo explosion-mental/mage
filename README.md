@@ -15,7 +15,6 @@ Dependencies
 
 Installation
 ------------
-Please install the lastest **stable** version.
 Edit config.mk to match your local setup (mage is installed into
 the /usr/local namespace by default).
 
