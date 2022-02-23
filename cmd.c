@@ -1,4 +1,7 @@
-void
+/* return 1 = re-draw bar and re-render image
+ * return 0 = do nothing */
+
+int
 togglebar(const Arg *arg)
 {
 	showbar = !showbar;
@@ -7,46 +10,44 @@ togglebar(const Arg *arg)
 	else
 		xw.h += bh;
 	XSync(xw.dpy, False);
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 advance(const Arg *arg)
 {
 	if ((arg->i > 0 && fileidx + arg->i < filecnt)
 	|| (arg->i < 0 && fileidx >= -arg->i)) {
 		fileidx = fileidx + arg->i;
 		img_load(&image, filenames[fileidx]);
-		img_render(&image);
-		drawbar();
+		return 1;
 	}
+	return 0;
 }
 
-void
+int
 printfile(const Arg *arg)
 {
 	printf("%s\n", filenames[fileidx]);
 	quit(0);
+	return 0;
 }
 
-void
+int
 set_zoom(const Arg *arg)
 {
 	img_zoom(&image, arg->f / 100.0);
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 zoom(const Arg *arg)
 {
 	img_zoom(&image, zoomstate + arg->f / 100.0);
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 togglefullscreen(const Arg *arg)
 {
 	XEvent e;
@@ -60,9 +61,10 @@ togglefullscreen(const Arg *arg)
 	e.xclient.data.l[2] = 0;
 	XSendEvent(xw.dpy, DefaultRootWindow(xw.dpy), False,
 	           SubstructureNotifyMask | SubstructureRedirectMask, &e);
+	return 0;
 }
 
-void
+int
 panhorz(const Arg *arg)
 {
 	float x = image.x, y = image.y;
@@ -75,12 +77,12 @@ panhorz(const Arg *arg)
 	check_pan(&image);
 
 	if (x != image.x || y != image.y) {
-		img_render(&image);
-		drawbar();
+		return 1;
 	}
+	return 0;
 }
 
-void
+int
 panvert(const Arg *arg)
 {
 	float x = image.x, y = image.y;
@@ -93,34 +95,34 @@ panvert(const Arg *arg)
 	check_pan(&image);
 
 	if (x != image.x || y != image.y) {
-		img_render(&image);
-		drawbar(); //panning without bar?
+		return 1;
 	}
+	return 0;
 }
 
-void
+int
 first(const Arg *arg)
 {
 	if (fileidx != 0) {
 		fileidx = 0;
 		img_load(&image, filenames[fileidx]);
-		img_render(&image);
-		drawbar();
+		return 1;
 	}
+	return 0;
 }
 
-void
+int
 last(const Arg *arg)
 {
 	if (fileidx != filecnt - 1) {
 		fileidx = filecnt - 1;
 		img_load(&image, filenames[fileidx]);
-		img_render(&image);
-		drawbar();
+		return 1;
 	}
+	return 0;
 }
 
-void
+int
 rotate(const Arg *arg)
 {
 	int ox, oy, tmp, d;
@@ -143,28 +145,25 @@ rotate(const Arg *arg)
 	image.h = tmp;
 
 	image.checkpan = 1;
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 toggleantialias(const Arg *arg)
 {
 	antialiasing = !antialiasing;
 	imlib_context_set_anti_alias(antialiasing);
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 reload(const Arg *arg)
 {
 	img_load(&image, filenames[fileidx]);
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 cyclescale(const Arg *arg)
 {
 	if (arg->i > 0) {
@@ -175,8 +174,6 @@ cyclescale(const Arg *arg)
 				scalemode = 0;
 		}
 		image.zoomed = 0;
-		img_render(&image);
-		drawbar();
 	} else {
 		if (!image.zoomed) {
 			if (scalemode > 0)
@@ -185,29 +182,27 @@ cyclescale(const Arg *arg)
 				scalemode = LENGTH(scales) - 1;
 		}
 		image.zoomed = 0;
-		img_render(&image);
-		drawbar();
 	}
+	return 1;
 }
 
-void
+int
 savestate(const Arg *arg)
 {
 	imlib_save_image(filenames[fileidx]);
+	return 0;
 }
 
-void
+int
 fliphorz(const Arg *arg)
 {
 	imlib_image_flip_horizontal();
-	img_render(&image);
-	drawbar();
+	return 1;
 }
 
-void
+int
 flipvert(const Arg *arg)
 {
 	imlib_image_flip_vertical();
-	img_render(&image);
-	drawbar();
+	return 1;
 }

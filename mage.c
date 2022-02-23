@@ -70,14 +70,14 @@ typedef union {
 
 typedef struct {
 	unsigned int b;
-	void (*func)(const Arg *);
+	int (*func)(const Arg *);
 	const Arg arg;
 } Mousekey;
 
 typedef struct {
 	unsigned int mod;
 	KeySym keysym;
-	void (*func)(const Arg *);
+	int (*func)(const Arg *);
 	const Arg arg;
 } Shortcut;
 
@@ -104,24 +104,24 @@ static void img_zoom(Image *img, float z);
 static void check_pan(Image *img);
 
 /* commands */
-static void togglebar(const Arg *arg);
-static void quit(const Arg *arg);
-static void flipvert(const Arg *arg);
-static void fliphorz(const Arg *arg);
-static void advance(const Arg *arg);
-static void printfile(const Arg *arg);
-static void zoom(const Arg *arg);
-static void set_zoom(const Arg *arg);
-static void togglefullscreen(const Arg *arg);
-static void panhorz(const Arg *arg);
-static void panvert(const Arg *arg);
-static void first(const Arg *arg);
-static void last(const Arg *arg);
-static void rotate(const Arg *arg);
-static void toggleantialias(const Arg *arg);
-static void reload(const Arg *arg);
-static void cyclescale(const Arg *arg);
-static void savestate(const Arg *arg);
+static int togglebar(const Arg *arg);
+static int quit(const Arg *arg);
+static int flipvert(const Arg *arg);
+static int fliphorz(const Arg *arg);
+static int advance(const Arg *arg);
+static int printfile(const Arg *arg);
+static int zoom(const Arg *arg);
+static int set_zoom(const Arg *arg);
+static int togglefullscreen(const Arg *arg);
+static int panhorz(const Arg *arg);
+static int panvert(const Arg *arg);
+static int first(const Arg *arg);
+static int last(const Arg *arg);
+static int rotate(const Arg *arg);
+static int toggleantialias(const Arg *arg);
+static int reload(const Arg *arg);
+static int cyclescale(const Arg *arg);
+static int savestate(const Arg *arg);
 
 /* handling files */
 static int check_img(char *filename);
@@ -205,10 +205,11 @@ drawbar(void)
 	drw_map(drw, xw.win, 0, y, xw.w, bh);
 }
 
-void
+int
 quit(const Arg *arg)
 {
 	running = 0;
+	return 0;
 }
 
 void
@@ -250,7 +251,10 @@ bpress(XEvent *e)
 
 	for (i = 0; i < LENGTH(mshortcuts); i++)
 		if (e->xbutton.button == mshortcuts[i].b && mshortcuts[i].func)
-			mshortcuts[i].func(&(mshortcuts[i].arg));
+			if (mshortcuts[i].func(&(mshortcuts[i].arg))) {
+				img_render(&image);
+				drawbar();
+			}
 }
 
 void
@@ -283,7 +287,10 @@ kpress(XEvent *e)
 		if (keysym == shortcuts[i].keysym
 		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
 		&& shortcuts[i].func)
-			shortcuts[i].func(&(shortcuts[i].arg));
+			if (shortcuts[i].func(&(shortcuts[i].arg))) { /* if the func returns something, reload */
+				img_render(&image);
+				drawbar();
+			}
 }
 
 void
