@@ -20,7 +20,7 @@ char *argv0;
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define ABS(a)			((a) > 0 ? (a) : -(a))
 
-enum { SchemeNorm, SchemeSel, SchemeBar }; /* color schemes */
+enum { SchemeNorm, SchemeBar }; /* color schemes */
 enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 
 typedef enum {
@@ -454,7 +454,7 @@ setup(void)
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
-	bh = drw->fonts->h + 2;
+	bh = drw->fonts->h + 2; /* two pixel padding */
 
 	/* init bar */
 	drawbar();

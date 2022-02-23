@@ -12,7 +12,6 @@ static const char *fonts[] = { "monospace" };
 static const char *colors[][2] = {
       			/*  fg       bg     */
 	[SchemeNorm]  = { "#eeeeee", "#005577" },
-	[SchemeSel]   = { "#bbbbbb", "#882100" },
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
