@@ -56,11 +56,6 @@ typedef struct {
 	float x, y; /* position */
 } Image;
 
-typedef struct {
-	const char *symbol;
-	void (*arrange)(void);
-} Layout;
-
 typedef union {
 	int i;
 	unsigned int ui;
