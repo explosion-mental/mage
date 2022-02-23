@@ -17,7 +17,7 @@ static const char *colors[][2] = {
 	[SchemeBar]   = { "#bbb012", "#411828" },
 };
 
-static Shortcut shortcuts[] = {
+static const Shortcut shortcuts[] = {
 	/* modifier     key              function            argument */
 	{ 0,            XK_Escape,       quit,               {0} },
 	{ 0,            XK_q,            quit,               {0} },
@@ -49,7 +49,7 @@ static Shortcut shortcuts[] = {
 	{ ShiftMask,    XK_backslash,    cyclescale,         {.i = -1 } },
 };
 
-static Mousekey mshortcuts[] = {
+static const Mousekey mshortcuts[] = {
 	/* button         function        argument */
 	{ Button1,        advance,     {.i = +1} },
 	{ Button2,        quit,        {0} },

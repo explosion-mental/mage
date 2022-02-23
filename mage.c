@@ -495,7 +495,7 @@ int
 main(int argc, char *argv[])
 {
 	int i, fs = 0;
-	char *smode;
+	char *scale;
 
 	ARGBEGIN {
 	case 'f':
@@ -517,9 +517,9 @@ main(int argc, char *argv[])
 		wmname = EARGF(usage());
 		break;
 	case 's':
-		smode = EARGF(usage());
+		scale = EARGF(usage());
 		for (i = 0; i < LENGTH(scales); i++)
-			if (!strcmp(smode, scales[i])) {
+			if (!strcmp(scale, scales[i])) {
 				scalemode = i;
 				break;
 			}
@@ -548,7 +548,8 @@ main(int argc, char *argv[])
 
 	setup();
 
-	if (fs) togglefullscreen(0);
+	if (fs)
+		togglefullscreen(NULL);
 
 	run();
 
