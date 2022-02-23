@@ -4,8 +4,8 @@ static int showbar         = 1;          /* 0 means no bar */
 static int antialiasing    = 1;          /* 0 means pixelize images */
 static int quiet           = 0;          /* 0 means print warnings */
 static int recursive       = 0;          /* 1 means load subdirectories */
-static const float maxzoom = 800.0;      /* max value that zoom can reach */
-static const float minzoom = 12.5;       /* min value that zoom can reach */
+static const float maxzoom = 800.0;      /* max value that zoom can reach (ignored by scaling) */
+static const float minzoom = 12.5;       /* min value that zoom can reach (ignored by scaling) */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_{DOWN - FIT - WIDTH - HEIGHT} */
 static const char *fonts[] = { "monospace" };
 
