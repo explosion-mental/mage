@@ -4,7 +4,6 @@ static int showbar         = 1;          /* 0 means no bar */
 static int antialiasing    = 1;          /* 0 means pixelize images */
 static int quiet           = 0;          /* 0 means print warnings */
 static int recursive       = 0;          /* 1 means load subdirectories */
-static int blend           = 1;          /* 1 means blend (only affects imgs with alpha) */
 static const float maxzoom = 800.0;      /* max value that zoom can reach */
 static const float minzoom = 12.5;       /* min value that zoom can reach */
 static scaling scalemode   = SCALE_DOWN; /* SCALE_{DOWN - FIT - WIDTH - HEIGHT} */
@@ -33,7 +32,6 @@ static const Shortcut shortcuts[] = {
 	{ ShiftMask,    XK_equal,        set_zoom,           {.f = 100} },
 	{ 0,            XK_f,            togglefullscreen,   {0} },
 	{ 0,            XK_a,            toggleantialias,    {0} },
-	{ ShiftMask,    XK_a,            toggleblend,        {0} },
 	{ 0,            XK_s,            savestate,          {0} },
 	{ 0,            XK_u,            flipvert,           {0} },
 	{ ShiftMask,    XK_u,            fliphorz,           {0} },

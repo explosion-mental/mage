@@ -211,11 +211,3 @@ flipvert(const Arg *arg)
 	img_render(&image);
 	drawbar();
 }
-void
-toggleblend(const Arg *arg)
-{
-	blend = !blend;
-	imlib_context_set_blend(blend);
-	img_render(&image);
-	drawbar();
-}

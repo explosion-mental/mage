@@ -102,7 +102,6 @@ img_render(Image *img)
 
 	/* config context */
 	imlib_context_set_anti_alias(antialiasing);
-	imlib_context_set_blend(blend);
 
 	/* context */
 	imlib_context_set_image(img->im);

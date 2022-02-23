@@ -113,7 +113,6 @@ static void printfile(const Arg *arg);
 static void zoom(const Arg *arg);
 static void set_zoom(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
-static void toggleblend(const Arg *arg);
 static void panhorz(const Arg *arg);
 static void panvert(const Arg *arg);
 static void first(const Arg *arg);
