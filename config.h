@@ -2,7 +2,7 @@
 
 static int showbar         = 1;          /* 0 means no bar */
 static int antialiasing    = 1;          /* 0 means pixelize images */
-static int quiet           = 0;          /* 1 means print warnings */
+static int quiet           = 0;          /* 0 means print warnings */
 static int recursive       = 0;          /* 1 means load subdirectories */
 static int blend           = 1;          /* 1 means blend (only affects imgs with alpha) */
 static const float maxzoom = 800.0;      /* max value that zoom can reach */
