@@ -299,13 +299,17 @@ configurenotify(XEvent *e)
 int
 check_img(char *file)
 {
+	DIR *dir;
 	if (access(file, F_OK) != -1) { /* the file exist */
-		if (imlib_load_image(file)) { /* the file is an image */
+		if (imlib_load_image(file)) { /* is an image */
 			filenames[filecnt] = file; //store the filename
 			filecnt++; //+1 for every new entry
 			return 0;
-		} else /* the image cant be loaded (may be a directory) */
+		} else if ((dir = opendir(file))) { /* is a directory */
+			closedir(dir);
 			return 1;
+		} else /* file cant be loaded */
+			return -1;
 	} else { /* the file doesn't exist */
 		if (!quiet)
 			fprintf(stderr, "mage: %s: No such file or directory\n", file);
