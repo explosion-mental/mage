@@ -53,6 +53,6 @@ static const Mousekey mshortcuts[] = {
 	{ Button1,        advance,     {.i = +1} },
 	{ Button2,        quit,        {0} },
 	{ Button3,        advance,     {.i = -1} },
-	{ Button4,        zoom,        {.i = +1} },
-	{ Button5,        zoom,        {.i = -1} },
+	{ Button4,        zoom,        {.f = +3} },
+	{ Button5,        zoom,        {.f = -3} },
 };
