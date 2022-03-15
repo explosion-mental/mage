@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+/* Default settings; can be overriden by command line. */
 
 static int showbar         = 1;          /* 0 means no bar */
 static int antialiasing    = 1;          /* 0 means pixelize images */
