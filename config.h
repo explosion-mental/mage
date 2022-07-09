@@ -9,8 +9,14 @@ static const int winwidth  = 800;        /* default window width */
 static const int winheight = 600;        /* default window height */
 static const float maxzoom = 800.0;      /* max value that zoom can reach (ignored by scaling) */
 static const float minzoom = 12.5;       /* min value that zoom can reach (ignored by scaling) */
-static scaling scalemode   = SCALE_DOWN; /* SCALE_{DOWN - FIT - WIDTH - HEIGHT} */
 static const char *fonts[] = { "monospace" };
+
+static const ScaleMode scalemodes[] = {
+	{ "down",   scaledown },  /* first entry is default */
+	{ "width",  scalewidth },
+	{ "fit",    scalefit },
+	{ "height", scaleheight },
+};
 
 static const char *colors[][2] = {
       			/*  fg       bg     */

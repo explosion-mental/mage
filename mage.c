@@ -23,12 +23,7 @@ char *argv0;
 enum { SchemeNorm, SchemeBar }; /* color schemes */
 enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 
-typedef enum {
-	SCALE_DOWN,
-	SCALE_FIT,
-	SCALE_WIDTH,
-	SCALE_HEIGHT,
-} scaling;
+enum { SCALE_DOWN, SCALE_FIT, SCALE_WIDTH, SCALE_HEIGHT, }; /* custom-views */
 
 typedef struct {
 	Display *dpy;
@@ -45,15 +40,24 @@ typedef struct {
 	//int gm; /* geometry mask */
 } XWindow;
 
+typedef struct ScaleMode ScaleMode;
+
 typedef struct {
 	Imlib_Image *im;
  	//int re; /* rendered */
 	//int redraw;
+	const ScaleMode *scale;
 	int checkpan;
 	int zoomed;
 	int w, h;   /* dimension */
 	float x, y; /* position */
 } Image;
+
+struct ScaleMode {
+	const char *name;
+	void (*arrange)(Image *im);
+};
+
 
 typedef union {
 	int i;
@@ -84,11 +88,11 @@ static void setup(void);
 static void drawbar(void);
 
 /* X events */
-static void bpress(XEvent *);
-static void cmessage(XEvent *);
-static void expose(XEvent *);
-static void kpress(XEvent *);
-static void configurenotify(XEvent *);
+static void bpress(XEvent *e);
+static void cmessage(XEvent *e);
+static void expose(XEvent *e);
+static void kpress(XEvent *e);
+static void configurenotify(XEvent *e);
 
 /* image */
 static void im_destroy(void);
@@ -117,6 +121,11 @@ static int reload(const Arg *arg);
 static int cyclescale(const Arg *arg);
 static int savestate(const Arg *arg);
 
+static void scaledown(Image *im);
+static void scaleheight(Image *im);
+static void scalewidth(Image *im);
+static void scalefit(Image *im);
+
 /* handling files */
 static int check_img(char *filename);
 static void check_file(char *file);
@@ -136,7 +145,6 @@ static int bh = 0;      /* bar geometry */
 //static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
-static const char *scales[] = { "down", "fit", "width", "height" };
 static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
@@ -192,7 +200,7 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : scales[scalemode], (int)(zoomstate * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : image.scale->name, (int)(zoomstate * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -407,6 +415,9 @@ setup(void)
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
 
+	if (!image.scale)
+		image.scale = &scalemodes[0];
+
 	/* init screen */
 	xw.scr   = DefaultScreen(xw.dpy);
 	xw.vis   = DefaultVisual(xw.dpy, xw.scr);
@@ -489,6 +500,7 @@ main(int argc, char *argv[])
 {
 	int i, fs = 0;
 	char *scale;
+	void (*scalefunc)(Image *im);
 
 	ARGBEGIN {
 	case 'f':
@@ -511,9 +523,19 @@ main(int argc, char *argv[])
 		break;
 	case 's':
 		scale = EARGF(usage());
-		for (i = 0; i < LENGTH(scales); i++)
-			if (!strcmp(scale, scales[i])) {
-				scalemode = i;
+		if (!strcmp(scale, "down")) {
+			scalefunc = scaledown;
+		} else if (!strcmp(scale, "width")) {
+			scalefunc = scalewidth;
+		} else if (!strcmp(scale, "height")) {
+			scalefunc = scaleheight;
+		} else if (!strcmp(scale, "fit")) {
+			scalefunc = scalefit;
+		} else
+			break;
+		for (ScaleMode *l = (ScaleMode *)scalemodes; l; l++)
+			if (l->arrange == scalefunc) {
+				image.scale = l;
 				break;
 			}
 		break;
