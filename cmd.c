@@ -43,7 +43,7 @@ set_zoom(const Arg *arg)
 int
 zoom(const Arg *arg)
 {
-	img_zoom(&image, zoomstate + arg->f / 100.0);
+	img_zoom(&image, image.z + arg->f / 100.0);
 	return 1;
 }
 
@@ -132,8 +132,8 @@ rotate(const Arg *arg)
 	else
 		d = 3;
 
-	ox = d == 1 ? image.x : xw.w - image.x - image.w * zoomstate;
-	oy = d == 3 ? image.y : xw.h - image.y - image.h * zoomstate;
+	ox = d == 1 ? image.x : xw.w - image.x - image.w * image.z;
+	oy = d == 3 ? image.y : xw.h - image.y - image.h * image.z;
 
 	imlib_image_orientate(d);
 

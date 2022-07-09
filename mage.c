@@ -51,6 +51,7 @@ typedef struct {
 	int zoomed;
 	int w, h;   /* dimension */
 	float x, y; /* position */
+	float z;    /* zoom */
 } Image;
 
 struct ScaleMode {
@@ -145,7 +146,6 @@ static int bh = 0;      /* bar geometry */
 //static int by;		/* bar y */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
-static float zoomstate = 1.0;
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
 
 /* config.h for applying patches and the configuration. */
@@ -200,7 +200,7 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : image.scale->name, (int)(zoomstate * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : image.scale->name, (int)(image.z * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 

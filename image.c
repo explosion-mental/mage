@@ -33,25 +33,26 @@ img_load(Image *img, const char *filename)
 void
 scalewidth(Image *im)
 {
-	zoomstate = MIN((float) xw.w / (float) im->w, maxzoom / 100.0);
+	im->z = MIN((float) xw.w / (float) im->w, maxzoom / 100.0);
 }
 
 void
 scaleheight(Image *im)
 {
-	zoomstate = MIN((float) xw.h / (float) im->h, maxzoom / 100.0);
+	im->z = MIN((float) xw.h / (float) im->h, maxzoom / 100.0);
 }
 
 void
 scaledown(Image *im)
 {
-	zoomstate = MIN((float) xw.h / (float) im->h, 1.0);
+	im->z = MIN((float) xw.w / (float) im->w, (float) xw.h / (float) im->h);
+	im->z = MIN(im->z, 1.0);
 }
 
 void
 scalefit(Image *im)
 {
-	zoomstate = MIN((float) xw.w / (float) im->w, (float) xw.h / (float) im->h);
+	im->z = MIN((float) xw.w / (float) im->w, (float) xw.h / (float) im->h);
 }
 
 void
@@ -59,13 +60,14 @@ img_render(Image *img)
 {
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
+	//float z = img->z;
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
 		img->scale->arrange(img);
-		//if (ABS(zoomstate - z) > 1.0 / MAX(img->w, img->h)) {
-		//	zoomstate = z;
-		//	img->x = xw.w / 2 - (xw.w / 2 - img->x) * zoomstate;
-		//	img->y = xw.h / 2 - (xw.h / 2 - img->y) * zoomstate;
+		//if (!(ABS(img->z - z) > 1.0 / MAX(img->w, img->h))) {
+		//	img->z = z;
+		//	img->x = xw.w / 2 - (xw.w / 2 - img->x) * img->z;
+		//	img->y = xw.h / 2 - (xw.h / 2 - img->y) * img->z;
 		//}
 		img->checkpan = 1;
 	}
@@ -77,26 +79,26 @@ img_render(Image *img)
 
  	/* calculate source and destination offsets */
 	if (img->x <= 0) {
-		sx = -img->x / zoomstate;
-		sw = xw.w / zoomstate;
+		sx = -img->x / img->z;
+		sw = xw.w / img->z;
 		dx = 0;
 		dw = xw.w;
 	} else {
 		sx = 0;
 		sw = img->w;
 		dx = img->x;
-		dw = img->w * zoomstate;
+		dw = img->w * img->z;
 	}
 	if (img->y <= 0) {
-		sy = -img->y / zoomstate;
-		sh = xw.h / zoomstate;
+		sy = -img->y / img->z;
+		sh = xw.h / img->z;
 		dy = 0;
 		dh = xw.h;
 	} else {
 		sy = 0;
 		sh = img->h;
 		dy = img->y;
-		dh = img->h * zoomstate;
+		dh = img->h * img->z;
 	}
 
 	/* clear and set pixmap */
@@ -126,8 +128,8 @@ check_pan(Image *img)
 	if (!img)
 		return;
 
-	float w = img->w * zoomstate;
-	float h = img->h * zoomstate;
+	float w = img->w * img->z;
+	float h = img->h * img->z;
 
 	if (w < xw.w)
 		img->x = (xw.w - w) / 2;
@@ -152,10 +154,10 @@ img_zoom(Image *img, float z)
 	z = MAX(z, minzoom / 100.0);
 	z = MIN(z, maxzoom / 100.0);
 
-	if (z != zoomstate) {
-		img->x -= (img->w * z - img->w * zoomstate) / 2;
-		img->y -= (img->h * z - img->h * zoomstate) / 2;
-		zoomstate = z;
+	if (z != img->z) {
+		img->x -= (img->w * z - img->w * img->z) / 2;
+		img->y -= (img->h * z - img->h * img->z) / 2;
+		img->z = z;
 		img->checkpan = 1;
 		img->zoomed = 1;
 	}
