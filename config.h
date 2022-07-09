@@ -12,6 +12,7 @@ static const float minzoom = 12.5;       /* min value that zoom can reach (ignor
 static const char *fonts[] = { "monospace" };
 
 static const ScaleMode scalemodes[] = {
+	/* symbol   arrange function */
 	{ "down",   scaledown },  /* first entry is default */
 	{ "width",  scalewidth },
 	{ "fit",    scalefit },
