@@ -417,6 +417,7 @@ setup(void)
 
 	if (!image.scale)
 		image.scale = &scalemodes[0];
+	image.z = 1.0;
 
 	/* init screen */
 	xw.scr   = DefaultScreen(xw.dpy);
