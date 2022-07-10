@@ -25,21 +25,6 @@ enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 
 enum { SCALE_DOWN, SCALE_FIT, SCALE_WIDTH, SCALE_HEIGHT, }; /* custom-views */
 
-typedef struct {
-	Display *dpy;
-	Colormap cmap;
-	Window win;
-	Visual *vis;
-	XSetWindowAttributes attrs;
-	int depth; /* bit depth */
-	int scr;
-	//int x, y;
-	int w, h;
-	Pixmap pm;
-	GC gc;
-	//int gm; /* geometry mask */
-} XWindow;
-
 typedef struct ScaleMode ScaleMode;
 
 typedef struct {
@@ -137,7 +122,6 @@ static Atom atom[WMLast];
 static char right[128], left[128];
 static unsigned int filecnt = 0;
 static size_t fileidx;
-static XWindow xw;
 static Image *ci, *images; /* current image and images */
 static const ScaleMode *scale;
 static Drw *drw;
@@ -148,6 +132,16 @@ static int bh = 0;      /* bar geometry */
 static int lrpad;       /* sum of left and right padding for text */
 static char *wmname = "mage";
 static unsigned int numlockmask = 0; //should this be handled at all? (updatenumlockmask)
+static Display *dpy;
+static Colormap cmap;
+static Window win;
+static Visual *visual = NULL;
+static int depth, screen;
+//static int sw, sh; /* X display screen geometry width, height */
+static int winw, winh;
+//static int winx, winy;
+static Pixmap pm;
+static GC gc;
 
 /* config.h for applying patches and the configuration. */
 #include "config.h"
@@ -175,10 +169,10 @@ cleanup(void)
 		free(scheme[i]);
 	free(scheme);
 	drw_free(drw);
- 	XFreeGC(xw.dpy, xw.gc);
-	XDestroyWindow(xw.dpy, xw.win);
-	XSync(xw.dpy, False);
-	XCloseDisplay(xw.dpy);
+ 	XFreeGC(dpy, gc);
+	XDestroyWindow(dpy, win);
+	XSync(dpy, False);
+	XCloseDisplay(dpy);
 }
 
 void
@@ -191,20 +185,20 @@ drawbar(void)
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
-	y = xw.h - bh;
+	y = winh - bh;
 
 	drw_setscheme(drw, scheme[SchemeBar]);
 
 	/* left text */
 	snprintf(left, LENGTH(left), "%s %dx%d", ci->fname, ci->w, ci->h);
-	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
+	drw_text(drw, 0, y, winw / 2, bh, lrpad / 2, left, 0);
 
 	/* right text */
 	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", ci->zoomed ? "" : scale->name, (int)(ci->z * 100.0), (int) fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
-	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
+	drw_text(drw, winw / 2, y, winw / 2, bh, winw / 2 - (tw + lrpad / 2), right, 0);
 
-	drw_map(drw, xw.win, 0, y, xw.w, bh);
+	drw_map(drw, win, 0, y, winw, bh);
 }
 
 void
@@ -213,7 +207,7 @@ run(void)
 	XEvent ev;
 
 	while (running) {
-		XNextEvent(xw.dpy, &ev);
+		XNextEvent(dpy, &ev);
 		if (handler[ev.type])
 			(handler[ev.type])(&ev);
 		//if (image.redraw)
@@ -232,10 +226,10 @@ xhints(void)
 		die("mage: Unable to allocate size hints");
 
 	sizeh->flags = PSize;
-	sizeh->height = xw.h;
-	sizeh->width = xw.w;
+	sizeh->height = winh;
+	sizeh->width = winw;
 
-	XSetWMProperties(xw.dpy, xw.win, NULL, NULL, NULL, 0, sizeh, &wm, &class);
+	XSetWMProperties(dpy, win, NULL, NULL, NULL, 0, sizeh, &wm, &class);
 	XFree(sizeh);
 }
 
@@ -262,11 +256,8 @@ cmessage(XEvent *e)
 void
 expose(XEvent *e)
 {
-	if (0 == e->xexpose.count) {
-		//TODO currently resize is a bit sluggish (noticeable on big images)
-		//image.redraw = 0;
+	if (e->xexpose.count == 0) {
 		img_render(ci);
-		//XSync(xw.dpy, True);
 		drawbar();
 	}
 }
@@ -277,7 +268,7 @@ kpress(XEvent *e)
 	unsigned int i;
 	KeySym keysym;
 
-	keysym = XkbKeycodeToKeysym(xw.dpy, (KeyCode)ev->keycode, 0, 0);
+	keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0, 0);
 	for (i = 0; i < LENGTH(shortcuts); i++)
 		if (keysym == shortcuts[i].keysym
 		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
@@ -293,10 +284,10 @@ configurenotify(XEvent *e)
 {
 	XConfigureEvent *ev = &e->xconfigure;
 
-	if (xw.w != ev->width || xw.h + bh!= ev->height) {
-		xw.w = ev->width;
-		xw.h = ev->height;
-		drw_resize(drw, xw.w, xw.h + bh);
+	if (winw != ev->width || winh + bh!= ev->height) {
+		winw = ev->width;
+		winh = ev->height;
+		drw_resize(drw, winw, winh + bh);
 		//if (showbar)
 		//	xw.h -= bh;
 		//else
@@ -380,9 +371,10 @@ setup(void)
 {
 	int i;
 	XTextProperty prop;
+	XSetWindowAttributes attrs;
 	XGCValues gcval;
 
-	if (!(xw.dpy = XOpenDisplay(NULL)))
+	if (!(dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
 
 	if (!scale)
@@ -390,48 +382,47 @@ setup(void)
 	ci->z = 1.0;
 
 	/* init screen */
-	xw.scr   = DefaultScreen(xw.dpy);
-	xw.vis   = DefaultVisual(xw.dpy, xw.scr);
-	xw.cmap  = DefaultColormap(xw.dpy, xw.scr);
-	xw.depth = DefaultDepth(xw.dpy, xw.scr);
-	xw.pm = 0;
+	screen = DefaultScreen(dpy);
+	visual = DefaultVisual(dpy, screen);
+	cmap = DefaultColormap(dpy, screen);
+	depth = DefaultDepth(dpy, screen);
+	pm = 0;
 
-	xw.w = winwidth;
-	xw.h = winheight;
+	winw = winwidth;
+	winh = winheight;
 
- 	xw.attrs.colormap = xw.cmap;
 	//xw.attrs.background_pixel = 0;
 	//xw.attrs.border_pixel = 0;
-	xw.attrs.save_under = False;
-	xw.attrs.bit_gravity = CenterGravity;
-	xw.attrs.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask |
+ 	attrs.colormap = cmap;
+	attrs.save_under = False;
+	attrs.bit_gravity = CenterGravity;
+	attrs.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask |
 	                       ButtonPressMask; //ButtonMotionMask
 
-	xw.win = XCreateWindow(xw.dpy, XRootWindow(xw.dpy, xw.scr), 0, 0,
-				xw.w, xw.h, 0, xw.depth, InputOutput, xw.vis,
-				0, &xw.attrs);
+	win = XCreateWindow(dpy, XRootWindow(dpy, screen), 0, 0, winw, winh, 0,
+			depth, InputOutput, visual, 0, &attrs);
 
-	XSelectInput(xw.dpy, xw.win, StructureNotifyMask | ExposureMask | KeyPressMask |
+	XSelectInput(dpy, win, StructureNotifyMask | ExposureMask | KeyPressMask |
 	                       ButtonPressMask);
 
 	/* init atoms */
-	atom[WMDelete] = XInternAtom(xw.dpy, "WM_DELETE_WINDOW", False);
-	atom[WMName] = XInternAtom(xw.dpy, "_NET_WM_NAME", False);
-	atom[WMFullscreen] = XInternAtom(xw.dpy, "_NET_WM_STATE_FULLSCREEN", False);
-	atom[WMState] = XInternAtom(xw.dpy, "_NET_WM_STATE", False);
+	atom[WMDelete] = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+	atom[WMName] = XInternAtom(dpy, "_NET_WM_NAME", False);
+	atom[WMFullscreen] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+	atom[WMState] = XInternAtom(dpy, "_NET_WM_STATE", False);
 
-	XSetWMProtocols(xw.dpy, xw.win, &atom[WMDelete], 1);
+	XSetWMProtocols(dpy, win, &atom[WMDelete], 1);
 
-	if (!(drw = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
+	if (!(drw = drw_create(dpy, screen, win, winw, winh)))
 		die("mage: Unable to create drawing context");
 
 	/* init appearance */
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 2);
-	XSetWindowBackground(xw.dpy, xw.win, scheme[SchemeNorm][ColBg].pixel);
+	XSetWindowBackground(dpy, win, scheme[SchemeNorm][ColBg].pixel);
 	gcval.foreground = scheme[SchemeNorm][ColBg].pixel;
-	xw.gc = XCreateGC(xw.dpy, xw.win, GCForeground, &gcval); //context for Pixmap
+	gc = XCreateGC(dpy, win, GCForeground, &gcval); //context for Pixmap
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
@@ -441,18 +432,18 @@ setup(void)
 	drawbar();
 
 	XStringListToTextProperty(&argv0, 1, &prop);
-	XSetWMName(xw.dpy, xw.win, &prop);
-	XSetTextProperty(xw.dpy, xw.win, &prop, atom[WMName]);
+	XSetWMName(dpy, win, &prop);
+	XSetTextProperty(dpy, win, &prop, atom[WMName]);
 	XFree(prop.value);
-	XMapWindow(xw.dpy, xw.win);
-	drw_resize(drw, xw.w, xw.h);
+	XMapWindow(dpy, win);
+	drw_resize(drw, winw, winh);
 	xhints();
-	XSync(xw.dpy, False);
+	XSync(dpy, False);
 
 	/* init image */
-	imlib_context_set_display(xw.dpy);
-	imlib_context_set_visual(xw.vis);
-	imlib_context_set_colormap(xw.cmap);
+	imlib_context_set_display(dpy);
+	imlib_context_set_visual(visual);
+	imlib_context_set_colormap(cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 

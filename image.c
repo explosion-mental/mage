@@ -13,26 +13,26 @@ im_destroy()
 void
 scalewidth(Image *im)
 {
-	im->z = MIN((float) xw.w / (float) im->w, maxzoom / 100.0);
+	im->z = MIN((float) winw / (float) im->w, maxzoom / 100.0);
 }
 
 void
 scaleheight(Image *im)
 {
-	im->z = MIN((float) xw.h / (float) im->h, maxzoom / 100.0);
+	im->z = MIN((float) winh / (float) im->h, maxzoom / 100.0);
 }
 
 void
 scaledown(Image *im)
 {
-	im->z = MIN((float) xw.w / (float) im->w, (float) xw.h / (float) im->h);
+	im->z = MIN((float) winw / (float) im->w, (float) winh / (float) im->h);
 	im->z = MIN(im->z, 1.0);
 }
 
 void
 scalefit(Image *im)
 {
-	im->z = MIN((float) xw.w / (float) im->w, (float) xw.h / (float) im->h);
+	im->z = MIN((float) winw / (float) im->w, (float) winh / (float) im->h);
 }
 
 void
@@ -65,9 +65,9 @@ img_render(Image *img)
  	/* calculate source and destination offsets */
 	if (img->x <= 0) {
 		sx = -img->x / img->z;
-		sw = xw.w / img->z;
+		sw = winw / img->z;
 		dx = 0;
-		dw = xw.w;
+		dw = winw;
 	} else {
 		sx = 0;
 		sw = img->w;
@@ -76,9 +76,9 @@ img_render(Image *img)
 	}
 	if (img->y <= 0) {
 		sy = -img->y / img->z;
-		sh = xw.h / img->z;
+		sh = winh / img->z;
 		dy = 0;
-		dh = xw.h;
+		dh = winh;
 	} else {
 		sy = 0;
 		sh = img->h;
@@ -87,13 +87,13 @@ img_render(Image *img)
 	}
 
 	/* clear and set pixmap */
-	if (xw.pm)
-		XFreePixmap(xw.dpy, xw.pm);
-	xw.pm = XCreatePixmap(xw.dpy, xw.win, xw.w, xw.h, xw.depth);
-	XFillRectangle(xw.dpy, xw.pm, xw.gc, 0, 0, xw.w, xw.h);
+	if (pm)
+		XFreePixmap(dpy, pm);
+	pm = XCreatePixmap(dpy, win, winw, winh, depth);
+	XFillRectangle(dpy, pm, gc, 0, 0, winw, winh);
 
 	/* render image */
- 	imlib_context_set_drawable(xw.pm);
+ 	imlib_context_set_drawable(pm);
 
 	/* config context */
 	imlib_context_set_anti_alias(antialiasing);
@@ -103,8 +103,8 @@ img_render(Image *img)
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
 	/* window background */
-	XSetWindowBackgroundPixmap(xw.dpy, xw.win, xw.pm);
-	XClearWindow(xw.dpy, xw.win);
+	XSetWindowBackgroundPixmap(dpy, win, pm);
+	XClearWindow(dpy, win);
 }
 
 void
@@ -116,18 +116,18 @@ check_pan(Image *img)
 	float w = img->w * img->z;
 	float h = img->h * img->z;
 
-	if (w < xw.w)
-		img->x = (xw.w - w) / 2;
+	if (w < winw)
+		img->x = (winw - w) / 2;
 	else if (img->x > 0)
 		img->x = 0;
-	else if (img->x + w < xw.w)
-		img->x = xw.w - w;
-	if (h < xw.h)
-		img->y = (xw.h - h) / 2;
+	else if (img->x + w < winw)
+		img->x = winw - w;
+	if (h < winh)
+		img->y = (winh - h) / 2;
 	else if (img->y > 0)
 		img->y = 0;
-	else if (img->y + h < xw.h)
-		img->y = xw.h - h;
+	else if (img->y + h < winh)
+		img->y = winh - h;
 }
 
 void

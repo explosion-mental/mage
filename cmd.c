@@ -6,10 +6,10 @@ togglebar(const Arg *arg)
 {
 	showbar = !showbar;
 	if (showbar)
-		xw.h -= bh;
+		winh -= bh;
 	else
-		xw.h += bh;
-	XSync(xw.dpy, False);
+		winh += bh;
+	XSync(dpy, False);
 	return 1;
 }
 
@@ -58,13 +58,13 @@ togglefullscreen(const Arg *arg)
 	XEvent e;
 
 	e.type = ClientMessage;
-	e.xclient.window = xw.win;
+	e.xclient.window = win;
 	e.xclient.message_type = atom[WMState];
 	e.xclient.format = 32;
 	e.xclient.data.l[0] = 2;
 	e.xclient.data.l[1] = atom[WMFullscreen];
 	e.xclient.data.l[2] = 0;
-	XSendEvent(xw.dpy, DefaultRootWindow(xw.dpy), False,
+	XSendEvent(dpy, DefaultRootWindow(dpy), False,
 	           SubstructureNotifyMask | SubstructureRedirectMask, &e);
 	return 0;
 }
@@ -75,9 +75,9 @@ panhorz(const Arg *arg)
 	float x = ci->x, y = ci->y;
 
 	if (arg->i > 0)
-		ci->x -= xw.w / arg->f;
+		ci->x -= winw / arg->f;
 	else
-		ci->x += xw.w / -arg->f;
+		ci->x += winw / -arg->f;
 
 	check_pan(ci);
 
@@ -93,9 +93,9 @@ panvert(const Arg *arg)
 	float x = ci->x, y = ci->y;
 
 	if (arg->i > 0)
-		ci->y += xw.h / arg->f;
+		ci->y += winh / arg->f;
 	else
-		ci->y -= xw.h / -arg->f;
+		ci->y -= winh / -arg->f;
 
 	check_pan(ci);
 
@@ -145,13 +145,13 @@ rotate(const Arg *arg)
 	else
 		d = 3;
 
-	ox = d == 1 ? ci->x : xw.w - ci->x - ci->w * ci->z;
-	oy = d == 3 ? ci->y : xw.h - ci->y - ci->h * ci->z;
+	ox = d == 1 ? ci->x : winw - ci->x - ci->w * ci->z;
+	oy = d == 3 ? ci->y : winh - ci->y - ci->h * ci->z;
 
 	imlib_image_orientate(d);
 
-	ci->x = oy + (xw.w - xw.h) / 2;
-	ci->y = ox + (xw.h - xw.w) / 2;
+	ci->x = oy + (winw - winh) / 2;
+	ci->y = ox + (winh - winw) / 2;
 
 	tmp = ci->w;
 	ci->w = ci->h;
