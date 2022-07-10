@@ -78,10 +78,13 @@ static void kpress(XEvent *e);
 static void configurenotify(XEvent *e);
 
 /* image */
-static void im_destroy(void);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
 static void check_pan(Image *img);
+static void scaledown(Image *im);
+static void scaleheight(Image *im);
+static void scalewidth(Image *im);
+static void scalefit(Image *im);
 
 /* commands */
 static int togglebar(const Arg *arg);
@@ -103,11 +106,6 @@ static int reload(const Arg *arg);
 static int cyclescale(const Arg *arg);
 static int savestate(const Arg *arg);
 
-static void scaledown(Image *im);
-static void scaleheight(Image *im);
-static void scalewidth(Image *im);
-static void scalefit(Image *im);
-
 /* handling files */
 static void addfile(const char *file);
 static void getsize(const char *file);
@@ -115,11 +113,11 @@ static void readstdin(void);
 
 /* variables */
 static Atom atom[WMLast];
-static char right[128], left[128];
+static char right[128], left[128]; /* status bar */
 static unsigned int filecnt = 0;
 static size_t fileidx;
 static Image *ci, *images; /* current image and images */
-static const ScaleMode *scale;
+static const ScaleMode *scale; /* scalemode */
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
@@ -209,13 +207,9 @@ run(void)
 {
 	XEvent ev;
 
-	while (running) {
-		XNextEvent(dpy, &ev);
+	while (running && !XNextEvent(dpy, &ev))
 		if (handler[ev.type])
-			(handler[ev.type])(&ev);
-		//if (image.redraw)
-		//	img_render();
-	}
+			handler[ev.type](&ev); /* call handler */
 }
 
 void
