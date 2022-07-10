@@ -16,14 +16,19 @@ char *argv0;
 
 /* macros */
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-#define LENGTH(a)               (sizeof(a) / sizeof(a)[0])
+#define LENGTH(X)               (sizeof(X) / sizeof(X)[0])
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
-#define ABS(a)			((a) > 0 ? (a) : -(a))
+#define ABS(X)			((X) > 0 ? (X) : -(X))
 
 enum { SchemeNorm, SchemeBar }; /* color schemes */
 enum { WMDelete, WMName, WMFullscreen, WMState, WMLast }; /* atoms */
 
-enum { SCALE_DOWN, SCALE_FIT, SCALE_WIDTH, SCALE_HEIGHT, }; /* custom-views */
+typedef union {
+	int i;
+	unsigned int ui;
+	float f;
+	const void *v;
+} Arg;
 
 typedef struct ScaleMode ScaleMode;
 
@@ -43,14 +48,6 @@ struct ScaleMode {
 	const char *name;
 	void (*arrange)(Image *im);
 };
-
-
-typedef union {
-	int i;
-	unsigned int ui;
-	float f;
-	const void *v;
-} Arg;
 
 typedef struct {
 	unsigned int b;
@@ -163,7 +160,11 @@ cleanup(void)
 {
 	unsigned int i;
 
-	im_destroy();
+	if (ci->im) {
+		imlib_free_image();
+	//	imlib_free_image_and_decache();
+		ci->im = NULL;
+	}
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(scheme);
