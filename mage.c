@@ -303,9 +303,7 @@ getsize(const char *file)
 	struct stat s;
 
 	if (!(stat(file, &s))) {
-		puts("stat");
 		if (S_ISDIR(s.st_mode)) { /* it's a dir */
-			puts("dir");
 		if ((dir = opendir(file))) {
 			while ((e = readdir(dir))) {
 				if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
@@ -317,10 +315,13 @@ getsize(const char *file)
 		} else if (!quiet)
 			fprintf(stderr, "mage: Directory '%s', cannot be opened.\n", file);
 	} else if (S_ISREG(s.st_mode)) {
-		//fileidx = filecnt;
-		//addfile(file);
-		//fileidx = 0;
-		filecnt++;
+		if (imlib_load_image(file)) {
+			filecnt++;
+		} else {
+			if (!quiet)
+				fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
+			return;
+		}
 	} else
 		fprintf(stderr, "mage: '%s' No such file or directory.\n", file);
 	}
@@ -329,7 +330,7 @@ getsize(const char *file)
 void
 addfile(const char *file)
 {
-	//if ((m = imlib_load_image(file))) { /* can be opened */
+	if ((imlib_load_image(file))) { /* can be opened */
 		images[fileidx].fname = file;
 		//images[fileidx].im = m;
 		//imlib_context_set_image(m);
@@ -338,11 +339,11 @@ addfile(const char *file)
 		images[fileidx].checkpan = 0;
 		images[fileidx].zoomed = 0;
 		fileidx++;
-	//} else {
-	//	if (!quiet)
-	//		fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
-	//	return;
-	//}
+	} else {
+		if (!quiet)
+			fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
+		return;
+	}
 }
 
 void
@@ -543,17 +544,15 @@ main(int argc, char *argv[])
 	if (!recursive)
 		images = ecalloc(filecnt, sizeof(Image));
 
-	fileidx = 0;
-
 	if (!strcmp(argv[0], "-"))
 		readstdin();
 	else if (!recursive) /* handle images */
 		for (i = 0; i < argc; i++)
 			addfile(argv[i]);
-	fileidx = 0;
 
-	if (!filecnt)
+	if (!filecnt || !fileidx)
 		die("mage: No more images to display");
+	fileidx = 0;
 
 	ci = images;
 
