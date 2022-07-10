@@ -33,7 +33,7 @@ typedef union {
 typedef struct ScaleMode ScaleMode;
 
 typedef struct {
-	Imlib_Image *im;
+	Imlib_Image im;
  	//int re; /* rendered */
 	//int redraw;
 	const char *fname;
