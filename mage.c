@@ -309,17 +309,30 @@ getsize(const char *file)
 {
 	DIR *dir;
 	struct dirent *e;
+	struct stat s;
 
-	if ((dir = opendir(file))) {
-		while ((e = readdir(dir))) {
-			if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
-				continue;
-			if (e->d_type == DT_REG)
-				filecnt++;
-		}
-		closedir(dir);
-	} else if (!quiet)
-		fprintf(stderr, "mage: Directory '%s', cannot be opened.\n", file);
+	if (!(stat(file, &s))) {
+		puts("stat");
+		if (S_ISDIR(s.st_mode)) { /* it's a dir */
+			puts("dir");
+		if ((dir = opendir(file))) {
+			while ((e = readdir(dir))) {
+				if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
+					continue;
+				if (e->d_type == DT_REG)
+					filecnt++;
+			}
+			closedir(dir);
+		} else if (!quiet)
+			fprintf(stderr, "mage: Directory '%s', cannot be opened.\n", file);
+	} else if (S_ISREG(s.st_mode)) {
+		//fileidx = filecnt;
+		//addfile(file);
+		//fileidx = 0;
+		filecnt++;
+	} else
+		fprintf(stderr, "mage: '%s' No such file or directory.\n", file);
+	}
 }
 
 void
@@ -526,6 +539,8 @@ main(int argc, char *argv[])
 						addfile(f);
 					}
 				}
+			} else {
+				addfile(argv[i]);
 			}
 			closedir(dir);
 		}
