@@ -46,7 +46,6 @@ typedef struct {
 	Imlib_Image *im;
  	//int re; /* rendered */
 	//int redraw;
-	const ScaleMode *scale;
 	int checkpan;
 	int zoomed;
 	int w, h;   /* dimension */
@@ -137,6 +136,7 @@ static Atom atom[WMLast];
 static char right[128], left[128];
 static char **filenames;
 static unsigned int fileidx = 0, filecnt = 0;
+static const ScaleMode *scale;
 static XWindow xw;
 static Image image;
 static Drw *drw;
@@ -200,7 +200,7 @@ drawbar(void)
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : image.scale->name, (int)(image.z * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : scale->name, (int)(image.z * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -415,8 +415,8 @@ setup(void)
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
 
-	if (!image.scale)
-		image.scale = &scalemodes[0];
+	if (!scale)
+		scale = &scalemodes[0];
 	image.z = 1.0;
 
 	/* init screen */
@@ -500,7 +500,7 @@ int
 main(int argc, char *argv[])
 {
 	int i, fs = 0;
-	char *scale;
+	char *mode;
 	void (*scalefunc)(Image *im);
 
 	ARGBEGIN {
@@ -523,20 +523,20 @@ main(int argc, char *argv[])
 		wmname = EARGF(usage());
 		break;
 	case 's':
-		scale = EARGF(usage());
-		if (!strcmp(scale, "down")) {
+		mode = EARGF(usage());
+		if (!strcmp(mode, "down")) {
 			scalefunc = scaledown;
-		} else if (!strcmp(scale, "width")) {
+		} else if (!strcmp(mode, "width")) {
 			scalefunc = scalewidth;
-		} else if (!strcmp(scale, "height")) {
+		} else if (!strcmp(mode, "height")) {
 			scalefunc = scaleheight;
-		} else if (!strcmp(scale, "fit")) {
+		} else if (!strcmp(mode, "fit")) {
 			scalefunc = scalefit;
 		} else
 			break;
 		for (ScaleMode *l = (ScaleMode *)scalemodes; l; l++)
 			if (l->arrange == scalefunc) {
-				image.scale = l;
+				scale = l;
 				break;
 			}
 		break;

@@ -63,7 +63,7 @@ img_render(Image *img)
 	//float z = img->z;
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
-		img->scale->arrange(img);
+		scale->arrange(img);
 		//if (!(ABS(img->z - z) > 1.0 / MAX(img->w, img->h))) {
 		//	img->z = z;
 		//	img->x = xw.w / 2 - (xw.w / 2 - img->x) * img->z;

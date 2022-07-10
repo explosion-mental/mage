@@ -168,7 +168,7 @@ cyclescale(const Arg *arg)
 {
 	ScaleMode *l;
 	unsigned int idx = 0;
-	for (l = (ScaleMode *)scalemodes; l != image.scale; l++, idx++);
+	for (l = (ScaleMode *)scalemodes; l != scale; l++, idx++);
 
 	if (arg->i > 0) {
 		if (!image.zoomed) { /* use the same scalemode as before if the image is zoomed */
@@ -188,7 +188,7 @@ cyclescale(const Arg *arg)
 		image.zoomed = 0;
 	}
 
-	image.scale = &scalemodes[idx];
+	scale = &scalemodes[idx];
 
 	return 1;
 }
