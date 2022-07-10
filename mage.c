@@ -168,6 +168,7 @@ cleanup(void)
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(scheme);
+	free(images);
 	drw_free(drw);
  	XFreeGC(dpy, gc);
 	XDestroyWindow(dpy, win);
