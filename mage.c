@@ -134,7 +134,8 @@ static Window win;
 static Visual *visual = NULL;
 static int depth, screen;
 static int scrw, scrh; /* X display screen geometry width, height */
-static int winw, winh;
+static int winw, winh; /* window width and height */
+static int winy; /* window height - bar height */
 //static int winx, winy;
 static Pixmap pm;
 static GC gc;
@@ -179,27 +180,28 @@ cleanup(void)
 void
 drawbar(void)
 {
-	int y, tw = 0;
+	int tw = 0;
 
-	if (!showbar) //not drawbar
+	winy = winh - bh;
+
+	if (!showbar)
 		return;
 
 	/* currently topbar is not supported */
 	//y = topbar ? 0 : xw.h - bh;
-	y = winh - bh;
 
 	drw_setscheme(drw, scheme[SchemeBar]);
 
 	/* left text */
 	snprintf(left, LENGTH(left), "%s %dx%d", ci->fname, ci->w, ci->h);
-	drw_text(drw, 0, y, winw / 2, bh, lrpad / 2, left, 0);
+	drw_text(drw, 0, winy, winw / 2, bh, lrpad / 2, left, 0);
 
 	/* right text */
 	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", ci->zoomed ? "" : scale->name, (int)(ci->z * 100.0), (int) fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
-	drw_text(drw, winw / 2, y, winw / 2, bh, winw / 2 - (tw + lrpad / 2), right, 0);
+	drw_text(drw, winw / 2, winy, winw / 2, bh, winw / 2 - (tw + lrpad / 2), right, 0);
 
-	drw_map(drw, win, 0, y, winw, bh);
+	drw_map(drw, win, 0, winy, winw, bh);
 }
 
 void
@@ -285,14 +287,10 @@ configurenotify(XEvent *e)
 {
 	XConfigureEvent *ev = &e->xconfigure;
 
-	if (winw != ev->width || winh + bh!= ev->height) {
+	if (winw != ev->width || winh != ev->height) {
 		winw = ev->width;
 		winh = ev->height;
-		drw_resize(drw, winw, winh + bh);
-		//if (showbar)
-		//	xw.h -= bh;
-		//else
-		//	xw.h += bh;
+		drw_resize(drw, winw, winh);
 	}
 }
 

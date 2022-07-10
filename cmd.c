@@ -6,10 +6,12 @@ togglebar(const Arg *arg)
 {
 	showbar = !showbar;
 	if (showbar)
-		winh -= bh;
+		bh = drw->fonts->h + 2; /* two pixel padding */
 	else
-		winh += bh;
+		bh = 0;
+	winy = winh - bh;
 	XSync(dpy, False);
+
 	return 1;
 }
 

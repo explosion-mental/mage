@@ -76,9 +76,9 @@ img_render(Image *img)
 	}
 	if (img->y <= 0) {
 		sy = -img->y / img->z;
-		sh = winh / img->z;
+		sh = winy / img->z;
 		dy = 0;
-		dh = winh;
+		dh = winy;
 	} else {
 		sy = 0;
 		sh = img->h;
@@ -123,12 +123,12 @@ check_pan(Image *img)
 		img->x = 0;
 	else if (img->x + w < winw)
 		img->x = winw - w;
-	if (h < winh)
-		img->y = (winh - h) / 2;
+	if (h < winy)
+		img->y = (winy - h) / 2;
 	else if (img->y > 0)
 		img->y = 0;
-	else if (img->y + h < winh)
-		img->y = winh - h;
+	else if (img->y + h < winy)
+		img->y = winy - h;
 }
 
 void
