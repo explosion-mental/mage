@@ -26,7 +26,7 @@ LIBS = -L/usr/lib -lc -lm -L${X11LIB} -lXft -lfontconfig -lX11 -lImlib2
 #LIBS = -L/usr/local/lib -lc -lm -L${X11LIB} -lXft -lfontconfig -lX11
 
 # flags
-CPPFLAGS = -DVERSION=\"${VERSION}\" -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
+CPPFLAGS = -D_DEFAULT_SOURCE -DVERSION=\"${VERSION}\" -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
 #CFLAGS  = -g -std=c99 -pedantic -Wall -O0 ${INCS} ${CPPFLAGS}
 #LDFLAGS = -g ${LIBS}
 CFLAGS  = -std=c99 -pedantic -Wall -Os ${INCS} ${CPPFLAGS}

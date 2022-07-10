@@ -3,31 +3,11 @@ im_destroy()
 {
 //after the 'cache'ing images this function should accept `Image *` as an
 //argument in order to reuse this
-	if (image.im) {
+	if (ci->im) {
 		imlib_free_image();
 	//	imlib_free_image_and_decache();
-		image.im = NULL;
+		ci->im = NULL;
 	}
-}
-
-int
-img_load(Image *img, const char *filename)
-{
-	if (!img || !filename)
-		return -1;
-
-	/* handle image */
-	img->im = imlib_load_image(filename);
-	imlib_context_set_image(img->im);
-	img->w = imlib_image_get_width();
-	img->h = imlib_image_get_height();
-
-	/* set defaults */
- 	//img->redraw = 0;
-	img->checkpan = 0;
-	img->zoomed = 0;
-
-	return 0;
 }
 
 void
@@ -61,6 +41,11 @@ img_render(Image *img)
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
 	//float z = img->z;
+
+	img->im = imlib_load_image(img->fname);
+	imlib_context_set_image(img->im);
+	img->w = imlib_image_get_width();
+	img->h = imlib_image_get_height();
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
 		scale->arrange(img);

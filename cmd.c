@@ -18,17 +18,22 @@ advance(const Arg *arg)
 {
 	if ((arg->i > 0 && fileidx + arg->i < filecnt)
 	|| (arg->i < 0 && fileidx >= -arg->i)) {
+		images[fileidx].im = NULL;
+		ci->im = NULL;
+		imlib_free_image();
 		fileidx = fileidx + arg->i;
-		img_load(&image, filenames[fileidx]);
+		ci = ci + arg->i;
+		ci = &images[fileidx];
 		return 1;
 	}
+
 	return 0;
 }
 
 int
 printfile(const Arg *arg)
 {
-	printf("%s\n", filenames[fileidx]);
+	printf("%s\n", ci->fname);
 	quit(NULL);
 	return 0;
 }
@@ -36,14 +41,14 @@ printfile(const Arg *arg)
 int
 set_zoom(const Arg *arg)
 {
-	img_zoom(&image, arg->f / 100.0);
+	img_zoom(ci, arg->f / 100.0);
 	return 1;
 }
 
 int
 zoom(const Arg *arg)
 {
-	img_zoom(&image, image.z + arg->f / 100.0);
+	img_zoom(ci, ci->z + arg->f / 100.0);
 	return 1;
 }
 
@@ -67,16 +72,16 @@ togglefullscreen(const Arg *arg)
 int
 panhorz(const Arg *arg)
 {
-	float x = image.x, y = image.y;
+	float x = ci->x, y = ci->y;
 
 	if (arg->i > 0)
-		image.x -= xw.w / arg->f;
+		ci->x -= xw.w / arg->f;
 	else
-		image.x += xw.w / -arg->f;
+		ci->x += xw.w / -arg->f;
 
-	check_pan(&image);
+	check_pan(ci);
 
-	if (x != image.x || y != image.y) {
+	if (x != ci->x || y != ci->y) {
 		return 1;
 	}
 	return 0;
@@ -85,16 +90,16 @@ panhorz(const Arg *arg)
 int
 panvert(const Arg *arg)
 {
-	float x = image.x, y = image.y;
+	float x = ci->x, y = ci->y;
 
 	if (arg->i > 0)
-		image.y += xw.h / arg->f;
+		ci->y += xw.h / arg->f;
 	else
-		image.y -= xw.h / -arg->f;
+		ci->y -= xw.h / -arg->f;
 
-	check_pan(&image);
+	check_pan(ci);
 
-	if (x != image.x || y != image.y) {
+	if (x != ci->x || y != ci->y) {
 		return 1;
 	}
 	return 0;
@@ -104,8 +109,12 @@ int
 first(const Arg *arg)
 {
 	if (fileidx != 0) {
+		images[fileidx].im = NULL;
+		ci->im = NULL;
+		imlib_free_image();
 		fileidx = 0;
-		img_load(&image, filenames[fileidx]);
+		ci = ci + arg->i;
+		ci = &images[fileidx];
 		return 1;
 	}
 	return 0;
@@ -115,8 +124,12 @@ int
 last(const Arg *arg)
 {
 	if (fileidx != filecnt - 1) {
+		images[fileidx].im = NULL;
+		ci->im = NULL;
+		imlib_free_image();
 		fileidx = filecnt - 1;
-		img_load(&image, filenames[fileidx]);
+		ci = ci + arg->i;
+		ci = &images[fileidx];
 		return 1;
 	}
 	return 0;
@@ -132,19 +145,19 @@ rotate(const Arg *arg)
 	else
 		d = 3;
 
-	ox = d == 1 ? image.x : xw.w - image.x - image.w * image.z;
-	oy = d == 3 ? image.y : xw.h - image.y - image.h * image.z;
+	ox = d == 1 ? ci->x : xw.w - ci->x - ci->w * ci->z;
+	oy = d == 3 ? ci->y : xw.h - ci->y - ci->h * ci->z;
 
 	imlib_image_orientate(d);
 
-	image.x = oy + (xw.w - xw.h) / 2;
-	image.y = ox + (xw.h - xw.w) / 2;
+	ci->x = oy + (xw.w - xw.h) / 2;
+	ci->y = ox + (xw.h - xw.w) / 2;
 
-	tmp = image.w;
-	image.w = image.h;
-	image.h = tmp;
+	tmp = ci->w;
+	ci->w = ci->h;
+	ci->h = tmp;
 
-	image.checkpan = 1;
+	ci->checkpan = 1;
 	return 1;
 }
 
@@ -159,7 +172,10 @@ toggleantialias(const Arg *arg)
 int
 reload(const Arg *arg)
 {
-	img_load(&image, filenames[fileidx]);
+	images[fileidx].im = NULL;
+	ci->im = NULL;
+	imlib_free_image();
+
 	return 1;
 }
 
@@ -171,21 +187,21 @@ cyclescale(const Arg *arg)
 	for (l = (ScaleMode *)scalemodes; l != scale; l++, idx++);
 
 	if (arg->i > 0) {
-		if (!image.zoomed) { /* use the same scalemode as before if the image is zoomed */
+		if (!ci->zoomed) { /* use the same scalemode as before if the image is zoomed */
 			if (idx < LENGTH(scalemodes) - 1)
 				idx = idx + arg->i;
 			else
 				idx = 0;
 		}
-		image.zoomed = 0;
+		ci->zoomed = 0;
 	} else {
-		if (!image.zoomed) {
+		if (!ci->zoomed) {
 			if (idx > 0)
 				idx = idx + arg->i;
 			else
 				idx = LENGTH(scalemodes) - 1;
 		}
-		image.zoomed = 0;
+		ci->zoomed = 0;
 	}
 
 	scale = &scalemodes[idx];
@@ -196,7 +212,7 @@ cyclescale(const Arg *arg)
 int
 savestate(const Arg *arg)
 {
-	imlib_save_image(filenames[fileidx]);
+	imlib_save_image(ci->fname);
 	return 0;
 }
 

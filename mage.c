@@ -46,6 +46,7 @@ typedef struct {
 	Imlib_Image *im;
  	//int re; /* rendered */
 	//int redraw;
+	const char *fname;
 	int checkpan;
 	int zoomed;
 	int w, h;   /* dimension */
@@ -96,7 +97,7 @@ static void configurenotify(XEvent *e);
 
 /* image */
 static void im_destroy(void);
-static int img_load(Image *img, const char *filename);
+static int img_load(Image *img);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
 static void check_pan(Image *img);
@@ -127,18 +128,18 @@ static void scalewidth(Image *im);
 static void scalefit(Image *im);
 
 /* handling files */
-static int check_img(char *filename);
-static void check_file(char *file);
+static void addfile(const char *file);
+static void getsize(const char *file);
 static void readstdin(void);
 
 /* variables */
 static Atom atom[WMLast];
 static char right[128], left[128];
-static char **filenames;
-static unsigned int fileidx = 0, filecnt = 0;
-static const ScaleMode *scale;
+static unsigned int filecnt = 0;
+static size_t fileidx;
 static XWindow xw;
-static Image image;
+static Image *ci, *images; /* current image and images */
+static const ScaleMode *scale;
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
@@ -172,7 +173,6 @@ cleanup(void)
 	im_destroy();
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
-	free(filenames);
 	free(scheme);
 	drw_free(drw);
  	XFreeGC(xw.dpy, xw.gc);
@@ -196,11 +196,11 @@ drawbar(void)
 	drw_setscheme(drw, scheme[SchemeBar]);
 
 	/* left text */
-	snprintf(left, LENGTH(left), "%s %dx%d", filenames[fileidx], image.w, image.h);
+	snprintf(left, LENGTH(left), "%s %dx%d", ci->fname, ci->w, ci->h);
 	drw_text(drw, 0, y, xw.w/2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", image.zoomed ? "" : scale->name, (int)(image.z * 100.0), fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", ci->zoomed ? "" : scale->name, (int)(ci->z * 100.0), (int) fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, xw.w/2, y, xw.w/2, bh, xw.w/2 - (tw + lrpad / 2), right, 0);
 
@@ -247,7 +247,7 @@ bpress(XEvent *e)
 	for (i = 0; i < LENGTH(mshortcuts); i++)
 		if (e->xbutton.button == mshortcuts[i].b && mshortcuts[i].func)
 			if (mshortcuts[i].func(&(mshortcuts[i].arg))) {
-				img_render(&image);
+				img_render(ci);
 				drawbar();
 			}
 }
@@ -265,7 +265,7 @@ expose(XEvent *e)
 	if (0 == e->xexpose.count) {
 		//TODO currently resize is a bit sluggish (noticeable on big images)
 		//image.redraw = 0;
-		img_render(&image);
+		img_render(ci);
 		//XSync(xw.dpy, True);
 		drawbar();
 	}
@@ -283,7 +283,7 @@ kpress(XEvent *e)
 		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
 		&& shortcuts[i].func)
 			if (shortcuts[i].func(&(shortcuts[i].arg))) { /* if the func returns something, reload */
-				img_render(&image);
+				img_render(ci);
 				drawbar();
 			}
 }
@@ -304,90 +304,41 @@ configurenotify(XEvent *e)
 	}
 }
 
-int
-check_img(char *file)
+void
+getsize(const char *file)
 {
 	DIR *dir;
-	if (access(file, F_OK) != -1) { /* the file exist */
-		if (imlib_load_image(file)) { /* is an image */
-			filenames[filecnt] = file; //store the filename
-			filecnt++; //+1 for every new entry
-			return 0;
-		} else if ((dir = opendir(file))) { /* is a directory */
-			closedir(dir);
-			return 1;
-		} else /* file cant be loaded */
-			return -1;
-	} else { /* the file doesn't exist */
-		if (!quiet)
-			fprintf(stderr, "mage: %s: No such file or directory\n", file);
-		return 2;
-	}
-	return 2;
+	struct dirent *e;
+
+	if ((dir = opendir(file))) {
+		while ((e = readdir(dir))) {
+			if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
+				continue;
+			if (e->d_type == DT_REG)
+				filecnt++;
+		}
+		closedir(dir);
+	} else if (!quiet)
+		fprintf(stderr, "mage: Directory '%s', cannot be opened.\n", file);
 }
 
-//needs to be simplified further
 void
-check_file(char *file)
+addfile(const char *file)
 {
-	char *filename, **dirnames;
-	DIR *dir;
-	int dircnt, diridx;
-	unsigned int first;
-	size_t len;
-	struct dirent *dentry;
-	int ret;
-
-	if (recursive)
-		if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
-			die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
-
-	/* check if it's an image */
-	if (!check_img(file))
-		return;
-
-	dircnt = 512;
-	diridx = first = 1;
-	dirnames = ecalloc(dircnt, sizeof(char *));
-	dirnames[0] = file;
-
-	/* handle directory */
-	if ((dir = opendir(file))) {
-		while (diridx > 0) {
-			file = dirnames[--diridx];
-			while ((dentry = readdir(dir))) {
-				/* ignore self and parent directories */
-				if (!strcmp(dentry->d_name, ".") || !strcmp(dentry->d_name, ".."))
-					continue;
-				/* '\0' null terminated bits also need space */
-				len = strlen(file) + 1 + strlen(dentry->d_name) + 1;
-				filename = ecalloc(len, sizeof(char));
-				snprintf(filename, len, "%s/%s", file, dentry->d_name);
-				if (recursive)
-					check_file(filename);
-				else {
-					//FIXME Don't realloc for every file
-					if (!(filenames = realloc(filenames, (filecnt + 1) * sizeof (char *))))
-						die("cannot realloc %u bytes:", (filecnt + 1) * sizeof (char *));
-					ret = check_img(filename);
-					if (ret == 1) {
-						if (!quiet)
-							fprintf(stderr, "mage: %s: Ignoring directory\n", filename);
-						free(filename);
-					} else if (ret == 2)
-						free(filename);
-				}
-			}
-			closedir(dir);
-			if (!first)
-				free(file);
-			else
-				first = 0;
-		}
-		free(dirnames);
-		return;
-	} else	/* opendir() failed */
-		return;
+	//if ((m = imlib_load_image(file))) { /* can be opened */
+		images[fileidx].fname = file;
+		//images[fileidx].im = m;
+		//imlib_context_set_image(m);
+		//images[fileidx].w = imlib_image_get_width();
+		//images[fileidx].h = imlib_image_get_height();
+		images[fileidx].checkpan = 0;
+		images[fileidx].zoomed = 0;
+		fileidx++;
+	//} else {
+	//	if (!quiet)
+	//		fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
+	//	return;
+	//}
 }
 
 void
@@ -396,12 +347,18 @@ readstdin(void)
 	size_t n;
 	ssize_t len;
 	char *line = NULL;
+	size_t i = filecnt;
+	int sizecnt = 2;
 
 	while ((len = getline(&line, &n, stdin)) > 0) {
 		if (line[len-1] == '\n')
 			line[len-1] = '\0';
-		check_file(line);
+		addfile(line);
 		line = NULL;
+		if (filecnt >= i) {
+			images = realloc(images, sizeof(Image *) * sizecnt * i);
+			sizecnt++;
+		}
 	}
 }
 
@@ -417,7 +374,7 @@ setup(void)
 
 	if (!scale)
 		scale = &scalemodes[0];
-	image.z = 1.0;
+	ci->z = 1.0;
 
 	/* init screen */
 	xw.scr   = DefaultScreen(xw.dpy);
@@ -486,8 +443,7 @@ setup(void)
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 
-	img_load(&image, filenames[fileidx]);
-	img_render(&image);
+	img_render(ci);
 }
 
 void
@@ -502,6 +458,9 @@ main(int argc, char *argv[])
 	int i, fs = 0;
 	char *mode;
 	void (*scalefunc)(Image *im);
+
+	if (!argv[0])
+		usage();
 
 	ARGBEGIN {
 	case 'f':
@@ -547,20 +506,50 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND
 
-	if (!argv[0])
-		usage();
+	DIR *dir;
 
-	filenames = ecalloc(argc, sizeof(char *));
+	struct dirent *e;
+
+	if (recursive) {
+		for (i = 0; i < argc; i++)
+			getsize(argv[i]); /* count images in dir */
+		images = ecalloc(filecnt, sizeof(Image));
+		for (i = 0; i < argc; i++) {
+			if ((dir = opendir(argv[i]))) {
+				while ((e = readdir(dir))) {
+					if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
+						continue;
+					if (e->d_type == DT_REG) {
+						int len = strlen(argv[i]) + 1 + strlen(e->d_name) + 1;
+						char *f = ecalloc(len, sizeof(char));
+						snprintf(f, len, "%s/%s", argv[i], e->d_name);
+						addfile(f);
+					}
+				}
+			}
+			closedir(dir);
+		}
+	} else if (!strcmp(argv[0], "-"))
+		filecnt = 1024; /* big arbitrary size */
+	else
+		filecnt = argc;
+
+	if (!recursive)
+		images = ecalloc(filecnt, sizeof(Image));
+
+	fileidx = 0;
 
 	if (!strcmp(argv[0], "-"))
 		readstdin();
-	else /* handle images or directories */
+	else if (!recursive) /* handle images */
 		for (i = 0; i < argc; i++)
-			check_file(argv[i]);
+			addfile(argv[i]);
+	fileidx = 0;
 
 	if (!filecnt)
-		//exit(1);
 		die("mage: No more images to display");
+
+	ci = images;
 
 	setup();
 
