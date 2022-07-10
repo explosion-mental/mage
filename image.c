@@ -7,8 +7,11 @@ img_render(Image *img)
 
 	img->im = imlib_load_image(img->fname);
 	imlib_context_set_image(img->im);
-	img->w = imlib_image_get_width();
-	img->h = imlib_image_get_height();
+
+	if (!img->w)
+		img->w = imlib_image_get_width();
+	if (!img->h)
+		img->h = imlib_image_get_height();
 
 	if (!img->zoomed) { /* if the image isn't zoomed */
 		scale->arrange(img);
@@ -56,14 +59,11 @@ img_render(Image *img)
 	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
 	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
 
-	/* render image */
- 	imlib_context_set_drawable(pm);
-
 	/* config context */
 	imlib_context_set_anti_alias(antialiasing);
 
-	/* context */
-	imlib_context_set_image(img->im);
+	/* render image */
+ 	imlib_context_set_drawable(pm);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
 	/* window background */
