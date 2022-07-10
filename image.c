@@ -1,41 +1,4 @@
 void
-im_destroy()
-{
-//after the 'cache'ing images this function should accept `Image *` as an
-//argument in order to reuse this
-	if (ci->im) {
-		imlib_free_image();
-	//	imlib_free_image_and_decache();
-		ci->im = NULL;
-	}
-}
-
-void
-scalewidth(Image *im)
-{
-	im->z = MIN((float) winw / (float) im->w, maxzoom / 100.0);
-}
-
-void
-scaleheight(Image *im)
-{
-	im->z = MIN((float) winh / (float) im->h, maxzoom / 100.0);
-}
-
-void
-scaledown(Image *im)
-{
-	im->z = MIN((float) winw / (float) im->w, (float) winh / (float) im->h);
-	im->z = MIN(im->z, 1.0);
-}
-
-void
-scalefit(Image *im)
-{
-	im->z = MIN((float) winw / (float) im->w, (float) winh / (float) im->h);
-}
-
-void
 img_render(Image *img)
 {
 	int sx, sy, sw, sh; //source
@@ -148,3 +111,29 @@ img_zoom(Image *img, float z)
 		img->zoomed = 1;
 	}
 }
+
+void
+scalewidth(Image *im)
+{
+	im->z = MIN((float) winw / (float) im->w, maxzoom / 100.0);
+}
+
+void
+scaleheight(Image *im)
+{
+	im->z = MIN((float) winy / (float) im->h, maxzoom / 100.0);
+}
+
+void
+scaledown(Image *im)
+{
+	im->z = MIN((float) winw / (float) im->w, (float) winy / (float) im->h);
+	im->z = MIN(im->z, 1.0);
+}
+
+void
+scalefit(Image *im)
+{
+	im->z = MIN((float) winw / (float) im->w, (float) winy / (float) im->h);
+}
+
