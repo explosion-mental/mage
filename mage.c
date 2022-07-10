@@ -137,7 +137,7 @@ static Colormap cmap;
 static Window win;
 static Visual *visual = NULL;
 static int depth, screen;
-//static int sw, sh; /* X display screen geometry width, height */
+static int scrw, scrh; /* X display screen geometry width, height */
 static int winw, winh;
 //static int winx, winy;
 static Pixmap pm;
@@ -384,6 +384,8 @@ setup(void)
 
 	/* init screen */
 	screen = DefaultScreen(dpy);
+	scrw = DisplayWidth(dpy, screen);
+	scrh = DisplayHeight(dpy, screen);
 	visual = DefaultVisual(dpy, screen);
 	cmap = DefaultColormap(dpy, screen);
 	depth = DefaultDepth(dpy, screen);
