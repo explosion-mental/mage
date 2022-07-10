@@ -82,7 +82,6 @@ static void configurenotify(XEvent *e);
 
 /* image */
 static void im_destroy(void);
-static int img_load(Image *img);
 static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
 static void check_pan(Image *img);
@@ -372,7 +371,7 @@ setup(void)
 {
 	int i;
 	XTextProperty prop;
-	XSetWindowAttributes attrs;
+	XSetWindowAttributes wa;
 	XGCValues gcval;
 
 	if (!(dpy = XOpenDisplay(NULL)))
@@ -394,19 +393,18 @@ setup(void)
 	winw = winwidth;
 	winh = winheight;
 
-	//xw.attrs.background_pixel = 0;
-	//xw.attrs.border_pixel = 0;
- 	attrs.colormap = cmap;
-	attrs.save_under = False;
-	attrs.bit_gravity = CenterGravity;
-	attrs.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask |
-	                       ButtonPressMask; //ButtonMotionMask
+	//wa.background_pixel = 0;
+	//wa.border_pixel = 0;
+ 	wa.colormap = cmap;
+	wa.save_under = False;
+	wa.bit_gravity = CenterGravity;
+	wa.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask |
+			ButtonPressMask; //ButtonMotionMask
 
 	win = XCreateWindow(dpy, XRootWindow(dpy, screen), 0, 0, winw, winh, 0,
-			depth, InputOutput, visual, 0, &attrs);
+			depth, InputOutput, visual, 0, &wa);
 
-	XSelectInput(dpy, win, StructureNotifyMask | ExposureMask | KeyPressMask |
-	                       ButtonPressMask);
+	XSelectInput(dpy, win, wa.event_mask);
 
 	/* init atoms */
 	atom[WMDelete] = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
