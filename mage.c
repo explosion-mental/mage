@@ -351,19 +351,27 @@ readstdin(void)
 	size_t n;
 	ssize_t len;
 	char *line = NULL;
-	size_t i = filecnt;
+	size_t oldi = filecnt; /* big arbitrary size */
 	int sizecnt = 2;
 
+	/* read stdin */
 	while ((len = getline(&line, &n, stdin)) > 0) {
 		if (line[len-1] == '\n')
 			line[len-1] = '\0';
 		addfile(line);
 		line = NULL;
-		if (filecnt >= i) {
-			images = realloc(images, sizeof(Image *) * sizecnt * i);
+		if (fileidx >= oldi) {
+			/* need more space, realloc */
+			if (!(images = realloc(images, sizeof(Image) * sizecnt * oldi)))
+				die("cannot realloc %u bytes:", sizeof(Image) * sizecnt * oldi);
 			sizecnt++;
 		}
 	}
+
+	/* realloc exactly the number of files that can be opened */
+	filecnt = fileidx;
+	if (!(images = realloc(images, sizeof(Image) * fileidx)))
+		die("cannot realloc %u bytes:", sizeof(Image) * fileidx);
 }
 
 void
