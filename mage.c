@@ -50,6 +50,11 @@ struct ScaleMode {
 };
 
 typedef struct {
+	const char *name;
+	void (*arrange)(void);
+} Layout;
+
+typedef struct {
 	unsigned int b;
 	int (*func)(const Arg *);
 	const Arg arg;
@@ -78,13 +83,16 @@ static void kpress(XEvent *e);
 static void configurenotify(XEvent *e);
 
 /* image */
-static void img_render(Image *img);
 static void img_zoom(Image *img, float z);
 static void check_pan(Image *img);
 static void scaledown(Image *im);
 static void scaleheight(Image *im);
 static void scalewidth(Image *im);
 static void scalefit(Image *im);
+
+/* layouts */
+static void singleview(void);
+static void thumbnailview(void);
 
 /* commands */
 static int togglebar(const Arg *arg);
@@ -118,6 +126,7 @@ static unsigned int filecnt = 0;
 static size_t fileidx;
 static Image *ci, *images; /* current image and images */
 static const ScaleMode *scale; /* scalemode */
+static const Layout *lt; /* scalemode */
 static Drw *drw;
 static Clr **scheme;
 static int running = 1;
@@ -238,7 +247,7 @@ bpress(XEvent *e)
 	for (i = 0; i < LENGTH(mshortcuts); i++)
 		if (e->xbutton.button == mshortcuts[i].b && mshortcuts[i].func)
 			if (mshortcuts[i].func(&(mshortcuts[i].arg))) {
-				img_render(ci);
+				lt->arrange();
 				drawbar();
 			}
 }
@@ -254,7 +263,7 @@ void
 expose(XEvent *e)
 {
 	if (e->xexpose.count == 0) {
-		img_render(ci);
+		lt->arrange();
 		drawbar();
 	}
 }
@@ -271,7 +280,7 @@ kpress(XEvent *e)
 		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
 		&& shortcuts[i].func)
 			if (shortcuts[i].func(&(shortcuts[i].arg))) { /* if the func returns something, reload */
-				img_render(ci);
+				lt->arrange();
 				drawbar();
 			}
 }
@@ -381,6 +390,8 @@ setup(void)
 
 	if (!scale)
 		scale = &scalemodes[0];
+	if (!lt)
+		lt = &layouts[0];
 	ci->z = 1.0;
 
 	/* init screen */
@@ -450,7 +461,7 @@ setup(void)
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
 
-	img_render(ci);
+	lt->arrange();
 }
 
 void

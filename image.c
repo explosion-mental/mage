@@ -1,55 +1,55 @@
 void
-img_render(Image *img)
+singleview(void)
 {
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
 	//float z = img->z;
 
-	img->im = imlib_load_image(img->fname);
-	imlib_context_set_image(img->im);
+	ci->im = imlib_load_image(ci->fname);
+	imlib_context_set_image(ci->im);
 
-	if (!img->w)
-		img->w = imlib_image_get_width();
-	if (!img->h)
-		img->h = imlib_image_get_height();
+	if (!ci->w)
+		ci->w = imlib_image_get_width();
+	if (!ci->h)
+		ci->h = imlib_image_get_height();
 
-	if (!img->zoomed) { /* if the image isn't zoomed */
-		scale->arrange(img);
+	if (!ci->zoomed) { /* if the image isn't zoomed */
+		scale->arrange(ci);
 		//if (!(ABS(img->z - z) > 1.0 / MAX(img->w, img->h))) {
 		//	img->z = z;
 		//	img->x = xw.w / 2 - (xw.w / 2 - img->x) * img->z;
 		//	img->y = xw.h / 2 - (xw.h / 2 - img->y) * img->z;
 		//}
-		img->checkpan = 1;
+		ci->checkpan = 1;
 	}
 
-	if (img->checkpan) {
-		check_pan(img);
-		img->checkpan = 0;
+	if (ci->checkpan) {
+		check_pan(ci);
+		ci->checkpan = 0;
 	}
 
  	/* calculate source and destination offsets */
-	if (img->x <= 0) {
-		sx = -img->x / img->z;
-		sw = winw / img->z;
+	if (ci->x <= 0) {
+		sx = -ci->x / ci->z;
+		sw = winw / ci->z;
 		dx = 0;
 		dw = winw;
 	} else {
 		sx = 0;
-		sw = img->w;
-		dx = img->x;
-		dw = img->w * img->z;
+		sw = ci->w;
+		dx = ci->x;
+		dw = ci->w * ci->z;
 	}
-	if (img->y <= 0) {
-		sy = -img->y / img->z;
-		sh = winy / img->z;
+	if (ci->y <= 0) {
+		sy = -ci->y / ci->z;
+		sh = winy / ci->z;
 		dy = 0;
 		dh = winy;
 	} else {
 		sy = 0;
-		sh = img->h;
-		dy = img->y;
-		dh = img->h * img->z;
+		sh = ci->h;
+		dy = ci->y;
+		dh = ci->h * ci->z;
 	}
 
 	/* clear and set pixmap */
@@ -65,6 +65,110 @@ img_render(Image *img)
 	/* render image */
  	imlib_context_set_drawable(pm);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
+
+	/* window background */
+	XSetWindowBackgroundPixmap(dpy, win, pm);
+	XClearWindow(dpy, win);
+}
+
+
+/* TODO finish thumbnail mode
+ * - correctly place the first image
+ * - cancel rendering thumbs if there is user input
+ */
+
+#define THUMB_SIZE	(128)
+#define THUMB_PAD	(8)
+
+int
+calc_block(int dymension, int padding, int thumb_size ) {
+	/* how many thumbs fit in the dymension */
+	int fit_num_raw = dymension / ( thumb_size + padding );
+	/* always ignore the decimals and floor the value */
+	//int fit_num = math_floor( fit_num_raw )
+	return fit_num_raw;
+}
+
+void
+thumbnailview(void)
+{
+	int i, margin;
+	//int width = 0, store;
+	unsigned int rows, cols;
+	//unsigned int top, bottom;
+	unsigned int n;
+	//int hpad, wpad, thumbpad;
+
+	margin = 10;
+	Image *t = images;
+
+	/* clear and set pixmap */
+	if (pm)
+		XFreePixmap(dpy, pm);
+	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
+	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
+	imlib_context_set_drawable(pm);
+
+	//int tmpw, tmph;
+
+	cols = calc_block( winw, THUMB_PAD, THUMB_SIZE );
+	rows = calc_block( winh, THUMB_PAD, THUMB_SIZE );
+
+
+	printf("COLS: %d\n", cols);
+	printf("ROWS: %d\n", rows);
+	printf("WIDTH: %d\n", winw);
+	printf("HEIGHT: %d\n", winh);
+
+	n = cols * rows;
+	if (n > filecnt)
+		n = filecnt;
+	int x = 0, y = 0;
+
+	for (i = 0; i < n; i++) {
+		/* cancel if there is user input */
+		if (XPending(dpy) != 0)
+			break;
+
+		if (!t[i].im)
+			t[i].im = imlib_load_image(t[i].fname);
+		imlib_context_set_image(t[i].im);
+
+		if (!t[i].w)
+			t[i].w = imlib_image_get_width();
+		if (!t[i].h)
+			t[i].h = imlib_image_get_height();
+
+		imlib_context_set_anti_alias(1); //faster but less quality
+
+
+		t[i].y = i * THUMB_SIZE;
+
+		/* width and height no bigger than size */
+		t[i].w = MAX(THUMB_SIZE, t[i].w / THUMB_SIZE); //thumbsize or half the image, needs more operations
+		t[i].h = MAX(THUMB_SIZE, t[i].h / THUMB_SIZE);
+
+		int j;
+
+		if (i == cols) {
+			/* first row filled */
+			x = margin;
+			y += THUMB_SIZE + margin;
+		} else {
+			x += THUMB_SIZE + margin;
+		}
+
+
+		t[i].x = x;
+		t[i].y = y;
+		//t[i].x = i * t[i].w + cols * i + margin;	//take the count
+
+
+		//t[i].y = y;
+		//t[i].x = i * t[i].w + i/ xw.w + margin;
+
+		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
+	}
 
 	/* window background */
 	XSetWindowBackgroundPixmap(dpy, win, pm);

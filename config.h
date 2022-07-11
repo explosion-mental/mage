@@ -19,6 +19,12 @@ static const ScaleMode scalemodes[] = {
 	{ "height", scaleheight },
 };
 
+static const Layout layouts[] = {
+	/* symbol   arrange function */
+	{ "[M]",   singleview },  /* first entry is default */
+	{ "===",   thumbnailview },
+};
+
 static const char *colors[][2] = {
       			/*  fg       bg     */
 	[SchemeNorm]  = { "#eeeeee", "#005577" },
