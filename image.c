@@ -102,12 +102,6 @@ thumbnailview(void)
 	margin = 10;
 	Image *t = images;
 
-	/* clear and set pixmap */
-	if (pm)
-		XFreePixmap(dpy, pm);
-	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
-	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
-	imlib_context_set_drawable(pm);
 
 	//int tmpw, tmph;
 
@@ -125,10 +119,18 @@ thumbnailview(void)
 		n = filecnt;
 	int x = 0, y = 0;
 
+	/* clear and set pixmap */
+	if (pm)
+		XFreePixmap(dpy, pm);
+	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
+	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
+	imlib_context_set_drawable(pm);
+
 	for (i = 0; i < n; i++) {
 		/* cancel if there is user input */
-		if (XPending(dpy) != 0)
+		if (XPending(dpy) != 0) {
 			break;
+		}
 
 		if (!t[i].im)
 			t[i].im = imlib_load_image(t[i].fname);
@@ -141,21 +143,19 @@ thumbnailview(void)
 
 		imlib_context_set_anti_alias(1); //faster but less quality
 
-
-		t[i].y = i * THUMB_SIZE;
+		//t[i].y = i * THUMB_SIZE;
 
 		/* width and height no bigger than size */
 		t[i].w = MAX(THUMB_SIZE, t[i].w / THUMB_SIZE); //thumbsize or half the image, needs more operations
 		t[i].h = MAX(THUMB_SIZE, t[i].h / THUMB_SIZE);
 
-		int j;
+		//int j;
 
-		if (i == cols) {
-			/* first row filled */
+		if ((i % cols) == 0) { /* first row filled */
 			x = margin;
-			y += THUMB_SIZE + margin;
-		} else {
-			x += THUMB_SIZE + margin;
+			y += THUMB_SIZE + margin; /* move to the next row */
+		} else { /* there is space */
+			x += THUMB_SIZE + margin; /* move to the next col */
 		}
 
 
