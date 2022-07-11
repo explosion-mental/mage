@@ -262,8 +262,15 @@ cmessage(XEvent *e)
 void
 expose(XEvent *e)
 {
-	if (e->xexpose.count == 0) {
-		lt->arrange();
+	XExposeEvent *ev = &e->xexpose;
+
+	if (ev->count == 0) {
+		if (winw != ev->width || winh != ev->height) {
+			winw = ev->width;
+			winh = ev->height;
+			lt->arrange();
+		}
+		XSync(dpy, True);
 		drawbar();
 	}
 }

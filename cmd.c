@@ -10,7 +10,7 @@ togglebar(const Arg *arg)
 	else
 		bh = 0;
 	winy = winh - bh;
-	XSync(dpy, False);
+	//XSync(dpy, False);
 
 	return 1;
 }
