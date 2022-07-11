@@ -68,56 +68,46 @@ typedef struct {
 } Shortcut;
 
 /* function declarations */
-static void cleanup(void);
-static void run(void);
-static void usage(void);
-static void xhints(void);
-static void setup(void);
-static void drawbar(void);
-
-/* X events */
-static void bpress(XEvent *e);
-static void cmessage(XEvent *e);
-static void expose(XEvent *e);
-static void kpress(XEvent *e);
-static void configurenotify(XEvent *e);
-
-/* image */
-static void img_zoom(Image *img, float z);
-static void check_pan(Image *img);
-static void scaledown(Image *im);
-static void scaleheight(Image *im);
-static void scalewidth(Image *im);
-static void scalefit(Image *im);
-
-/* layouts */
-static void singleview(void);
-static void thumbnailview(void);
-
-/* commands */
-static int togglebar(const Arg *arg);
-static int quit(const Arg *arg);
-static int flipvert(const Arg *arg);
-static int fliphorz(const Arg *arg);
 static int advance(const Arg *arg);
-static int printfile(const Arg *arg);
-static int zoom(const Arg *arg);
-static int set_zoom(const Arg *arg);
-static int togglefullscreen(const Arg *arg);
+static int cyclescale(const Arg *arg);
+static int first(const Arg *arg);
+static int fliphorz(const Arg *arg);
+static int flipvert(const Arg *arg);
+static int last(const Arg *arg);
 static int panhorz(const Arg *arg);
 static int panvert(const Arg *arg);
-static int first(const Arg *arg);
-static int last(const Arg *arg);
-static int rotate(const Arg *arg);
-static int toggleantialias(const Arg *arg);
+static int printfile(const Arg *arg);
+static int quit(const Arg *arg);
 static int reload(const Arg *arg);
-static int cyclescale(const Arg *arg);
+static int rotate(const Arg *arg);
 static int savestate(const Arg *arg);
-
-/* handling files */
+static int set_zoom(const Arg *arg);
+static int toggleantialias(const Arg *arg);
+static int togglebar(const Arg *arg);
+static int togglefullscreen(const Arg *arg);
+static int zoom(const Arg *arg);
 static void addfile(const char *file);
+static void bpress(XEvent *e);
+static void check_pan(Image *img);
+static void cleanup(void);
+static void cmessage(XEvent *e);
+static void configurenotify(XEvent *e);
+static void drawbar(void);
+static void expose(XEvent *e);
 static void getsize(const char *file);
+static void img_zoom(Image *img, float z);
+static void kpress(XEvent *e);
 static void readstdin(void);
+static void run(void);
+static void scaledown(Image *im);
+static void scalefit(Image *im);
+static void scaleheight(Image *im);
+static void scalewidth(Image *im);
+static void setup(void);
+static void singleview(void);
+static void thumbnailview(void);
+static void usage(void);
+static void xhints(void);
 
 /* variables */
 static Atom atom[WMLast];
