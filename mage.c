@@ -154,6 +154,38 @@ static void (*handler[LASTEvent])(XEvent *) = {
 #include "cmd.c"	//config.h commands
 
 void
+addfile(const char *file)
+{
+	if ((imlib_load_image(file))) { /* can be opened */
+		images[fileidx].fname = file;
+		//images[fileidx].im = m;
+		//imlib_context_set_image(m);
+		//images[fileidx].w = imlib_image_get_width();
+		//images[fileidx].h = imlib_image_get_height();
+		images[fileidx].checkpan = 0;
+		images[fileidx].zoomed = 0;
+		fileidx++;
+	} else {
+		if (!quiet)
+			fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
+		return;
+	}
+}
+
+void
+bpress(XEvent *e)
+{
+	unsigned int i;
+
+	for (i = 0; i < LENGTH(mshortcuts); i++)
+		if (e->xbutton.button == mshortcuts[i].b && mshortcuts[i].func)
+			if (mshortcuts[i].func(&(mshortcuts[i].arg))) {
+				lt->arrange();
+				drawbar();
+			}
+}
+
+void
 cleanup(void)
 {
 	unsigned int i;
@@ -172,6 +204,25 @@ cleanup(void)
 	XDestroyWindow(dpy, win);
 	XSync(dpy, False);
 	XCloseDisplay(dpy);
+}
+
+void
+cmessage(XEvent *e)
+{
+	if (e->xclient.data.l[0] == atom[WMDelete])
+		running = 0;
+}
+
+void
+configurenotify(XEvent *e)
+{
+	XConfigureEvent *ev = &e->xconfigure;
+
+	if (winw != ev->width || winh != ev->height) {
+		winw = ev->width;
+		winh = ev->height;
+		drw_resize(drw, winw, winh);
+	}
 }
 
 void
@@ -202,54 +253,6 @@ drawbar(void)
 }
 
 void
-run(void)
-{
-	XEvent ev;
-
-	while (running && !XNextEvent(dpy, &ev))
-		if (handler[ev.type])
-			handler[ev.type](&ev); /* call handler */
-}
-
-void
-xhints(void)
-{
-	XClassHint class = {.res_name = wmname, .res_class = "mage"};
-	XWMHints wm = {.flags = InputHint, .input = True};
-	XSizeHints *sizeh = NULL;
-
-	if (!(sizeh = XAllocSizeHints()))
-		die("mage: Unable to allocate size hints");
-
-	sizeh->flags = PSize;
-	sizeh->height = winh;
-	sizeh->width = winw;
-
-	XSetWMProperties(dpy, win, NULL, NULL, NULL, 0, sizeh, &wm, &class);
-	XFree(sizeh);
-}
-
-void
-bpress(XEvent *e)
-{
-	unsigned int i;
-
-	for (i = 0; i < LENGTH(mshortcuts); i++)
-		if (e->xbutton.button == mshortcuts[i].b && mshortcuts[i].func)
-			if (mshortcuts[i].func(&(mshortcuts[i].arg))) {
-				lt->arrange();
-				drawbar();
-			}
-}
-
-void
-cmessage(XEvent *e)
-{
-	if (e->xclient.data.l[0] == atom[WMDelete])
-		running = 0;
-}
-
-void
 expose(XEvent *e)
 {
 	XExposeEvent *ev = &e->xexpose;
@@ -262,35 +265,6 @@ expose(XEvent *e)
 		}
 		XSync(dpy, True);
 		drawbar();
-	}
-}
-void
-kpress(XEvent *e)
-{
-	const XKeyEvent *ev = &e->xkey;
-	unsigned int i;
-	KeySym keysym;
-
-	keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0, 0);
-	for (i = 0; i < LENGTH(shortcuts); i++)
-		if (keysym == shortcuts[i].keysym
-		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
-		&& shortcuts[i].func)
-			if (shortcuts[i].func(&(shortcuts[i].arg))) { /* if the func returns something, reload */
-				lt->arrange();
-				drawbar();
-			}
-}
-
-void
-configurenotify(XEvent *e)
-{
-	XConfigureEvent *ev = &e->xconfigure;
-
-	if (winw != ev->width || winh != ev->height) {
-		winw = ev->width;
-		winh = ev->height;
-		drw_resize(drw, winw, winh);
 	}
 }
 
@@ -327,22 +301,21 @@ getsize(const char *file)
 }
 
 void
-addfile(const char *file)
+kpress(XEvent *e)
 {
-	if ((imlib_load_image(file))) { /* can be opened */
-		images[fileidx].fname = file;
-		//images[fileidx].im = m;
-		//imlib_context_set_image(m);
-		//images[fileidx].w = imlib_image_get_width();
-		//images[fileidx].h = imlib_image_get_height();
-		images[fileidx].checkpan = 0;
-		images[fileidx].zoomed = 0;
-		fileidx++;
-	} else {
-		if (!quiet)
-			fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
-		return;
-	}
+	const XKeyEvent *ev = &e->xkey;
+	unsigned int i;
+	KeySym keysym;
+
+	keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0, 0);
+	for (i = 0; i < LENGTH(shortcuts); i++)
+		if (keysym == shortcuts[i].keysym
+		&& CLEANMASK(shortcuts[i].mod) == CLEANMASK(ev->state)
+		&& shortcuts[i].func)
+			if (shortcuts[i].func(&(shortcuts[i].arg))) { /* if the func returns something, reload */
+				lt->arrange();
+				drawbar();
+			}
 }
 
 void
@@ -372,6 +345,16 @@ readstdin(void)
 	filecnt = fileidx;
 	if (!(images = realloc(images, sizeof(Image) * fileidx)))
 		die("cannot realloc %u bytes:", sizeof(Image) * fileidx);
+}
+
+void
+run(void)
+{
+	XEvent ev;
+
+	while (running && !XNextEvent(dpy, &ev))
+		if (handler[ev.type])
+			handler[ev.type](&ev); /* call handler */
 }
 
 void
@@ -465,6 +448,24 @@ void
 usage(void)
 {
 	die("usage: %s [-fhpqrv] [-s scalemode] [-n class] file...", argv0);
+}
+
+void
+xhints(void)
+{
+	XClassHint class = {.res_name = wmname, .res_class = "mage"};
+	XWMHints wm = {.flags = InputHint, .input = True};
+	XSizeHints *sizeh = NULL;
+
+	if (!(sizeh = XAllocSizeHints()))
+		die("mage: Unable to allocate size hints");
+
+	sizeh->flags = PSize;
+	sizeh->height = winh;
+	sizeh->width = winw;
+
+	XSetWMProperties(dpy, win, NULL, NULL, NULL, 0, sizeh, &wm, &class);
+	XFree(sizeh);
 }
 
 int
