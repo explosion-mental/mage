@@ -550,10 +550,10 @@ main(int argc, char *argv[])
 						addfile(f);
 					}
 				}
+				closedir(dir);
 			} else {
 				addfile(argv[i]);
 			}
-			closedir(dir);
 		}
 	} else if (!strcmp(argv[0], "-"))
 		filecnt = 1024; /* big arbitrary size */
