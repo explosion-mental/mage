@@ -18,8 +18,8 @@ togglebar(const Arg *arg)
 int
 advance(const Arg *arg)
 {
-	if ((arg->i > 0 && fileidx + arg->i < filecnt)
-	|| (arg->i < 0 && fileidx >= -arg->i)) {
+	if ((arg->i > 0 && (int) fileidx + arg->i < filecnt)
+	|| (arg->i < 0 && (int) fileidx >= -arg->i)) {
 		fileidx = fileidx + arg->i;
 		ci = ci + arg->i;
 		ci = &images[fileidx];
