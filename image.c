@@ -7,10 +7,8 @@ singleview(void)
 	ci->im = imlib_load_image(ci->fname);
 	imlib_context_set_image(ci->im);
 
-	if (!ci->w)
-		ci->w = imlib_image_get_width();
-	if (!ci->h)
-		ci->h = imlib_image_get_height();
+	ci->w = imlib_image_get_width();
+	ci->h = imlib_image_get_height();
 
 	if (!ci->zoomed) { /* if the image isn't zoomed */
 		scale->arrange(ci);
