@@ -139,6 +139,13 @@ thumbnailview(void)
 		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
 	}
 
+	/* draw rectangle around the current image */
+	XGCValues gcval;
+	GC c;
+	gcval.foreground = scheme[SchemeNorm][ColFg].pixel;
+	c = XCreateGC(dpy, win, GCForeground, &gcval); //context for Pixmap
+	XDrawRectangle(dpy, pm, c, ci->x - 3, ci->y - 3, ci->w + 6, ci->h + 6);
+
 	/* update window */
 	XSetWindowBackgroundPixmap(dpy, win, pm);
 	XClearWindow(dpy, win);
