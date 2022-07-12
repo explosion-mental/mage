@@ -3,7 +3,6 @@ singleview(void)
 {
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
-	//float z = img->z;
 
 	ci->im = imlib_load_image(ci->fname);
 	imlib_context_set_image(ci->im);
@@ -15,11 +14,6 @@ singleview(void)
 
 	if (!ci->zoomed) { /* if the image isn't zoomed */
 		scale->arrange(ci);
-		//if (!(ABS(img->z - z) > 1.0 / MAX(img->w, img->h))) {
-		//	img->z = z;
-		//	img->x = xw.w / 2 - (xw.w / 2 - img->x) * img->z;
-		//	img->y = xw.h / 2 - (xw.h / 2 - img->y) * img->z;
-		//}
 		ci->checkpan = 1;
 	}
 
@@ -71,55 +65,41 @@ singleview(void)
 	XClearWindow(dpy, win);
 }
 
-
-/* TODO finish thumbnail mode
- * - correctly place the first image
- * - cancel rendering thumbs if there is user input
- */
+/* TODO:
+ * - move to the next rows */
 
 #define THUMB_SIZE	(128)
 #define THUMB_PAD	(8)
 
 int
-calc_block(int dymension, int padding, int thumb_size ) {
-	/* how many thumbs fit in the dymension */
-	int fit_num_raw = dymension / ( thumb_size + padding );
-	/* always ignore the decimals and floor the value */
-	//int fit_num = math_floor( fit_num_raw )
-	return fit_num_raw;
+calc_block(int dimension, int pad, int size)
+{
+	return dimension / (size + padding);
 }
 
 void
 thumbnailview(void)
 {
-	int i, margin;
-	//int width = 0, store;
-	unsigned int rows, cols;
-	//unsigned int top, bottom;
-	unsigned int n;
-	//int hpad, wpad, thumbpad;
-
-	margin = 10;
+	int i, margin = 10;
+	int x = 0, y = 0;
+	unsigned int rows, cols, n;
 	Image *t = images;
-
-
-	//int tmpw, tmph;
 
 	cols = calc_block( winw, THUMB_PAD, THUMB_SIZE );
 	rows = calc_block( winh, THUMB_PAD, THUMB_SIZE );
 
+	/* debug */
+//	printf("COLS: %d\n", cols);
+//	printf("ROWS: %d\n", rows);
+//	printf("WIDTH: %d\n", winw);
+//	printf("HEIGHT: %d\n", winh);
 
-	printf("COLS: %d\n", cols);
-	printf("ROWS: %d\n", rows);
-	printf("WIDTH: %d\n", winw);
-	printf("HEIGHT: %d\n", winh);
+	n = cols * rows; /* max number of images to show */
 
-	n = cols * rows;
-	if (n > filecnt)
+	if (n > filecnt) /* make sure it isn't more than all the images */
 		n = filecnt;
-	int x = 0, y = 0;
 
-	/* clear and set pixmap */
+	/* clean pixmap (our canvas) */
 	if (pm)
 		XFreePixmap(dpy, pm);
 	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
@@ -127,13 +107,16 @@ thumbnailview(void)
 	imlib_context_set_drawable(pm);
 
 	for (i = 0; i < n; i++) {
-		/* cancel if there is user input */
-		if (XPending(dpy) != 0) {
+
+		/* cancel if there is user input.
+		 * TODO: when switching too fast with images none it's
+		 * displayed */
+		if (XPending(dpy) != 0)
 			break;
-		}
 
 		if (!t[i].im)
 			t[i].im = imlib_load_image(t[i].fname);
+
 		imlib_context_set_image(t[i].im);
 
 		if (!t[i].w)
@@ -143,34 +126,24 @@ thumbnailview(void)
 
 		imlib_context_set_anti_alias(1); //faster but less quality
 
-		//t[i].y = i * THUMB_SIZE;
-
 		/* width and height no bigger than size */
 		t[i].w = MAX(THUMB_SIZE, t[i].w / THUMB_SIZE); //thumbsize or half the image, needs more operations
 		t[i].h = MAX(THUMB_SIZE, t[i].h / THUMB_SIZE);
 
-		//int j;
-
 		if ((i % cols) == 0) { /* first row filled */
 			x = margin;
 			y += THUMB_SIZE + margin; /* move to the next row */
-		} else { /* there is space */
+		} else /* there is space */
 			x += THUMB_SIZE + margin; /* move to the next col */
-		}
-
 
 		t[i].x = x;
 		t[i].y = y;
-		//t[i].x = i * t[i].w + cols * i + margin;	//take the count
 
-
-		//t[i].y = y;
-		//t[i].x = i * t[i].w + i/ xw.w + margin;
-
+		/* render image */
 		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
 	}
 
-	/* window background */
+	/* update window */
 	XSetWindowBackgroundPixmap(dpy, win, pm);
 	XClearWindow(dpy, win);
 }
