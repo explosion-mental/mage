@@ -483,9 +483,6 @@ main(int argc, char *argv[])
 	char *mode;
 	void (*scalefunc)(Image *im);
 
-	if (!argv[0])
-		usage();
-
 	ARGBEGIN {
 	case 'f':
 		fs = 1;
@@ -529,6 +526,9 @@ main(int argc, char *argv[])
 	default:
 		usage();
 	} ARGEND
+
+	if (!argv[0])
+		usage();
 
 	DIR *dir;
 
