@@ -75,7 +75,7 @@ calc_block(int dimension, int padding, int size)
 void
 thumbnailview(void)
 {
-	int i;
+	unsigned int i;
 	int x = 0, y = 0;
 	unsigned int rows, cols, n;
 	Image *t = images;

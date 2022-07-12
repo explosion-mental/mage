@@ -369,7 +369,7 @@ run(void)
 void
 setup(void)
 {
-	int i;
+	unsigned int i;
 	XTextProperty prop;
 	XSetWindowAttributes wa;
 	XGCValues gcval;
