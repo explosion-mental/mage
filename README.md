@@ -28,7 +28,7 @@ Running mage
 ------------
 run
 
-	mage [file or directory]
+	mage [file]
 
 See the manpage for further options.
 

@@ -496,7 +496,7 @@ main(int argc, char *argv[])
 		quiet = 1;
 		break;
 	case 'r':
-		recursive = 1;
+		loaddirs = 1;
 		break;
 	case 'n':
 		wmname = EARGF(usage());
@@ -533,7 +533,7 @@ main(int argc, char *argv[])
 
 	struct dirent *e;
 
-	if (recursive) {
+	if (loaddirs) {
 		for (i = 0; i < argc; i++)
 			getsize(argv[i]); /* count images in dir */
 		images = ecalloc(filecnt, sizeof(Image));
@@ -559,12 +559,12 @@ main(int argc, char *argv[])
 	else
 		filecnt = argc;
 
-	if (!recursive)
+	if (!loaddirs)
 		images = ecalloc(filecnt, sizeof(Image));
 
 	if (!strcmp(argv[0], "-"))
 		readstdin();
-	else if (!recursive) /* handle images */
+	else if (!loaddirs) /* handle images */
 		for (i = 0; i < argc; i++)
 			addfile(argv[i]);
 
