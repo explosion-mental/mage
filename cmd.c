@@ -38,6 +38,13 @@ printfile(const Arg *arg)
 }
 
 int
+setlayout(const Arg *arg)
+{
+	lt = (Layout *)arg->v;
+	return 1;
+}
+
+int
 set_zoom(const Arg *arg)
 {
 	img_zoom(ci, arg->f / 100.0);

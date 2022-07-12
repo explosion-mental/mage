@@ -39,6 +39,8 @@ static const Shortcut shortcuts[] = {
 	{ 0,            XK_Escape,       quit,               {0} },
 	{ 0,            XK_q,            quit,               {0} },
 	{ 0,            XK_b,            togglebar,          {0} },
+	{ 0,            XK_Return,       setlayout,          {.v = &layouts[1]} },
+	{ ShiftMask,    XK_Return,       setlayout,          {.v = &layouts[0]} },
 	{ 0,            XK_space,        advance,            {.i = +1} },
 	{ 0,            XK_BackSpace,    advance,            {.i = -1} },
 	{ 0,            XK_bracketright, advance,            {.i = +5} },

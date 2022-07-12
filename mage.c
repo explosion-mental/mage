@@ -99,6 +99,7 @@ static void scalefit(Image *img);
 static void scaleheight(Image *img);
 static void scalewidth(Image *img);
 static int set_zoom(const Arg *arg);
+static int setlayout(const Arg *arg);
 static void setup(void);
 static void singleview(void);
 static void thumbnailview(void);
