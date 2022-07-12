@@ -253,7 +253,7 @@ drawbar(void)
 	drw_text(drw, 0, winy, winw / 2, bh, lrpad / 2, left, 0);
 
 	/* right text */
-	snprintf(right, LENGTH(right), "%s <%d%%> [%d/%d]", ci->zoomed ? "" : scale->name, (int)(ci->z * 100.0), (int) fileidx + 1, filecnt);
+	snprintf(right, LENGTH(right), "%s <%d%%> [%zu/%u]", ci->zoomed ? "" : scale->name, (int)(ci->z * 100.0), fileidx + 1, filecnt);
 	tw = TEXTW(right) - lrpad + 2; /* 2px right padding */
 	drw_text(drw, winw / 2, winy, winw / 2, bh, winw / 2 - (tw + lrpad / 2), right, 0);
 
