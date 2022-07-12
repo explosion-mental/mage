@@ -75,7 +75,7 @@ calc_block(int dimension, int padding, int size)
 void
 thumbnailview(void)
 {
-	int i, margin = 10;
+	int i;
 	int x = 0, y = 0;
 	unsigned int rows, cols, n;
 	Image *t = images;
@@ -127,10 +127,10 @@ thumbnailview(void)
 		t[i].h = MAX(thumbsize, t[i].h / thumbsize);
 
 		if ((i % cols) == 0) { /* first row filled */
-			x = margin;
-			y += thumbsize + margin; /* move to the next row */
+			x = thumbpad;
+			y += thumbsize + thumbpad; /* move to the next row */
 		} else /* there is space */
-			x += thumbsize + margin; /* move to the next col */
+			x += thumbsize + thumbpad; /* move to the next col */
 
 		t[i].x = x;
 		t[i].y = y;
