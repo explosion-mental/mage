@@ -37,3 +37,5 @@ See the manpage for further options.
 - custom (thumbnail) mode that has different layouts (e.g. grid)
 - Top status bar
 - Merge everything into mage.c and order functions alphabetically
+- remove most of the function on cmd.c. They deserve a path rather than to be
+  in mainline
