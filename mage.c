@@ -209,6 +209,7 @@ cleanup(void)
 	free(images);
 	drw_free(drw);
  	XFreeGC(dpy, gc);
+	XFreePixmap(dpy, pm);
 	XDestroyWindow(dpy, win);
 	XSync(dpy, False);
 	XCloseDisplay(dpy);
