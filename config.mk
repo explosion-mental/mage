@@ -28,7 +28,7 @@ LIBS = -L/usr/lib -lc -lm -L${X11LIB} -lXft -lfontconfig -lX11 -lImlib2
 # flags
 CPPFLAGS = -D_DEFAULT_SOURCE -DVERSION=\"${VERSION}\" -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
 CFLAGS  = -std=c99 -pedantic -Wall -Os ${INCS} ${CPPFLAGS}
-#CFLAGS  = -g -std=c99 -pedantic -Wall -Wextra -O3 ${INCS} ${CPPFLAGS} -flto -fsanitize=address,undefined
+#CFLAGS  = -g -std=c99 -pedantic -Wall -Wextra -O3 ${INCS} ${CPPFLAGS} -flto -fsanitize=address,undefined,leak
 LDFLAGS = ${LIBS}
 #LDFLAGS = -g ${LIBS} ${CFLAGS}
 
