@@ -19,6 +19,9 @@ static const ScaleMode scalemodes[] = {
 	{ "height", scaleheight },
 };
 
+static const int thumbsize = 128;        /* thumbnailview size */
+static const int thumbpad = 8;           /* thumbailview space between images */
+
 static const Layout layouts[] = {
 	/* symbol   arrange function */
 	{ "[M]",   singleview },  /* first entry is default */

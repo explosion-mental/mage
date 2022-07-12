@@ -68,12 +68,9 @@ singleview(void)
 /* TODO:
  * - move to the next rows */
 
-#define THUMB_SIZE	(128)
-#define THUMB_PAD	(8)
-
 int
-calc_block(int dimension, int pad, int size)
-{
+calc_block(int dimension, int padding, int size)
+{	/* how many thumbs fit in the dimension */
 	return dimension / (size + padding);
 }
 
@@ -85,8 +82,8 @@ thumbnailview(void)
 	unsigned int rows, cols, n;
 	Image *t = images;
 
-	cols = calc_block( winw, THUMB_PAD, THUMB_SIZE );
-	rows = calc_block( winh, THUMB_PAD, THUMB_SIZE );
+	cols = calc_block(winw, thumbpad, thumbsize );
+	rows = calc_block(winh, thumbpad, thumbsize );
 
 	/* debug */
 //	printf("COLS: %d\n", cols);
@@ -106,6 +103,7 @@ thumbnailview(void)
 	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
 	imlib_context_set_drawable(pm);
 
+	/* load and render images */
 	for (i = 0; i < n; i++) {
 
 		/* cancel if there is user input.
@@ -127,14 +125,14 @@ thumbnailview(void)
 		imlib_context_set_anti_alias(1); //faster but less quality
 
 		/* width and height no bigger than size */
-		t[i].w = MAX(THUMB_SIZE, t[i].w / THUMB_SIZE); //thumbsize or half the image, needs more operations
-		t[i].h = MAX(THUMB_SIZE, t[i].h / THUMB_SIZE);
+		t[i].w = MAX(thumbsize, t[i].w / thumbsize); //thumbsize or half the image, needs more operations
+		t[i].h = MAX(thumbsize, t[i].h / thumbsize);
 
 		if ((i % cols) == 0) { /* first row filled */
 			x = margin;
-			y += THUMB_SIZE + margin; /* move to the next row */
+			y += thumbsize + margin; /* move to the next row */
 		} else /* there is space */
-			x += THUMB_SIZE + margin; /* move to the next col */
+			x += thumbsize + margin; /* move to the next col */
 
 		t[i].x = x;
 		t[i].y = y;
