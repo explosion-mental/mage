@@ -20,9 +20,6 @@ advance(const Arg *arg)
 {
 	if ((arg->i > 0 && fileidx + arg->i < filecnt)
 	|| (arg->i < 0 && fileidx >= -arg->i)) {
-		images[fileidx].im = NULL;
-		ci->im = NULL;
-		imlib_free_image();
 		fileidx = fileidx + arg->i;
 		ci = ci + arg->i;
 		ci = &images[fileidx];
@@ -111,9 +108,6 @@ int
 first(const Arg *arg)
 {
 	if (fileidx != 0) {
-		images[fileidx].im = NULL;
-		ci->im = NULL;
-		imlib_free_image();
 		fileidx = 0;
 		ci = ci + arg->i;
 		ci = &images[fileidx];
@@ -126,9 +120,6 @@ int
 last(const Arg *arg)
 {
 	if (fileidx != filecnt - 1) {
-		images[fileidx].im = NULL;
-		ci->im = NULL;
-		imlib_free_image();
 		fileidx = filecnt - 1;
 		ci = ci + arg->i;
 		ci = &images[fileidx];
@@ -174,10 +165,6 @@ toggleantialias(const Arg *arg)
 int
 reload(const Arg *arg)
 {
-	images[fileidx].im = NULL;
-	ci->im = NULL;
-	imlib_free_image();
-
 	return 1;
 }
 
