@@ -269,12 +269,8 @@ expose(XEvent *e)
 	XExposeEvent *ev = &e->xexpose;
 
 	if (ev->count == 0) {
-		if (winw != ev->width || winh != ev->height) {
-			winw = ev->width;
-			winh = ev->height;
-			lt->arrange();
-		}
-		XSync(dpy, True);
+		ci->zoomed = 1;
+		lt->arrange();
 		drawbar();
 	}
 }
