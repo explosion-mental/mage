@@ -192,9 +192,11 @@ cleanup(void)
 	unsigned int i;
 
 	for (i = 0; i < filecnt; i++) {
-		imlib_context_set_image(images[i].im);
-		images[i].im = NULL;
-		imlib_free_image();
+		if (images[i].im) {
+			imlib_context_set_image(images[i].im);
+			imlib_free_image();
+			images[i].im = NULL;
+		}
 	}
 
 	if (ci->im) {
