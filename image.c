@@ -78,7 +78,7 @@ thumbnailview(void)
 	unsigned int i;
 	int x = 0, y = 0;
 	unsigned int rows, cols, n;
-	Image *t = images;
+	Image *t;
 
 	cols = calc_block(winw, thumbpad, thumbsize );
 	rows = calc_block(winh, thumbpad, thumbsize );
@@ -103,6 +103,7 @@ thumbnailview(void)
 
 	/* load and render images */
 	for (i = 0; i < n; i++) {
+		t = &images[i];
 
 		/* cancel if there is user input.
 		 * TODO: when switching too fast with images none it's
@@ -110,21 +111,21 @@ thumbnailview(void)
 		if (XPending(dpy) != 0)
 			break;
 
-		if (!t[i].im)
-			t[i].im = imlib_load_image(t[i].fname);
+		if (!t->im)
+			t->im = imlib_load_image(t->fname);
 
-		imlib_context_set_image(t[i].im);
+		imlib_context_set_image(t->im);
 
-		if (!t[i].w)
-			t[i].w = imlib_image_get_width();
-		if (!t[i].h)
-			t[i].h = imlib_image_get_height();
+		if (!t->w)
+			t->w = imlib_image_get_width();
+		if (!t->h)
+			t->h = imlib_image_get_height();
 
 		imlib_context_set_anti_alias(1); //faster but less quality
 
 		/* width and height no bigger than size */
-		t[i].w = MAX(thumbsize, t[i].w / thumbsize); //thumbsize or half the image, needs more operations
-		t[i].h = MAX(thumbsize, t[i].h / thumbsize);
+		t->w = MAX(thumbsize, t->w / thumbsize); //thumbsize or half the image, needs more operations
+		t->h = MAX(thumbsize, t->h / thumbsize);
 
 		if ((i % cols) == 0) { /* first row filled */
 			x = thumbpad;
@@ -132,11 +133,11 @@ thumbnailview(void)
 		} else /* there is space */
 			x += thumbsize + thumbpad; /* move to the next col */
 
-		t[i].x = x;
-		t[i].y = y;
+		t->x = x;
+		t->y = y;
 
 		/* render image */
-		imlib_render_image_on_drawable_at_size(t[i].x, t[i].y, t[i].w, t[i].h);
+		imlib_render_image_on_drawable_at_size(t->x, t->y, t->w, t->h);
 	}
 
 	/* draw rectangle around the current image */
