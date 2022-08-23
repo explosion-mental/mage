@@ -359,9 +359,16 @@ run(void)
 {
 	XEvent ev;
 
-	while (running && !XNextEvent(dpy, &ev))
-		if (handler[ev.type])
+	while (running) {
+		/* TODO add a load() function that takes an argument, if 1 then
+		 * crop the image else load the entire image */
+		while (!XPending(dpy)) {
+			if (lt->arrange == thumbnailview)
+				loadthumb();
+		}
+		if (!XNextEvent(dpy, &ev) && handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
+	}
 }
 
 void

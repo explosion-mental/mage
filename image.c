@@ -51,11 +51,11 @@ singleview(void)
 	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
 	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
 
+ 	imlib_context_set_drawable(pm);
 	/* config context */
 	imlib_context_set_anti_alias(antialiasing);
 
 	/* render image */
- 	imlib_context_set_drawable(pm);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
 	/* window background */
@@ -70,6 +70,37 @@ int
 calc_block(int dimension, int padding, int size)
 {	/* how many thumbs fit in the dimension */
 	return dimension / (size + padding);
+}
+
+void loadthumb(void) {
+	int w, h;
+	float z, zw, zh;
+	Imlib_Image *im;
+
+	if (ci->im) {
+		imlib_context_set_image(ci->im);
+		imlib_free_image();
+	}
+
+	if ((im = imlib_load_image(ci->fname)))
+		imlib_context_set_image(im);
+
+	w = imlib_image_get_width();
+	h = imlib_image_get_height();
+	zw = (float) thumbsize / (float) w;
+	zh = (float) thumbsize / (float) h;
+	z = MIN(zw, zh);
+	if (!im && z > 1.0)
+		z = 1.0;
+
+	ci->w = z * w;
+	ci->h = z * h;
+
+	imlib_context_set_anti_alias(1);
+	if (!(ci->im = imlib_create_cropped_scaled_image(0, 0, w, h, ci->w, ci->h)))
+		die("could not allocate memory");
+	if (im)
+		imlib_free_image_and_decache();
 }
 
 void
@@ -104,12 +135,6 @@ thumbnailview(void)
 	/* load and render images */
 	for (i = 0; i < n; i++) {
 		t = &images[i];
-
-		/* cancel if there is user input.
-		 * TODO: when switching too fast with images none it's
-		 * displayed */
-		if (XPending(dpy) != 0)
-			break;
 
 		if (!t->im)
 			t->im = imlib_load_image(t->fname);
