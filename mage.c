@@ -192,14 +192,13 @@ cleanup(void)
 			imlib_free_image();
 			images[i].im = NULL;
 		}
+		if (images[i].crop) {
+			imlib_context_set_image(images[i].crop);
+			imlib_free_image();
+			images[i].crop = NULL;
+		}
 	}
 
-	if (ci->im) {
-		imlib_context_set_image(ci->im);
-		imlib_free_image();
-	//	imlib_free_image_and_decache();
-		ci->im = NULL;
-	}
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	free(scheme);
