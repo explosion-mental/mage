@@ -95,16 +95,14 @@ thumbnailview(void)
 {
 	Image *t;
 	int x = 0, y = 0;
-	unsigned int i, rows, cols, n;
+	unsigned int i, rows, cols, n, size = thumbpad + thumbsize;
 
-	/* how many thumbs fit in the dimension */
-	cols = winw / (thumbpad + thumbsize);
-	rows = winh / (thumbpad + thumbsize);
+	/* how many thumbs fit in the window */
+	cols = winw / size;
+	rows = winh / size;
 
-	n = cols * rows; /* max number of images to show */
-
-	if (n > filecnt) /* make sure it isn't more than all the images */
-		n = filecnt;
+	/* total number of thumbs to show (no more than filecnt) */
+	n = MIN(cols * rows, filecnt);
 
 	/* clean pixmap (our canvas) */
 	if (pm)
@@ -112,14 +110,14 @@ thumbnailview(void)
 	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
 	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
 	imlib_context_set_drawable(pm);
-	y = (winh - (rows * (thumbpad + thumbsize))) / 2;
-	x = (winw - (MIN(filecnt, cols) * (thumbpad + thumbsize))) / 2;
 
-	/* load and render images */
+	/* center x and y */
+	y = (winh - (rows * size)) / 2;
+	x = (winw - (MIN(filecnt, cols) * size)) / 2;
+
 	for (i = 0; i < n; i++) {
 		t = &images[i];
-
-		if (!t->crop) /* if no image, quit here in order to access loadimgs() in run() */
+		if (!t->crop) /* no crop image, quit here in order to call loadimgs() in run() */
 			return;
 
 		t->x = x;
@@ -129,14 +127,15 @@ thumbnailview(void)
 		imlib_context_set_anti_alias(1); //faster but less quality
 		imlib_render_image_on_drawable_at_size(t->x, t->y, t->cw, t->ch);
 
+		/* calculate next thumb position */
 		if (((i + 1) % cols) == 0) { /* row filled */
-			x = (winw - (cols * (thumbpad + thumbsize))) / 2;
-			y += thumbsize + thumbpad; /* move to the next row */
-		} else	/* there is space */
-			x += thumbsize + thumbpad; /* move to the next col */
+			x = (winw - (cols * size)) / 2;
+			y += size; /* move to the next row */
+		} else	/* current row still has space */
+			x += size; /* move to the next col */
 	}
 
-	/* draw rectangle around the current image */
+	/* selection rectangle around the current image */
 	XGCValues gcval;
 	GC c;
 	gcval.foreground = scheme[SchemeNorm][ColFg].pixel;
