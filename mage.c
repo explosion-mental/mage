@@ -81,7 +81,7 @@ static void expose(XEvent *e);
 static int first(const Arg *arg);
 static int fliphorz(const Arg *arg);
 static int flipvert(const Arg *arg);
-static void getsize(const char *file);
+static unsigned int getsize(const char *file);
 static void img_zoom(Image *img, float z);
 static void kpress(XEvent *e);
 static int last(const Arg *arg);
@@ -275,12 +275,13 @@ expose(XEvent *e)
 	}
 }
 
-void
+unsigned int
 getsize(const char *file)
 {
 	DIR *dir;
 	struct dirent *e;
 	struct stat s;
+	unsigned int cnt = 0;
 
 	if (!(stat(file, &s))) {
 		if (S_ISDIR(s.st_mode)) { /* it's a dir */
@@ -289,22 +290,24 @@ getsize(const char *file)
 				if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
 					continue;
 				if (e->d_type == DT_REG)
-					filecnt++;
+					cnt++;
 			}
 			closedir(dir);
 		} else if (!quiet)
 			fprintf(stderr, "mage: Directory '%s', cannot be opened.\n", file);
 	} else if (S_ISREG(s.st_mode)) {
 		if (imlib_load_image(file)) {
-			filecnt++;
+			cnt++;
 		} else {
 			if (!quiet)
 				fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
-			return;
+			return 0;
 		}
 	} else
 		fprintf(stderr, "mage: '%s' No such file or directory.\n", file);
 	}
+
+	return cnt;
 }
 
 void
@@ -542,7 +545,7 @@ main(int argc, char *argv[])
 
 	if (loaddirs) {
 		for (i = 0; i < argc; i++)
-			getsize(argv[i]); /* count images in dir */
+			filecnt += getsize(argv[i]); /* count images in dir */
 	} else if (!strcmp(argv[0], "-"))
 		filecnt = 1024; /* big arbitrary size */
 	else
