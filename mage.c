@@ -159,18 +159,12 @@ addfile(const char *file)
 {
 	if ((imlib_load_image(file))) { /* can be opened */
 		images[fileidx].fname = file;
-		//images[fileidx].im = m;
-		//imlib_context_set_image(m);
-		//images[fileidx].w = imlib_image_get_width();
-		//images[fileidx].h = imlib_image_get_height();
 		images[fileidx].checkpan = 0;
 		images[fileidx].zoomed = 0;
+		images[fileidx].z = 1.0;
 		fileidx++;
-	} else {
-		if (!quiet)
+	} else if (!quiet)
 			fprintf(stderr, "mage: File '%s' cannot be opened.\n", file);
-		return;
-	}
 }
 
 void
@@ -385,11 +379,13 @@ setup(void)
 	if (!(dpy = XOpenDisplay(NULL)))
 		die("mage: Unable to open display");
 
+	/* init image */
+	fileidx = 0;
+	ci = images;
 	if (!scale)
 		scale = &scalemodes[0];
 	if (!lt)
 		lt = &layouts[0];
-	ci->z = 1.0;
 
 	/* init screen */
 	screen = DefaultScreen(dpy);
@@ -446,7 +442,7 @@ setup(void)
 	XSetWMName(dpy, win, &prop);
 	XSetTextProperty(dpy, win, &prop, atom[WMName]);
 	XFree(prop.value);
-	XMapWindow(dpy, win);
+	XMapRaised(dpy, win);
 	drw_resize(drw, winw, winh);
 	xhints();
 	XSync(dpy, False);
@@ -488,6 +484,8 @@ xhints(void)
 int
 main(int argc, char *argv[])
 {
+	DIR *dir;
+	struct dirent *e;
 	int i, fs = 0;
 	char *mode;
 	void (*scalefunc)(Image *im);
@@ -513,15 +511,15 @@ main(int argc, char *argv[])
 		break;
 	case 's':
 		mode = EARGF(usage());
-		if (!strcmp(mode, "down")) {
+		if (!strcmp(mode, "down"))
 			scalefunc = scaledown;
-		} else if (!strcmp(mode, "width")) {
-			scalefunc = scalewidth;
-		} else if (!strcmp(mode, "height")) {
-			scalefunc = scaleheight;
-		} else if (!strcmp(mode, "fit")) {
-			scalefunc = scalefit;
-		} else
+		else if (!strcmp(mode, "width"))
+		      scalefunc = scalewidth;
+		else if (!strcmp(mode, "height"))
+		      scalefunc = scaleheight;
+		else if (!strcmp(mode, "fit"))
+		      scalefunc = scalefit;
+		else
 			break;
 		for (ScaleMode *l = (ScaleMode *)scalemodes; l; l++)
 			if (l->arrange == scalefunc) {
@@ -534,14 +532,11 @@ main(int argc, char *argv[])
 		break;
 	default:
 		usage();
+		break;
 	} ARGEND
 
 	if (!argv[0])
 		usage();
-
-	DIR *dir;
-
-	struct dirent *e;
 
 	if (loaddirs) {
 		for (i = 0; i < argc; i++)
@@ -567,9 +562,8 @@ main(int argc, char *argv[])
 					}
 				}
 				closedir(dir);
-			} else {
+			} else
 				addfile(argv[i]);
-			}
 		}
 	} else if (!strcmp(argv[0], "-"))
 		readstdin();
@@ -577,21 +571,12 @@ main(int argc, char *argv[])
 		for (i = 0; i < argc; i++)
 			addfile(argv[i]);
 	filecnt = fileidx;
-
-	if (!filecnt || !fileidx)
+	if (!filecnt)
 		die("mage: No more images to display");
-	fileidx = 0;
-
-	ci = images;
-
 	setup();
-
 	if (fs)
 		togglefullscreen(NULL);
-
 	run();
-
 	cleanup();
-
-	return 0;
+	return EXIT_SUCCESS;
 }
