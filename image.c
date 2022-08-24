@@ -121,18 +121,19 @@ thumbnailview(void)
 
 		if (!t->crop) /* if no image, quit here in order to access loadimgs() in run() */
 			return;
-		imlib_context_set_image(t->crop);
 
-		if ((i % cols) == 0) { /* first row filled */
-			x = (winw - (cols * (thumbpad + thumbsize))) / 2;
-			y += thumbsize + thumbpad; /* move to the next row */
-		} else /* there is space */
-			x += thumbsize + thumbpad; /* move to the next col */
 		t->x = x;
 		t->y = y;
 		/* render image */
+		imlib_context_set_image(t->crop);
 		imlib_context_set_anti_alias(1); //faster but less quality
 		imlib_render_image_on_drawable_at_size(t->x, t->y, t->cw, t->ch);
+
+		if (((i + 1) % cols) == 0) { /* row filled */
+			x = (winw - (cols * (thumbpad + thumbsize))) / 2;
+			y += thumbsize + thumbpad; /* move to the next row */
+		} else	/* there is space */
+			x += thumbsize + thumbpad; /* move to the next col */
 	}
 
 	/* draw rectangle around the current image */
