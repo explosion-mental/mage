@@ -66,12 +66,6 @@ singleview(void)
 /* TODO:
  * - move to the next rows */
 
-int
-calc_block(int dimension, int padding, int size)
-{	/* how many thumbs fit in the dimension */
-	return dimension / (size + padding);
-}
-
 void loadthumb(void) {
 	int w, h;
 	float z, zw, zh;
@@ -106,19 +100,13 @@ void loadthumb(void) {
 void
 thumbnailview(void)
 {
-	unsigned int i;
-	int x = 0, y = 0;
-	unsigned int rows, cols, n;
 	Image *t;
+	int x = 0, y = 0;
+	unsigned int i, rows, cols, n;
 
-	cols = calc_block(winw, thumbpad, thumbsize );
-	rows = calc_block(winh, thumbpad, thumbsize );
-
-	/* debug */
-//	printf("COLS: %d\n", cols);
-//	printf("ROWS: %d\n", rows);
-//	printf("WIDTH: %d\n", winw);
-//	printf("HEIGHT: %d\n", winh);
+	/* how many thumbs fit in the dimension */
+	cols = winw / (thumbpad + thumbsize);
+	rows = winh / (thumbpad + thumbsize);
 
 	n = cols * rows; /* max number of images to show */
 
@@ -138,16 +126,11 @@ thumbnailview(void)
 
 		if (!t->im)
 			t->im = imlib_load_image(t->fname);
-
 		imlib_context_set_image(t->im);
-
 		if (!t->w)
 			t->w = imlib_image_get_width();
 		if (!t->h)
 			t->h = imlib_image_get_height();
-
-		imlib_context_set_anti_alias(1); //faster but less quality
-
 		/* width and height no bigger than size */
 		t->w = MAX(thumbsize, t->w / thumbsize); //thumbsize or half the image, needs more operations
 		t->h = MAX(thumbsize, t->h / thumbsize);
@@ -157,11 +140,10 @@ thumbnailview(void)
 			y += thumbsize + thumbpad; /* move to the next row */
 		} else /* there is space */
 			x += thumbsize + thumbpad; /* move to the next col */
-
 		t->x = x;
 		t->y = y;
-
 		/* render image */
+		imlib_context_set_anti_alias(1); //faster but less quality
 		imlib_render_image_on_drawable_at_size(t->x, t->y, t->w, t->h);
 	}
 
