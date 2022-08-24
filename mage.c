@@ -33,13 +33,14 @@ typedef union {
 typedef struct ScaleMode ScaleMode;
 
 typedef struct {
-	Imlib_Image im;
+	Imlib_Image im, crop;
  	//int re; /* rendered */
 	//int redraw;
 	const char *fname;
 	int checkpan;
 	int zoomed;
-	int w, h;   /* dimension */
+	int w, h;   /* im dimension */
+	int cw, ch;   /* crop dimension */
 	float x, y; /* position */
 	float z;    /* zoom */
 } Image;
@@ -354,14 +355,13 @@ readstdin(void)
 void
 run(void)
 {
+	unsigned int i;
 	XEvent ev;
 
 	while (running) {
-		/* TODO add a load() function that takes an argument, if 1 then
-		 * crop the image else load the entire image */
-		while (!XPending(dpy)) {
-			if (lt->arrange == thumbnailview)
-				loadthumb();
+		i = 0;
+		while (!XPending(dpy) && i < filecnt) { /* pre-load imgs while no user input */
+			loadimgs(&images[i++]);
 		}
 		if (!XNextEvent(dpy, &ev) && handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
@@ -446,15 +446,12 @@ setup(void)
 	drw_resize(drw, winw, winh);
 	xhints();
 	XSync(dpy, False);
-
-	/* init image */
+	/* init imlib */
 	imlib_context_set_display(dpy);
 	imlib_context_set_visual(visual);
 	imlib_context_set_colormap(cmap);
 	//imlib_context_set_drawable(xw.pm);
 	//imlib_context_set_drawable(xw.win);
-
-	lt->arrange();
 }
 
 void

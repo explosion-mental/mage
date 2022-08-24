@@ -4,11 +4,7 @@ singleview(void)
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
 
-	ci->im = imlib_load_image(ci->fname);
 	imlib_context_set_image(ci->im);
-
-	ci->w = imlib_image_get_width();
-	ci->h = imlib_image_get_height();
 
 	if (!ci->zoomed) { /* if the image isn't zoomed */
 		scale->arrange(ci);
@@ -47,15 +43,12 @@ singleview(void)
 	/* clear and set pixmap */
 	if (pm)
 		XFreePixmap(dpy, pm);
-
 	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
 	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
 
- 	imlib_context_set_drawable(pm);
-	/* config context */
-	imlib_context_set_anti_alias(antialiasing);
-
 	/* render image */
+ 	imlib_context_set_drawable(pm);
+	imlib_context_set_anti_alias(antialiasing);
 	imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 
 	/* window background */
@@ -66,35 +59,35 @@ singleview(void)
 /* TODO:
  * - move to the next rows */
 
-void loadthumb(void) {
-	int w, h;
+void
+loadimgs(Image *i)
+{
 	float z, zw, zh;
-	Imlib_Image *im;
 
-	if (ci->im) {
-		imlib_context_set_image(ci->im);
-		imlib_free_image();
+	if (i->crop) /* crop alrd exist */
+		return;
+
+	if (!i->im) {
+		i->im = imlib_load_image(i->fname);
 	}
 
-	if ((im = imlib_load_image(ci->fname)))
-		imlib_context_set_image(im);
-
-	w = imlib_image_get_width();
-	h = imlib_image_get_height();
-	zw = (float) thumbsize / (float) w;
-	zh = (float) thumbsize / (float) h;
+	imlib_context_set_image(i->im);
+	/* real width and height */
+	i->w = imlib_image_get_width();
+	i->h = imlib_image_get_height();
+	/* croped w and h */
+	zw = (float) thumbsize / (float) i->w;
+	zh = (float) thumbsize / (float) i->h;
 	z = MIN(zw, zh);
-	if (!im && z > 1.0)
+	if (!i->im && z > 1.0)
 		z = 1.0;
-
-	ci->w = z * w;
-	ci->h = z * h;
+	/* croped width and height */
+	i->cw = z * i->w;
+	i->ch = z * i->h;
 
 	imlib_context_set_anti_alias(1);
-	if (!(ci->im = imlib_create_cropped_scaled_image(0, 0, w, h, ci->w, ci->h)))
-		die("could not allocate memory");
-	if (im)
-		imlib_free_image_and_decache();
+	if (!(i->crop = imlib_create_cropped_scaled_image(0, 0, i->w, i->h, i->cw, i->ch)))
+		die("could not allocate memory.");
 }
 
 void
@@ -124,16 +117,9 @@ thumbnailview(void)
 	for (i = 0; i < n; i++) {
 		t = &images[i];
 
-		if (!t->im)
-			t->im = imlib_load_image(t->fname);
-		imlib_context_set_image(t->im);
-		if (!t->w)
-			t->w = imlib_image_get_width();
-		if (!t->h)
-			t->h = imlib_image_get_height();
-		/* width and height no bigger than size */
-		t->w = MAX(thumbsize, t->w / thumbsize); //thumbsize or half the image, needs more operations
-		t->h = MAX(thumbsize, t->h / thumbsize);
+		if (!t->crop) /* if no image, quit here in order to access loadimgs() in run() */
+			return;
+		imlib_context_set_image(t->crop);
 
 		if ((i % cols) == 0) { /* first row filled */
 			x = thumbpad;
@@ -144,7 +130,7 @@ thumbnailview(void)
 		t->y = y;
 		/* render image */
 		imlib_context_set_anti_alias(1); //faster but less quality
-		imlib_render_image_on_drawable_at_size(t->x, t->y, t->w, t->h);
+		imlib_render_image_on_drawable_at_size(t->x, t->y, t->cw, t->ch);
 	}
 
 	/* draw rectangle around the current image */
@@ -152,7 +138,7 @@ thumbnailview(void)
 	GC c;
 	gcval.foreground = scheme[SchemeNorm][ColFg].pixel;
 	c = XCreateGC(dpy, win, GCForeground, &gcval); //context for Pixmap
-	XDrawRectangle(dpy, pm, c, ci->x - 3, ci->y - 3, ci->w + 6, ci->h + 6);
+	XDrawRectangle(dpy, pm, c, ci->x - 3, ci->y - 3, ci->cw + 6, ci->ch + 6);
 	XFreeGC(dpy, c);
 
 	/* update window */
