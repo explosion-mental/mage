@@ -122,7 +122,7 @@ thumbnailview(void)
 		imlib_context_set_image(t->crop);
 
 		if ((i % cols) == 0) { /* first row filled */
-			x = thumbpad;
+			x = (winw - (cols * (thumbpad + thumbsize))) / 2;
 			y += thumbsize + thumbpad; /* move to the next row */
 		} else /* there is space */
 			x += thumbsize + thumbpad; /* move to the next col */
