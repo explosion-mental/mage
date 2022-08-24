@@ -112,6 +112,8 @@ thumbnailview(void)
 	pm = XCreatePixmap(dpy, win, scrw, scrh, depth);
 	XFillRectangle(dpy, pm, gc, 0, 0, scrw, scrh);
 	imlib_context_set_drawable(pm);
+	y = (winh - (rows * (thumbpad + thumbsize))) / 2;
+	x = (winw - (cols * (thumbpad + thumbsize))) / 2;
 
 	/* load and render images */
 	for (i = 0; i < n; i++) {
