@@ -543,7 +543,14 @@ main(int argc, char *argv[])
 	if (loaddirs) {
 		for (i = 0; i < argc; i++)
 			getsize(argv[i]); /* count images in dir */
-		images = ecalloc(filecnt, sizeof(Image));
+	} else if (!strcmp(argv[0], "-"))
+		filecnt = 1024; /* big arbitrary size */
+	else
+		filecnt = argc;
+
+	images = ecalloc(filecnt, sizeof(Image));
+
+	if (loaddirs) {
 		for (i = 0; i < argc; i++) {
 			if ((dir = opendir(argv[i]))) {
 				while ((e = readdir(dir))) {
@@ -562,18 +569,11 @@ main(int argc, char *argv[])
 			}
 		}
 	} else if (!strcmp(argv[0], "-"))
-		filecnt = 1024; /* big arbitrary size */
-	else
-		filecnt = argc;
-
-	if (!loaddirs)
-		images = ecalloc(filecnt, sizeof(Image));
-
-	if (!strcmp(argv[0], "-"))
 		readstdin();
-	else if (!loaddirs) /* handle images */
+	else	/* handle images */
 		for (i = 0; i < argc; i++)
 			addfile(argv[i]);
+	filecnt = fileidx;
 
 	if (!filecnt || !fileidx)
 		die("mage: No more images to display");
