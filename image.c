@@ -112,7 +112,7 @@ thumbnailview(void)
 	imlib_context_set_drawable(pm);
 
 	/* center x and y */
-	y = (winh - (rows * size)) / 2;
+	y = (winy - (rows * size)) / 2;
 	x = (winw - (MIN(filecnt, cols) * size)) / 2;
 
 	for (i = 0; i < n; i++) {
