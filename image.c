@@ -66,7 +66,7 @@ singleview(void)
 int
 loadimgs(Image *i)
 {
-	float z, zw, zh;
+	float z;
 
 	if (i->crop) /* crop alrd exist */
 		return 1;
@@ -88,11 +88,9 @@ loadimgs(Image *i)
 
 	if (lt->arrange == thumbnailview) {
 		/* croped w and h */
-		zw = (float) thumbsize / (float) i->w;
-		zh = (float) thumbsize / (float) i->h;
-		z = MIN(zw, zh);
-		if (z > 1.0)
-			z = 1.0;
+		z = MIN((float) thumbsize / (float) i->w, (float) thumbsize / (float) i->h);
+		z = MIN(z, 1.0); /* no more than 1.0 */
+
 		/* croped width and height */
 		i->cw = z * i->w;
 		i->ch = z * i->h;
