@@ -4,6 +4,8 @@ singleview(void)
 	int sx, sy, sw, sh; //source
 	int dx, dy, dw, dh; //destination
 
+	loadimgs(ci);
+
 	imlib_context_set_image(ci->im);
 
 	if (!ci->zoomed) { /* if the image isn't zoomed */
@@ -57,15 +59,17 @@ singleview(void)
 }
 
 /* TODO:
- * - move to the next rows */
+ * - move to the next rows
+ * - imlib_free_image() every time
+ */
 
-void
+int
 loadimgs(Image *i)
 {
 	float z, zw, zh;
 
 	if (i->crop) /* crop alrd exist */
-		return;
+		return 1;
 
 	if (!i->im) {
 		i->im = imlib_load_image(i->fname);
@@ -73,21 +77,32 @@ loadimgs(Image *i)
 
 	imlib_context_set_image(i->im);
 	/* real width and height */
-	i->w = imlib_image_get_width();
-	i->h = imlib_image_get_height();
-	/* croped w and h */
-	zw = (float) thumbsize / (float) i->w;
-	zh = (float) thumbsize / (float) i->h;
-	z = MIN(zw, zh);
-	if (!i->im && z > 1.0)
-		z = 1.0;
-	/* croped width and height */
-	i->cw = z * i->w;
-	i->ch = z * i->h;
+	if (!i->w)
+		i->w = imlib_image_get_width();
+	if (!i->h)
+		i->h = imlib_image_get_height();
 
-	imlib_context_set_anti_alias(1);
-	if (!(i->crop = imlib_create_cropped_scaled_image(0, 0, i->w, i->h, i->cw, i->ch)))
-		die("could not allocate memory.");
+	/* block on singleview, but in thumbnailview wait for user input */
+	if (XPending(dpy))
+		return 0;
+
+	if (lt->arrange == thumbnailview) {
+		/* croped w and h */
+		zw = (float) thumbsize / (float) i->w;
+		zh = (float) thumbsize / (float) i->h;
+		z = MIN(zw, zh);
+		if (z > 1.0)
+			z = 1.0;
+		/* croped width and height */
+		i->cw = z * i->w;
+		i->ch = z * i->h;
+
+		imlib_context_set_anti_alias(1);
+		if (!(i->crop = imlib_create_cropped_scaled_image(0, 0, i->w, i->h, i->cw, i->ch)))
+			die("could not allocate memory.");
+	}
+
+	return 1;
 }
 
 void
@@ -95,7 +110,9 @@ thumbnailview(void)
 {
 	Image *t;
 	int x = 0, y = 0;
-	unsigned int i, rows, cols, n, size = thumbpad + thumbsize;
+	unsigned int rows, cols, n, size = thumbpad + thumbsize;
+
+	static unsigned int i = 0; /* keep track in which img we left off */
 
 	/* how many thumbs fit in the window */
 	cols = winw / size;
@@ -114,11 +131,13 @@ thumbnailview(void)
 	/* center x and y */
 	y = (winy - (rows * size)) / 2;
 	x = (winw - (MIN(filecnt, cols) * size)) / 2;
+	int ret;
 
 	for (i = 0; i < n; i++) {
 		t = &images[i];
-		if (!t->crop) /* no crop image, quit here in order to call loadimgs() in run() */
-			return;
+
+		if ((ret = loadimgs(t)) == 0)
+			break;
 
 		t->x = x;
 		t->y = y;
@@ -134,6 +153,10 @@ thumbnailview(void)
 		} else	/* current row still has space */
 			x += size; /* move to the next col */
 	}
+	if (ret == 0) {
+		dirty = 1;
+	} else
+		i = 0; /* restart count */
 
 	/* selection rectangle around the current image */
 	XGCValues gcval;

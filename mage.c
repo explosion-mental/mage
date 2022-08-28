@@ -110,11 +110,13 @@ static int togglefullscreen(const Arg *arg);
 static void usage(void);
 static void xhints(void);
 static int zoom(const Arg *arg);
+static int loadimgs(Image *i);
 
 /* variables */
 static Atom atom[WMLast];
 static char right[128], left[128]; /* status bar */
 static unsigned int filecnt = 0;
+static int dirty = 0;
 static size_t fileidx;
 static Image *ci, *images; /* current image and images */
 static const ScaleMode *scale; /* scalemode */
@@ -354,16 +356,16 @@ readstdin(void)
 void
 run(void)
 {
-	unsigned int i;
 	XEvent ev;
 
 	while (running) {
-		i = 0;
-		while (!XPending(dpy) && i < filecnt) { /* pre-load imgs while no user input */
-			loadimgs(&images[i++]);
-		}
 		if (!XNextEvent(dpy, &ev) && handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
+		if (dirty == 1) {
+			lt->arrange();
+			drawbar();
+			dirty = 0;
+		}
 	}
 }
 
