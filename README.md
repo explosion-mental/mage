@@ -4,6 +4,8 @@ mage - image viewer
 mage is a simple image viewer. It should be very straightforward how it
 works (thanks to Imlib2) and comes with useful configurable features.
 
+**Wait for version 1.0**
+
 
 Dependencies
 ------------
