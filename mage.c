@@ -160,7 +160,11 @@ static void (*handler[LASTEvent])(XEvent *) = {
 void
 addfile(const char *file)
 {
-	if ((imlib_load_image(file))) { /* can be opened */
+	Imlib_Image *im;
+
+	if ((im = imlib_load_image(file))) { /* can be opened */
+		imlib_context_set_image(im);
+		imlib_free_image();
 		images[fileidx].fname = file;
 		images[fileidx].checkpan = 0;
 		images[fileidx].zoomed = 0;
