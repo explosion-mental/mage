@@ -20,6 +20,7 @@ advance(const Arg *arg)
 {
 	if ((arg->i > 0 && (int) fileidx + arg->i < filecnt)
 	|| (arg->i < 0 && (int) fileidx >= -arg->i)) {
+		if (imlib_context_get_image()) { imlib_free_image(); }
 		fileidx = fileidx + arg->i;
 		ci = ci + arg->i;
 		ci = &images[fileidx];
