@@ -6,8 +6,6 @@ singleview(void)
 
 	loadimgs(ci);
 
-	imlib_context_set_image(ci->im);
-
 	if (!ci->zoomed) { /* if the image isn't zoomed */
 		scale->arrange(ci);
 		ci->checkpan = 1;
@@ -67,15 +65,13 @@ int
 loadimgs(Image *i)
 {
 	float z;
+	Imlib_Image *im;
 
 	if (i->crop) /* crop alrd exist */
 		return 1;
 
-	if (!i->im) {
-		i->im = imlib_load_image(i->fname);
-	}
-
-	imlib_context_set_image(i->im);
+	im = imlib_load_image(i->fname);
+	imlib_context_set_image(im);
 	/* real width and height */
 	if (!i->w)
 		i->w = imlib_image_get_width();

@@ -33,16 +33,18 @@ typedef union {
 typedef struct ScaleMode ScaleMode;
 
 typedef struct {
-	Imlib_Image im, crop;
  	//int re; /* rendered */
-	//int redraw;
 	const char *fname;
+
 	int checkpan;
 	int zoomed;
-	int w, h;   /* im dimension */
-	int cw, ch;   /* crop dimension */
-	float x, y; /* position */
+
+	int w, h;   /* original dimension */
+	float x, y; /* position of the pan() */
 	float z;    /* zoom */
+
+	Imlib_Image crop; /* small handy version of the image, intented to be use in layouts. */
+	int cw, ch;   /* crop dimension */
 } Image;
 
 struct ScaleMode {
@@ -193,11 +195,6 @@ cleanup(void)
 	unsigned int i;
 
 	for (i = 0; i < filecnt; i++) {
-		if (images[i].im) {
-			imlib_context_set_image(images[i].im);
-			imlib_free_image();
-			images[i].im = NULL;
-		}
 		if (images[i].crop) {
 			imlib_context_set_image(images[i].crop);
 			imlib_free_image();
